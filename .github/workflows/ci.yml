@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, development]
+  push:
+    branches: [development]
+
+# Permisos mínimos por defecto
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  secretos:
+    name: Secretos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  calidad:
+    name: Calidad
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+
+      - name: Formato (.editorconfig)
+        run: npx --yes editorconfig-checker@6 -exclude 'LICENSE|\.git/|\.agents/skills/security-audit/'
+
+      - name: HTML válido
+        run: |
+          if find . -name '*.html' -not -path './node_modules/*' | grep -q .; then
+            npx --yes htmlhint@1 "**/*.html" --ignore "node_modules/**"
+          else
+            echo "No hay HTML todavía."
+          fi
+
+      - name: Enlaces internos rotos
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --offline --no-progress --include-fragments --exclude-path .agents/skills/security-audit './**/*.html' './**/*.md'
+          fail: true

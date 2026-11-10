@@ -1,0 +1,25 @@
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Editores
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Dependencias y builds
+node_modules/
+dist/
+build/
+.cache/
+__pycache__/
+
+# Secretos: nunca al repo
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Logs
+*.log

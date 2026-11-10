@@ -1,0 +1,44 @@
+name: Publicar en GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    name: Publicar
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      # Publica solo lo necesario, no docs internos ni configuración
+      - name: Preparar sitio
+        run: |
+          mkdir -p _site
+          rsync -a --exclude '.git*' --exclude '.github' --exclude '.agents' --exclude 'docs' \
+            --exclude 'scripts' --exclude '*.md' --exclude 'LICENSE' \
+            --exclude '.editorconfig' --exclude '_site' ./ _site/
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deploy
+        uses: actions/deploy-pages@v4
