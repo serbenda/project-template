@@ -14,6 +14,8 @@ permissions:
 jobs:
   analizar:
     name: Análisis estático
+    # Code scanning es gratis solo en repos públicos; en privados requiere GitHub Advanced Security
+    if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-latest
     permissions:
       actions: read          # CodeQL consulta el run en curso
