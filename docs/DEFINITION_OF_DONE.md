@@ -21,12 +21,14 @@ Un cambio está **hecho** solo cuando cumple todo lo de esta lista. Si algo no a
 - [ ] El escaneo de secretos y CodeQL no reportan nada nuevo.
 - [ ] Si el cambio toca autenticación, datos externos, workflows o dependencias: revisado con la skill `security-audit` (modo guía).
 - [ ] Antes de cada versión mayor: auditoría completa con `security-audit`, sin hallazgos `confirmed` abiertos.
+- [ ] Antes de cada versión mayor: `repo-security-posture` sin hallazgos Critical ni High.
 
 ## 4. Calidad web
 - [ ] Accesible: textos alternativos, contraste suficiente, navegable con teclado, `lang` correcto.
 - [ ] Responsive: se ve bien de 360 px a escritorio.
 - [ ] Sin errores en la consola del navegador.
 - [ ] Rendimiento razonable: imágenes optimizadas y nada bloqueante innecesario.
+- [ ] Antes de cada versión: revisión con la skill `web-perf`, con Core Web Vitals en verde.
 
 ## 5. Documentación
 - [ ] README actualizado si cambia el uso, la configuración o las fuentes de datos.

@@ -40,7 +40,7 @@ jobs:
           node-version: "lts/*"
 
       - name: Formato (.editorconfig)
-        run: npx --yes editorconfig-checker@6 -exclude 'LICENSE|\.git/|\.agents/skills/security-audit/'
+        run: npx --yes editorconfig-checker@6 -exclude 'LICENSE|\.git/|\.agents/skills/'
 
       - name: HTML válido
         run: |
@@ -53,5 +53,5 @@ jobs:
       - name: Enlaces internos rotos
         uses: lycheeverse/lychee-action@v2
         with:
-          args: --offline --no-progress --include-fragments --exclude-path .agents/skills/security-audit './**/*.html' './**/*.md'
+          args: --offline --no-progress --include-fragments --exclude-path .agents/skills './**/*.html' './**/*.md'
           fail: true

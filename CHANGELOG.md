@@ -6,6 +6,7 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y 
 ### Añadido
 - Estructura inicial: Definition of Done, flujo development → main, CI (Gitleaks, formato, HTML, enlaces), CodeQL, Dependabot, publicación en GitHub Pages y script de configuración.
 - Skill `security-audit` de Cloudflare en `.agents/skills/`, fijada al commit `c1c8a8c`.
+- Skills `web-perf` (Cloudflare, `cbf893b`) y `repo-security-posture` (superagent-ai, `0da315b`).
 
 <!--
 Secciones posibles: Añadido, Cambiado, Obsoleto, Eliminado, Corregido, Seguridad
