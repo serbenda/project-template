@@ -16,6 +16,7 @@ jobs:
     name: Análisis estático
     runs-on: ubuntu-latest
     permissions:
+      actions: read          # CodeQL consulta el run en curso
       contents: read
       security-events: write
     strategy:
