@@ -5,8 +5,13 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y 
 ## [Sin publicar]
 ### Añadido
 - Estructura inicial: Definition of Done, flujo development → main, CI (Gitleaks, formato, HTML, enlaces), CodeQL, Dependabot, publicación en GitHub Pages y script de configuración.
-- Skill `security-audit` de Cloudflare en `.agents/skills/`, fijada al commit `c1c8a8c`.
+- Skill `security-audit` de Cloudflare en `.claude/skills/`, fijada al commit `c1c8a8c`.
 - Skills `web-perf` (Cloudflare, `cbf893b`) y `repo-security-posture` (superagent-ai, `0da315b`).
+- Configuración de Claude Code en `.claude/`: sin firma en commits y PRs, permisos deny/ask/allow, hook `guardia.sh` con pruebas, subagentes `revisor-seguridad` y `revisor-dod`, y comando `/preparar-pr`. `CLAUDE.md` importa `AGENTS.md`.
+- Las skills pasan de `.agents/skills/` a `.claude/skills/`.
+- Hook de git `.githooks/commit-msg` y job **Autoría** en la CI contra firmas de IA y autores incorrectos.
+- GitHub Actions fijadas a un SHA y shellcheck en la CI.
+- `docs/SEGURIDAD.md` y `docs/claude-settings-global.json`.
 
 <!--
 Secciones posibles: Añadido, Cambiado, Obsoleto, Eliminado, Corregido, Seguridad

@@ -28,7 +28,12 @@ python3 -m http.server 8000   # abre http://localhost:8000
 ├── css/
 ├── js/
 ├── assets/
-└── docs/          # Definition of Done y documentación
+├── docs/          # Definition of Done, guía de seguridad
+├── scripts/       # setup-repo.sh y pruebas
+├── .claude/       # configuración del agente: permisos, hook, skills, subagentes, comandos
+├── .githooks/     # hook de git: quita firmas de IA y comprueba el autor
+├── AGENTS.md      # normas para cualquier agente de IA
+└── CLAUDE.md      # importa AGENTS.md y añade lo específico de Claude Code
 ```
 
 ## Cómo contribuir
@@ -47,8 +52,10 @@ Lee [CONTRIBUTING.md](CONTRIBUTING.md) y la [Definition of Done](docs/DEFINITION
    ```bash
    ./scripts/setup-repo.sh
    ```
-   Crea la rama `development`, protege `main`, activa Pages y las alertas de seguridad.
+   Crea la rama `development`, protege `main`, activa Pages, las alertas de seguridad y el hook de git.
+   Con commits firmados: `FIRMAS=1 ./scripts/setup-repo.sh`.
 3. Sustituye `NOMBRE_DEL_PROYECTO` en este README.
 4. Borra esta sección.
+5. Una sola vez en tu Mac: sigue [docs/SEGURIDAD.md](docs/SEGURIDAD.md) → "Lo que tienes que hacer tú".
 
 </details>

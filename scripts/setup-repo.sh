@@ -12,6 +12,9 @@ echo "→ Configurando $REPO"
 # 1. Autoría local de los commits
 git config user.name  "Sergio Santiago Bendaña Quesada"
 git config user.email "serbenda@gmail.com"
+# Hook de git que quita firmas de IA de los commits y comprueba el autor
+git config core.hooksPath .githooks
+chmod +x .githooks/* .claude/hooks/*.sh scripts/*.sh
 
 # 2. Sustituye el marcador del nombre del proyecto
 grep -rl --exclude-dir=.git --exclude=setup-repo.sh "NOMBRE_DEL_PROYECTO" . | xargs -r sed -i.bak "s/NOMBRE_DEL_PROYECTO/$NOMBRE/g"
@@ -66,12 +69,24 @@ gh api -X POST "repos/$REPO/rulesets" --input - >/dev/null <<'JSON'
       "strict_required_status_checks_policy": false,
       "required_status_checks": [
         {"context": "Secretos"},
-        {"context": "Calidad"}
+        {"context": "Calidad"},
+        {"context": "Autoría"}
       ]
     }}
   ]
 }
 JSON
+
+# 6b. Opcional: exigir commits firmados (FIRMAS=1 ./scripts/setup-repo.sh). Configura antes tu clave de firma:
+#     docs/SEGURIDAD.md → "Firmar commits"
+if [[ "${FIRMAS:-0}" == "1" ]]; then
+  gh api -X POST "repos/$REPO/rulesets" --input - >/dev/null <<'JSON'
+{"name": "Commits firmados", "target": "branch", "enforcement": "active",
+ "conditions": {"ref_name": {"include": ["~DEFAULT_BRANCH", "refs/heads/development"], "exclude": []}},
+ "rules": [{"type": "required_signatures"}]}
+JSON
+  echo "  ✓ Commits firmados obligatorios en main y development"
+fi
 
 # 7. GitHub Pages publicado desde Actions
 gh api -X POST "repos/$REPO/pages" -f build_type=workflow >/dev/null 2>&1 \

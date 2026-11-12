@@ -4,7 +4,7 @@ Este archivo marca las normas para cualquier asistente o agente de IA que trabaj
 
 ## Identidad y autoría
 - Todos los commits van firmados **solo** por: `Sergio Santiago Bendaña Quesada <serbenda@gmail.com>`.
-- Prohibido añadir `Co-Authored-By`, firmas o menciones a herramientas de IA en commits, PR, issues o archivos.
+- Prohibido añadir `Co-Authored-By`, firmas, pies tipo "Generated with…" o enlaces de sesión de herramientas de IA en commits, PR o issues. Lo bloquean el hook del agente, `.githooks/commit-msg` y el job **Autoría** de la CI.
 - Comprueba antes de hacer commit: `git config user.name` y `git config user.email`.
 
 ## Ramas y flujo
@@ -23,12 +23,16 @@ Este archivo marca las normas para cualquier asistente o agente de IA que trabaj
 - No añadas dependencias, workflows ni permisos de GitHub Actions sin justificarlo en la PR.
 - No ejecutes comandos destructivos (`rm -rf`, `git push --force`, `git reset --hard` sobre ramas compartidas) sin confirmación explícita.
 
+## Controles que no debes saltarte
+- `.claude/hooks/guardia.sh`, `.githooks/` y la CI son las barreras de seguridad. Si algo te bloquea, para y explica al propietario qué querías hacer.
+- Guía completa: [`docs/SEGURIDAD.md`](docs/SEGURIDAD.md).
+
 ## Skills disponibles
-Las skills están en `.agents/skills/`. Cárgalas cuando la tarea encaje:
+Las skills están en `.claude/skills/`. Cárgalas cuando la tarea encaje:
 - `security-audit/`: revisión y auditoría de seguridad (Cloudflare, MIT). Úsala para cualquier pregunta o revisión de seguridad. La **auditoría completa** se ejecuta solo si el propietario la pide explícitamente, y sus artefactos van fuera del repo. Antes de abrir una PR que toque autenticación, datos externos, workflows o dependencias, haz una revisión en modo guía.
 - `web-perf/`: rendimiento web (Core Web Vitals, Lighthouse). Úsala antes de cada versión y cuando una página vaya lenta. No abras issues públicas de feedback sin aprobación explícita del texto.
 - `repo-security-posture/`: revisión de la configuración del repo en GitHub. Solo lee, no cambia ajustes; las correcciones las aplica el propietario.
-- Las skills de terceros no se modifican; consulta `.agents/skills/UPSTREAM.md`.
+- Las skills de terceros no se modifican; consulta `.claude/skills/UPSTREAM.md`.
 
 ## Estilo del proyecto
 - Web estática (HTML, CSS, JS sin framework salvo que se indique) publicada en GitHub Pages.

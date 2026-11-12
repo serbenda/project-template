@@ -16,7 +16,7 @@ Auditoría de seguridad defensiva en seis fases: reconocimiento, búsqueda, vali
 - **Modo auditoría completa**: solo si se pide explícitamente, por ejemplo: *«haz una auditoría de seguridad completa de este repo»*.
 - Los resultados se guardan **fuera del repo** (`~/security-audit-skill/<repo>/run-N`). Si alguna vez se guardan dentro, la carpeta tiene que estar en `.gitignore`.
 - Para validar los hallazgos hace falta Node.js:
-  `node .agents/skills/security-audit/validate-findings.cjs <findings.json>`
+  `node .claude/skills/security-audit/validate-findings.cjs <findings.json>`
 
 ## web-perf
 
@@ -30,15 +30,15 @@ Auditoría de rendimiento web: Core Web Vitals, Lighthouse, análisis de red, ac
 Revisa la configuración del repo en GitHub: protección de ramas, CODEOWNERS, Actions, releases, accesos y dependencias. Entrega una lista de tareas ordenadas por gravedad.
 
 - Revisado: `scripts/collect.py` solo hace peticiones **de lectura** a `api.github.com` y `raw.githubusercontent.com`, no cambia ningún ajuste y oculta los tokens que encuentra en los archivos.
-- Uso: `GITHUB_TOKEN=<token de solo lectura> python3 .agents/skills/repo-security-posture/scripts/collect.py serbenda/<repo> --output /tmp/audit.json`
+- Uso: `GITHUB_TOKEN=<token de solo lectura> python3 .claude/skills/repo-security-posture/scripts/collect.py serbenda/<repo> --output /tmp/audit.json`
 - Usa el token con menos permisos posible (fine-grained, solo lectura, solo ese repo). Complementa a `scripts/setup-repo.sh`: el script aplica la protección y esta skill comprueba que sigue en pie.
 
 ## Actualizar `security-audit`
 ```bash
 git clone --depth 1 https://github.com/cloudflare/security-audit-skill /tmp/sas
-rm -rf .agents/skills/security-audit
-cp -a /tmp/sas/skills/security-audit .agents/skills/
-cp /tmp/sas/LICENSE .agents/skills/security-audit/
+rm -rf .claude/skills/security-audit
+cp -a /tmp/sas/skills/security-audit .claude/skills/
+cp /tmp/sas/LICENSE .claude/skills/security-audit/
 git -C /tmp/sas rev-parse HEAD   # anota el commit en la tabla
 ```
 
