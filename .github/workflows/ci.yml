@@ -50,7 +50,7 @@ jobs:
           BASE: ${{ github.event.pull_request.base.sha }}
           HEAD: ${{ github.event.pull_request.head.sha }}
         run: |
-          patron='co-authored-by:|generated with|claude-session:|noreply@anthropic|claude\.ai/code|claude\.com/claude-code|🤖'
+          patron='co-authored-by:|generated (with|by) \[?(claude|cursor|copilot|codex)|claude-session:|noreply@anthropic|claude\.ai/code|claude\.com/claude-code|🤖'
           fallo=0
           if printf '%s\n%s' "$PR_TITULO" "$PR_CUERPO" | grep -Eiq "$patron"; then
             echo "::error::El título o la descripción de la PR contiene firmas de IA."; fallo=1

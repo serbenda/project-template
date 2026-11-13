@@ -99,7 +99,7 @@ done
 
 # --- Firmas de IA en commits, PRs e issues ---
 if hay '(git( +-[cC] +[^ ]+)* +(commit|tag)|gh +(pr|issue) +(create|edit|comment)|gh +api)' "$cmd" &&
-   hay '(co-authored-by|generated with|claude-session|noreply@anthropic|claude\.ai/code|claude\.com/claude-code|🤖)' "$cmd"; then
+   hay '(co-authored-by|generated (with|by) \[?(claude|cursor|copilot|codex)|claude-session|noreply@anthropic|claude\.ai/code|claude\.com/claude-code|🤖)' "$cmd"; then
   bloquear "los commits, PRs e issues van sin coautor ni firmas de herramientas de IA (ver AGENTS.md)."
 fi
 

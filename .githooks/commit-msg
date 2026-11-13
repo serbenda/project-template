@@ -5,7 +5,7 @@
 set -euo pipefail
 
 msg_file="$1"
-patron='^(co-authored-by:.*(claude|anthropic|copilot|cursor|codex|openai|devin|noreply@)|.*generated with \[?(claude|cursor|copilot|codex)|claude-session:|.*claude\.ai/code|🤖)'
+patron='^(co-authored-by:.*(claude|anthropic|copilot|cursor|codex|openai|devin|noreply@)|.*generated (with|by) \[?(claude|cursor|copilot|codex)|claude-session:|.*claude\.ai/code|🤖)'
 
 if grep -Eiq "$patron" "$msg_file"; then
   grep -Eiv "$patron" "$msg_file" > "$msg_file.tmp" || true
