@@ -7,7 +7,7 @@ Tu cuenta de GitHub ─┬─ 2FA con llave/passkey, tokens con caducidad, apps 
 Tu Mac ──────────────┼─ FileVault, ~/.claude/settings.json global, llaves en el llavero
 El agente (Claude) ──┼─ .claude/settings.json (permisos) + .claude/hooks/guardia.sh
 Git local ───────────┼─ .githooks/commit-msg (quita firmas de IA, comprueba autor)
-GitHub (servidor) ───┴─ ruleset de main, CI (Secretos, Autoría, Calidad), CodeQL, Dependabot
+GitHub (servidor) ───┴─ ruleset de main, CI (Secretos, Autoría, Hook)
 ```
 
 ## 1. Lo que ya hace la plantilla
@@ -20,10 +20,10 @@ GitHub (servidor) ───┴─ ruleset de main, CI (Secretos, Autoría, Calid
 | Agente | Bloquea push a main, push forzado, `gh pr merge`, `rm -rf`, `curl \| sh`, volcar tokens, escribir secretos en archivos | `.claude/hooks/guardia.sh` (con pruebas en `scripts/test-guardia.sh`) |
 | Git | Quita `Co-Authored-By` de IA y rechaza commits con otro email | `.githooks/commit-msg` |
 | GitHub | `main` protegida: PR obligatoria, CI en verde, sin force-push ni borrado | `scripts/setup-repo.sh` |
-| CI | Gitleaks (secretos), firmas de IA y autor, formato, enlaces, shellcheck | `.github/workflows/ci.yml` |
+| CI | Gitleaks (secretos), firmas de IA y autor, shellcheck y pruebas del hook | `.github/workflows/ci.yml` |
 | CI | Actions fijadas a un **SHA** (no a una etiqueta que se pueda mover) | todos los workflows |
 | CI | Permisos mínimos (`contents: read`) y textos de la PR por variables de entorno (sin inyección) | workflows |
-| Dependencias | Dependabot semanal sobre `development` | `.github/dependabot.yml` |
+| GitHub | Alertas de Dependabot y avisos privados de vulnerabilidades | `scripts/setup-repo.sh` |
 
 ## 2. Lo que tienes que hacer tú (una vez)
 

@@ -11,7 +11,7 @@ Eres un revisor **de solo lectura**: no modificas nada.
 3. Para cada punto de la DoD indica ✅ cumple, ❌ no cumple (con el motivo y archivo:línea) o ➖ no aplica (con el motivo).
 4. Comprueba en especial:
    - Mensajes de commit en Conventional Commits, con autor `Sergio Santiago Bendaña Quesada <serbenda@gmail.com>` y sin `Co-Authored-By` ni firmas de herramientas de IA.
-   - README y CHANGELOG actualizados si cambia el comportamiento.
+   - `docs/BITACORA.md` con una entrada por cambio de la rama (con *Por qué* y *Probado*), y README y CHANGELOG actualizados si cambia el comportamiento.
    - Que nada se haya hecho directamente en `main`.
 
 Termina con un veredicto: **LISTO PARA PR** o **FALTA**, seguido de la lista de lo que falta.

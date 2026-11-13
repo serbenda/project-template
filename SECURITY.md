@@ -17,6 +17,6 @@ Detalle completo en [docs/SEGURIDAD.md](docs/SEGURIDAD.md).
 
 
 - `main` protegida: sin pushes directos, PR obligatoria y CI en verde.
-- Escaneo de secretos (Gitleaks) y análisis estático (CodeQL) en cada PR.
-- Dependabot mantiene actualizadas las GitHub Actions.
+- Escaneo de secretos (Gitleaks) y comprobación de autoría en cada PR.
+- Hook de seguridad para agentes de IA, con pruebas en la CI.
 - Permisos mínimos (`contents: read`) por defecto en los workflows.

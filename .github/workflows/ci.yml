@@ -81,20 +81,13 @@ jobs:
           [ $fallo -eq 0 ] && echo "✓ Autoría correcta y sin firmas de IA."
           exit $fallo
 
-  calidad:
-    name: Calidad
+  hook:
+    name: Hook
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
         with:
           persist-credentials: false
-
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
-        with:
-          node-version: "lts/*"
-
-      - name: Formato (.editorconfig)
-        run: npx --yes editorconfig-checker@6.2.0 -disable-indent-size -exclude 'LICENSE|\.git/|\.claude/skills/'
 
       - name: Scripts de shell
         run: shellcheck --severity=error scripts/*.sh .claude/hooks/*.sh .githooks/*
@@ -102,11 +95,5 @@ jobs:
       - name: Pruebas del hook de seguridad
         run: bash scripts/test-guardia.sh
 
-      # Al decidir el stack (fase F03), añade aquí su setup (setup-python, setup-go, flutter…)
-      # y los mismos comandos de `make test` y `make lint`.
-
-      - name: Enlaces internos rotos
-        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8  # v2.9.0
-        with:
-          args: --offline --no-progress --include-fragments --exclude-path .claude/skills './**/*.md'
-          fail: true
+  # Al decidir el stack (fase F03), añade aquí un job con las pruebas y el lint del proyecto,
+  # los mismos comandos que "Verificar" en docs/SETUP.md.

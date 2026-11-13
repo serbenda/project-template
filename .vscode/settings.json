@@ -1,8 +1,0 @@
-{
-  "editor.formatOnSave": true,
-  "files.trimTrailingWhitespace": true,
-  "files.insertFinalNewline": true,
-  "[markdown]": { "files.trimTrailingWhitespace": false },
-  "cSpell.language": "en,es",
-  "search.exclude": { "**/.claude/skills": true }
-}

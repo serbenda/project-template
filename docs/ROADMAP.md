@@ -6,7 +6,7 @@
 
 | Etapa | Objetivo | Criterio de salida | Estado |
 |---|---|---|---|
-| E0 | Definir | VISION escrita, stack decidido (ADR), entorno local arrancando con `make dev` | ⏳ |
+| E0 | Definir | VISION escrita, stack decidido (ADR), entorno local arrancando y verificable (`docs/SETUP.md`) | ⏳ |
 | E1 | Núcleo mínimo | <!-- p. ej.: un usuario puede hacer X de principio a fin en local --> | ⬜ |
 | E2 | Probar con gente | <!-- p. ej.: 3 personas lo usan una semana sin ayuda --> | ⬜ |
 | E3 | Publicar | <!-- p. ej.: desplegado, con backups y sin riesgos Altos abiertos --> | ⬜ |
@@ -19,7 +19,7 @@ Leyenda: ⬜ sin empezar · ⏳ en curso · ✅ hecha
 |---|---|---|
 | F01 | Visión y alcance | ⬜ |
 | F02 | Decisión de stack y estructura del código | ⬜ |
-| F03 | Entorno local: `make dev`, `make test`, `make verify` | ⬜ |
+| F03 | Entorno local: arrancar, probar y verificar; job de CI del stack | ⬜ |
 
 ## E1 — Núcleo mínimo
 <!-- Se detalla al terminar E0. No planifiques en detalle más de una etapa por delante. -->

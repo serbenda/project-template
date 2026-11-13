@@ -30,4 +30,4 @@
 - Ninguno registrado. Ver [RIESGOS.md](RIESGOS.md).
 
 ## Cómo arrancarlo
-Ver [SETUP.md](SETUP.md). Resumen: `make dev` · `make test` · `make verify`.
+Ver [SETUP.md](SETUP.md). Arrancar y verificar: ver sus secciones *Día a día* y *Verificar*.

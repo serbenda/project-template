@@ -1,5 +1,7 @@
 # Skills de terceros
 
+> `registro-cambios/` es **propia** de esta plantilla: no tiene origen externo y se puede editar.
+
 Copias **fijadas a un commit**, revisadas antes de incorporarlas. No se editan a mano: para actualizar, se sustituye la carpeta entera por la versión nueva, se revisa el diff en una PR y se actualiza esta tabla.
 
 | Skill | Origen | Commit | Licencia | Revisada |

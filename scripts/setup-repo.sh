@@ -70,7 +70,7 @@ gh api -X POST "repos/$REPO/rulesets" --input - >/dev/null <<'JSON'
       "strict_required_status_checks_policy": false,
       "required_status_checks": [
         {"context": "Secretos"},
-        {"context": "Calidad"},
+        {"context": "Hook"},
         {"context": "Autoría"}
       ]
     }}

@@ -72,9 +72,7 @@
       "Bash(git switch development)",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(make verify)",
-      "Bash(make test)",
-      "Bash(make lint)"
+      "Bash(bash scripts/test-guardia.sh)"
     ]
   },
   "hooks": {

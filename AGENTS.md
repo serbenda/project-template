@@ -10,8 +10,9 @@ No recuerdas nada entre sesiones: la memoria del proyecto está en `docs/` (ver 
 - **Antes de escribir código** de una fase, su plan tiene que estar en la ficha y aprobado por el propietario.
 - **No amplíes el alcance**: lo que no está en *Entra* de la fase se anota como siguiente paso en STATE, no se hace.
 - Las decisiones aceptadas de [`docs/decisiones/`](docs/decisiones/) no se reabren: si algo las contradice, cítalas y pregunta.
+- **Tras cada cambio**, antes del commit, usa la skill `registro-cambios`: entrada en [`docs/BITACORA.md`](docs/BITACORA.md) (qué, por qué, commits, cómo se probó, pendiente) y, si el cambio es visible, línea en `CHANGELOG.md`.
 - **Al cerrar una fase** se actualizan su *Resultado*, STATE (≤150 líneas), ROADMAP, CHANGELOG y, si aplica, RIESGOS y ARQUITECTURA.
-- `make verify` reproduce la CI: pásalo antes de dar algo por terminado.
+- Antes de dar algo por terminado, pasa los comandos de *Verificar* de [`docs/SETUP.md`](docs/SETUP.md).
 
 ## Identidad y autoría
 - Todos los commits van firmados **solo** por: `Sergio Santiago Bendaña Quesada <serbenda@gmail.com>`.
@@ -26,7 +27,7 @@ No recuerdas nada entre sesiones: la memoria del proyecto está en `docs/` (ver 
 
 ## Antes de dar algo por terminado
 - Cumple [`docs/DEFINITION_OF_DONE.md`](docs/DEFINITION_OF_DONE.md).
-- Rellena la plantilla de PR completa; lo que no aplique se marca con su motivo.
+- En la PR, marca la DoD; lo que no aplique se indica con su motivo.
 
 ## Seguridad
 - No escribas secretos, tokens ni datos personales en el código. Si hacen falta, se usan *GitHub Secrets* y se documenta su nombre (nunca su valor).
@@ -41,8 +42,9 @@ No recuerdas nada entre sesiones: la memoria del proyecto está en `docs/` (ver 
 ## Skills disponibles
 Las skills están en `.claude/skills/`. Cárgalas cuando la tarea encaje:
 - `security-audit/`: revisión y auditoría de seguridad (Cloudflare, MIT). Úsala para cualquier pregunta o revisión de seguridad. La **auditoría completa** se ejecuta solo si el propietario la pide explícitamente, y sus artefactos van fuera del repo. Antes de abrir una PR que toque autenticación, datos externos, workflows o dependencias, haz una revisión en modo guía.
+- `registro-cambios/`: CHANGELOG y bitácora. Úsala siempre al terminar un cambio, sin que te la pidan.
 - `repo-security-posture/`: revisión de la configuración del repo en GitHub. Solo lee, no cambia ajustes; las correcciones las aplica el propietario.
-- Las skills de terceros no se modifican; consulta `.claude/skills/UPSTREAM.md`.
+- `registro-cambios` es propia y se puede mejorar. Las skills de terceros no se modifican; consulta `.claude/skills/UPSTREAM.md`.
 
 ## Estilo del proyecto
 - **Stack:** el que fije la decisión de stack de la Etapa 0 en [`docs/decisiones/`](docs/decisiones/). Hasta entonces no hay código: no elijas lenguaje ni framework por tu cuenta.

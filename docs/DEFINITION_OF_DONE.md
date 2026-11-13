@@ -6,19 +6,19 @@ Un cambio está **hecho** solo cuando cumple todo lo de esta lista. Si algo no a
 - [ ] Hace lo que pide la issue y la ficha de fase, y nada más (sin cambios colaterales no pedidos).
 - [ ] Cumple los criterios de aceptación de la ficha de fase.
 - [ ] Legible: nombres claros, sin código muerto, sin trazas de depuración (`print`, `console.log`…).
-- [ ] Sigue `.editorconfig` y el estilo del proyecto.
+- [ ] Sigue el estilo del proyecto (`docs/ARQUITECTURA.md` → Convenciones).
 - [ ] Sin dependencias nuevas innecesarias; si las hay, están justificadas en la PR.
 
 ## 2. Pruebas
-- [ ] Probado en local (`make dev` o equivalente) siguiendo los criterios de aceptación.
+- [ ] Probado en local (ver `docs/SETUP.md`) siguiendo los criterios de aceptación.
 - [ ] Tests automáticos añadidos o actualizados para lo que cambia.
-- [ ] `make verify` pasa en local y la CI está en verde.
+- [ ] Los comandos de *Verificar* de `docs/SETUP.md` pasan en local y la CI está en verde.
 
 ## 3. Seguridad
 - [ ] Ningún secreto, token, clave ni dato personal en el código o en el historial.
 - [ ] Las entradas de usuario y los datos externos se tratan como no confiables y se validan antes de llegar a consultas, comandos, rutas o HTML.
 - [ ] Las llamadas a APIs externas van por HTTPS y sus fallos se gestionan (timeouts, mensaje claro, sin caerse).
-- [ ] El escaneo de secretos y CodeQL no reportan nada nuevo.
+- [ ] El escaneo de secretos no reporta nada nuevo.
 - [ ] Si el cambio toca autenticación, datos externos, workflows o dependencias: revisado con la skill `security-audit` (modo guía).
 - [ ] Antes de cada versión mayor: auditoría completa con `security-audit`, sin hallazgos `confirmed` abiertos.
 - [ ] Antes de cada versión mayor: `repo-security-posture` sin hallazgos Critical ni High.
@@ -39,7 +39,7 @@ Un cambio está **hecho** solo cuando cumple todo lo de esta lista. Si algo no a
 
 ## 5. Documentación
 - [ ] README actualizado si cambia el uso, la configuración o las fuentes de datos.
-- [ ] Entrada en `CHANGELOG.md` en la sección *Sin publicar*.
+- [ ] Entrada en `docs/BITACORA.md` (qué, por qué, commits, cómo se probó) y, si el cambio es visible, en `CHANGELOG.md` → *Sin publicar*.
 - [ ] Ficha de fase con *Resultado* relleno y `docs/STATE.md` actualizado (`/cerrar-fase`).
 - [ ] Si se ha tomado una decisión difícil de deshacer, tiene su ADR en `docs/decisiones/`.
 - [ ] Las fuentes de datos públicas usadas aparecen citadas con su licencia.
