@@ -11,7 +11,7 @@ Una plantilla de repositorio para **empezar cualquier proyecto nuevo trabajando 
 2. **Una forma de trabajar.** Comandos como `/status`, `/new-phase` o `/prepare-pr` que llevan el trabajo por fases pequeñas, con el plan aprobado antes de escribir código.
 3. **Barreras de seguridad.** Un hook que impide a Claude hacer cosas peligrosas, un hook de git que quita firmas de IA de los commits, una CI que lo comprueba en GitHub y un script que protege la rama `main`.
 
-Además incluye 22 **skills**: conocimiento especializado que Claude carga cuando la tarea lo pide (seguridad, documentos de Office, PDFs, servidores MCP, diseño…).
+Además incluye 18 **skills**: conocimiento especializado que Claude carga cuando la tarea lo pide (seguridad, servidores MCP, API de Claude, pruebas web, diseño…). Las de Word, Excel, PowerPoint y PDF no van en la plantilla porque ya vienen con tu cuenta de Claude.
 
 ## Cómo se empieza un proyecto
 
@@ -72,7 +72,7 @@ Además incluye 22 **skills**: conocimiento especializado que Claude carga cuand
 | `hooks/guard.sh` | **El guardián.** Se ejecuta antes de cada acción de Claude y bloquea lo peligroso: push a `main` o forzado, borrar historial, leer secretos, escribir tokens en archivos, ejecutar scripts descargados, cambiar la autoría, firmas de IA, tocar su propia configuración… Si algo se bloquea, Claude tiene que explicártelo en vez de buscar otro camino |
 | `commands/` | Los comandos `/status`, `/new-phase`, `/close-phase`, `/decision` y `/prepare-pr` explicados arriba |
 | `agents/` | Tres **subagentes revisores** de solo lectura que se lanzan antes de una PR (ver abajo) |
-| `skills/` | Las 22 skills (ver abajo). `UPSTREAM.md` dice de dónde sale cada una, en qué commit está fijada y cómo actualizarla |
+| `skills/` | Las 18 skills (ver abajo). `UPSTREAM.md` dice de dónde sale cada una, en qué commit está fijada y cómo actualizarla |
 | `launch.json` | Servidor local para la vista previa de Claude Code. Vacío hasta la fase P03 |
 
 #### Subagentes revisores
@@ -109,14 +109,10 @@ Una skill es una carpeta con un `SKILL.md` que explica a Claude cómo hacer algo
 | `security-audit` | Cloudflare | Revisión de seguridad de código, APIs, servicios y librerías. En **modo guía** responde preguntas o revisa un cambio concreto. La **auditoría completa** (reconocimiento, búsqueda por clases de ataque, validación adversarial e informe) solo se lanza si la pides explícitamente, y guarda los resultados fuera del repo |
 | `repo-security-posture` | superagent-ai | Revisa la configuración del repo en GitHub: protección de ramas, CODEOWNERS, Actions, publicación, colaboradores y dependencias. Solo lee; te da una lista de tareas ordenada por gravedad |
 
-### Documentos y archivos
+### Documentos
 
 | Skill | Para qué sirve |
 |---|---|
-| `docx` | Crear, leer y editar documentos de Word (`.docx`): informes, cartas, plantillas, control de cambios, comentarios |
-| `xlsx` | Hojas de cálculo (`.xlsx`, `.csv`): abrir, limpiar datos, fórmulas, formato, gráficos |
-| `pptx` | Presentaciones de PowerPoint (`.pptx`): crear diapositivas, leerlas, editarlas o extraer su texto |
-| `pdf` | Todo con PDFs: extraer texto y tablas, unir, dividir, rotar, marcas de agua, crear PDFs y rellenar formularios |
 | `doc-coauthoring` | Flujo guiado para escribir documentación a medias con Claude: propuestas, especificaciones técnicas, documentos de decisión |
 
 ### Desarrollo
@@ -152,8 +148,8 @@ Vienen en el repositorio oficial, pero encajan poco en un proyecto propio. Úsal
 
 ### Avisos sobre las skills
 
-- `docx`, `pptx`, `xlsx`, `pdf`, `canvas-design`, `slack-gif-creator`, `webapp-testing` y `web-artifacts-builder` **traen scripts** que se ejecutan al usarlas. Revísalos la primera vez y no los uses con archivos de origen desconocido.
-- `docx`, `pdf`, `pptx`, `xlsx`, `skill-creator` y `claude-api` también vienen con tu cuenta de Claude. Dentro del proyecto manda la copia del repo.
+- `canvas-design`, `slack-gif-creator`, `webapp-testing` y `web-artifacts-builder` **traen scripts** que se ejecutan al usarlas. Revísalos la primera vez y no los uses con archivos de origen desconocido.
+- `skill-creator` y `claude-api` también vienen con tu cuenta de Claude; dentro del proyecto manda la copia del repo. Para Word, Excel, PowerPoint y PDF usa las de tu cuenta (`anthropic-skills:docx`, `xlsx`, `pptx`, `pdf`).
 - Las skills de terceros **no se editan**. Para actualizarlas se sustituye la carpeta entera por la versión nueva, se revisa el diff y se actualiza `UPSTREAM.md`.
 - Cada skill añade su descripción al contexto de cada sesión. Si un proyecto no necesita alguna, puedes borrar su carpeta.
 

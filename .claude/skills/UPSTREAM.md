@@ -15,18 +15,14 @@ Copies **pinned to a commit**, reviewed before being added. They are not edited 
 | `claude-api` | [anthropics/skills](https://github.com/anthropics/skills) → `skills/claude-api` | `2c5958e` | Apache-2.0 (see `claude-api/LICENSE.txt`) | 2026-11-13 |
 | `discernment-nudge` | [anthropics/skills](https://github.com/anthropics/skills) → `skills/discernment-nudge` | `2c5958e` | Apache-2.0 (see `discernment-nudge/LICENSE.txt`) | 2026-11-13 |
 | `doc-coauthoring` | [anthropics/skills](https://github.com/anthropics/skills) → `skills/doc-coauthoring` | `2c5958e` | no license file at the source | 2026-11-13 |
-| `docx` | [anthropics/skills](https://github.com/anthropics/skills) → `skills/docx` | `2c5958e` | Apache-2.0 (see `docx/LICENSE.txt`) | 2026-11-13 |
 | `frontend-design` | [anthropics/skills](https://github.com/anthropics/skills) → `skills/frontend-design` | `2c5958e` | Apache-2.0 (see `frontend-design/LICENSE.txt`) | 2026-11-13 |
 | `internal-comms` | [anthropics/skills](https://github.com/anthropics/skills) → `skills/internal-comms` | `2c5958e` | Apache-2.0 (see `internal-comms/LICENSE.txt`) | 2026-11-13 |
 | `mcp-builder` | [anthropics/skills](https://github.com/anthropics/skills) → `skills/mcp-builder` | `2c5958e` | Apache-2.0 (see `mcp-builder/LICENSE.txt`) | 2026-11-13 |
-| `pdf` | [anthropics/skills](https://github.com/anthropics/skills) → `skills/pdf` | `2c5958e` | Apache-2.0 (see `pdf/LICENSE.txt`) | 2026-11-13 |
-| `pptx` | [anthropics/skills](https://github.com/anthropics/skills) → `skills/pptx` | `2c5958e` | Apache-2.0 (see `pptx/LICENSE.txt`) | 2026-11-13 |
 | `skill-creator` | [anthropics/skills](https://github.com/anthropics/skills) → `skills/skill-creator` | `2c5958e` | Apache-2.0 (see `skill-creator/LICENSE.txt`) | 2026-11-13 |
 | `slack-gif-creator` | [anthropics/skills](https://github.com/anthropics/skills) → `skills/slack-gif-creator` | `2c5958e` | Apache-2.0 (see `slack-gif-creator/LICENSE.txt`) | 2026-11-13 |
 | `theme-factory` | [anthropics/skills](https://github.com/anthropics/skills) → `skills/theme-factory` | `2c5958e` | Apache-2.0 (see `theme-factory/LICENSE.txt`) | 2026-11-13 |
 | `web-artifacts-builder` | [anthropics/skills](https://github.com/anthropics/skills) → `skills/web-artifacts-builder` | `2c5958e` | Apache-2.0 (see `web-artifacts-builder/LICENSE.txt`) | 2026-11-13 |
 | `webapp-testing` | [anthropics/skills](https://github.com/anthropics/skills) → `skills/webapp-testing` | `2c5958e` | Apache-2.0 (see `webapp-testing/LICENSE.txt`) | 2026-11-13 |
-| `xlsx` | [anthropics/skills](https://github.com/anthropics/skills) → `skills/xlsx` | `2c5958e` | Apache-2.0 (see `xlsx/LICENSE.txt`) | 2026-11-13 |
 
 ## security-audit
 
@@ -59,9 +55,9 @@ For `repo-security-posture` the process is the same, copying `skills/<name>` fro
 
 ## Anthropic skills
 
-All 19 skills from [anthropics/skills](https://github.com/anthropics/skills) (commit `2c5958e`). Third-party notices from the source repo are in `ANTHROPIC_THIRD_PARTY_NOTICES.md`.
+15 of the 19 skills from [anthropics/skills](https://github.com/anthropics/skills) (commit `2c5958e`). `docx`, `pdf`, `pptx` and `xlsx` are left out on purpose: they already ship with the owner's account (`anthropic-skills:`) and carry many scripts. Third-party notices from the source repo are in `ANTHROPIC_THIRD_PARTY_NOTICES.md`.
 
-- `docx`, `pdf`, `pptx`, `xlsx`, `skill-creator` and `claude-api` also ship with your account (`anthropic-skills:`) or with Claude Code. Inside this repo, the project copies take precedence.
-- `docx`, `pptx`, `xlsx`, `pdf`, `canvas-design`, `slack-gif-creator`, `webapp-testing` and `web-artifacts-builder` include scripts (Python, Node or shell) that run when the skill is used: review them before first use and don't run them on files of unknown origin.
+- `skill-creator` and `claude-api` also ship with your account (`anthropic-skills:`) or with Claude Code. Inside this repo, the project copies take precedence.
+- `canvas-design`, `slack-gif-creator`, `webapp-testing` and `web-artifacts-builder` include scripts (Python, Node or shell) that run when the skill is used: review them before first use and don't run them on files of unknown origin.
 - `brand-guidelines`, `internal-comms`, `academy-guide` and `discernment-nudge` are meant for Anthropic's internal use or its courses: use them only if they fit.
 - To update: `git clone --depth 1 https://github.com/anthropics/skills /tmp/as`, replace the folders, review the diff and update this table.

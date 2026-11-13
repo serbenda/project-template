@@ -16,6 +16,16 @@
 - **Pending:**
 -->
 
+## 2026-11-13 — Remove the Office and PDF skills
+- **Phase / issue:** —
+- **What:** `docx`, `xlsx`, `pptx` and `pdf` removed from `.claude/skills/`; `UPSTREAM.md`, `AGENTS.md`, `CLAUDE.md`, `README.es.md` and `CHANGELOG.md` updated. 18 skills remain.
+- **Why:** the owner asked for it; they already ship with the account (`anthropic-skills:`), so the copies were duplicates, and they were the skills with the most scripts (~4 MB).
+- **Rejected:** —
+- **Files:** `.claude/skills/{docx,xlsx,pptx,pdf}/` (removed), `.claude/skills/UPSTREAM.md`, `AGENTS.md`, `CLAUDE.md`, `README.es.md`, `CHANGELOG.md`.
+- **Commits:** this entry's commit.
+- **Tested:** links checked; every skill folder is listed in `README.es.md` and `UPSTREAM.md`; `bash scripts/test-guard.sh` passes.
+- **Pending:** —
+
 ## 2026-11-13 — Spanish guide to the template
 - **Phase / issue:** —
 - **What:** `README.es.md` explains in Spanish what the template is for, how to start a project, the day-to-day commands, every file and folder, the three reviewer subagents and all 22 skills. Linked from `README.md`.
