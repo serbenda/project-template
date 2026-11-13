@@ -34,8 +34,11 @@ if [[ -n "$path" ]] && has '(^|/)(\.claude/(settings(\.local)?\.json|hooks/|agen
   has '"tool_name" *: *"(Read|Grep|Glob)"' "$input" ||
     block "the security configuration (.claude/, .githooks/) is changed only by the owner."
 fi
+# Harmless redirections (2>/dev/null, >&2, 2>&1, &>/dev/null) don't count as writing: without this, a
+# read-only command such as "git ls-files | grep -v .claude/skills; cat x 2>/dev/null" was blocked.
+cmd_writes="$(printf '%s' "$cmd" | sed -E 's/[0-9]*>&[0-9-]+//g; s/&?[0-9]*>>? *\/dev\/(null|stderr|stdout)//g')"
 if [[ -n "$cmd" ]] && has '(\.claude/(settings|hooks|agents|commands|skills)|\.githooks)' "$cmd" &&
-   has '(>|sed +-i|tee |cp |mv |rm |chmod |ln |truncate|perl +-[a-z]*i|python3? +-c)' "$cmd"; then
+   has '(>|sed +-i|tee |cp |mv |rm |chmod |ln |truncate|perl +-[a-z]*i|python3? +-c)' "$cmd_writes"; then
   block "the security configuration (.claude/, .githooks/) is changed only by the owner."
 fi
 

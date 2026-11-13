@@ -72,7 +72,12 @@ check 2 "sed -i on the hook"              "$(bash_json 'sed -i s/exit/true/ .cla
 check 2 "redirect onto .githooks"         "$(bash_json 'echo exit 0 > .githooks/commit-msg')"
 check 2 "Grep on .env"                    "$(python3 -c 'import json; print(json.dumps({"tool_name":"Grep","tool_input":{"pattern":"KEY","path":"/repo/.env"}}))')"
 
+check 2 "write to the hook, hidden behind 2>/dev/null" "$(bash_json 'ls .claude/hooks 2>/dev/null; echo exit 0 > .claude/hooks/guard.sh')"
+check 2 "append to settings with >>"         "$(bash_json 'echo x >> .claude/settings.json')"
+
 echo "Must ALLOW:"
+check 0 "read-only command mentioning .claude/skills with 2>/dev/null" "$(bash_json "git ls-files | grep -v '^.claude/skills/' && cat app.py 2>/dev/null; ls docs 2>&1")"
+check 0 "list .claude/commands with >&2"     "$(bash_json 'ls .claude/commands >&2')"
 check 0 "git status"                      "$(bash_json 'git status')"
 check 0 "Write .claude/launch.json (phase P03)" "$(file_json Write /repo/.claude/launch.json '{"version":"0.0.1","configurations":[]}')"
 check 0 "normal commit"                   "$(bash_json 'git commit -m "feat: add the stops map"')"

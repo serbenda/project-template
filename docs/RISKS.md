@@ -5,7 +5,9 @@
 
 | ID | Risk | Impact | Probability | State | Mitigation | Phase |
 |---|---|---|---|---|---|---|
-| R-001 | <!-- e.g.: personal data leaks into the logs --> | High | Medium | OPEN | <!-- what is or will be done --> | |
+<!-- Example row (copy it, don't leave it as is):
+| R-001 | Personal data leaks into the logs | High | Medium | OPEN | Redact emails in the logger; test in tests/test_logging.py | P04 |
+-->
 
 ## How to use it
 - Any phase that touches data, authentication, dependencies or deployment reviews this table.
