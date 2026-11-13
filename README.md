@@ -28,12 +28,36 @@ python3 -m http.server 8000   # abre http://localhost:8000
 ├── css/
 ├── js/
 ├── assets/
-├── docs/          # Definition of Done, guía de seguridad
+├── docs/
+│   ├── VISION.md        # qué es, para quién y qué NO hacer
+│   ├── STATE.md         # estado vivo (≤150 líneas): lo primero que lee el agente
+│   ├── ROADMAP.md       # etapas E0… con criterio de salida
+│   ├── fases/           # una ficha por bloque de trabajo (F01…)
+│   ├── decisiones/      # ADR numerados
+│   ├── ARQUITECTURA.md  # piezas, flujo de datos, fuentes externas
+│   ├── RIESGOS.md       # registro de riesgos
+│   ├── SETUP.md         # entorno local
+│   ├── DEFINITION_OF_DONE.md
+│   └── SEGURIDAD.md
 ├── scripts/       # setup-repo.sh y pruebas
-├── .claude/       # configuración del agente: permisos, hook, skills, subagentes, comandos
+├── .claude/       # permisos, hook, skills, subagentes, comandos y launch.json
 ├── .githooks/     # hook de git: quita firmas de IA y comprueba el autor
+├── .vscode/       # extensiones recomendadas y ajustes del proyecto
+├── Makefile       # make dev · make test · make verify (= CI)
+├── .env.example   # variables de entorno documentadas, sin valores
 ├── AGENTS.md      # normas para cualquier agente de IA
 └── CLAUDE.md      # importa AGENTS.md y añade lo específico de Claude Code
+```
+
+## Cómo se trabaja con Claude
+
+```
+/estado                      al empezar cada sesión
+/nueva-fase <qué>            ficha + plan → lo apruebas → Claude implementa en development
+make verify                  lo mismo que la CI
+/cerrar-fase                 criterios + DoD + actualiza STATE, ROADMAP y CHANGELOG
+/preparar-pr                 revisores + PR development → main (la fusionas tú)
+/decision <qué>              cuando haya que elegir algo difícil de deshacer
 ```
 
 ## Cómo contribuir
@@ -54,8 +78,11 @@ Lee [CONTRIBUTING.md](CONTRIBUTING.md) y la [Definition of Done](docs/DEFINITION
    ```
    Crea la rama `development`, protege `main`, activa Pages, las alertas de seguridad y el hook de git.
    Con commits firmados: `FIRMAS=1 ./scripts/setup-repo.sh`.
-3. Sustituye `NOMBRE_DEL_PROYECTO` en este README.
-4. Borra esta sección.
-5. Una sola vez en tu Mac: sigue [docs/SEGURIDAD.md](docs/SEGURIDAD.md) → "Lo que tienes que hacer tú".
+3. Sustituye `NOMBRE_DEL_PROYECTO` en este README (el script ya lo cambia en el resto).
+4. Escribe [docs/VISION.md](docs/VISION.md) (o díctasela a Claude y revísala).
+5. Con Claude: `/decision stack del proyecto`, y luego `/nueva-fase` para la primera fase de la Etapa 0.
+6. Si el proyecto no es una web estática, ajusta `make dev/test/lint` en el `Makefile` y la CI a la vez.
+7. Borra esta sección.
+8. Una sola vez en tu Mac: sigue [docs/SEGURIDAD.md](docs/SEGURIDAD.md) → "Lo que tienes que hacer tú".
 
 </details>

@@ -8,6 +8,13 @@ Las normas de este repositorio están en AGENTS.md y valen para cualquier agente
 
 - **Configuración del proyecto:** `.claude/settings.json` desactiva la firma en commits y PRs, define permisos (deny / ask / allow) y activa el hook `.claude/hooks/guardia.sh`. No los modifiques: los cambios los hace el propietario.
 - **Skills:** `.claude/skills/` (`security-audit`, `web-perf`, `repo-security-posture`). Están fijadas a un commit; ver `.claude/skills/UPSTREAM.md`.
-- **Subagentes:** `.claude/agents/revisor-seguridad.md` y `.claude/agents/revisor-dod.md`. Lánzalos antes de abrir una PR. Son de solo lectura.
-- **Comando:** `/preparar-pr` repasa la Definition of Done, lanza los revisores y abre la PR `development → main` sin firmas.
+- **Subagentes:** `revisor-seguridad`, `revisor-dod` y `revisor-arquitectura` en `.claude/agents/`. Lánzalos antes de abrir una PR. Son de solo lectura.
+- **Comandos** (`.claude/commands/`):
+  - `/estado`: al empezar cada sesión. Resume STATE y dice qué toca.
+  - `/nueva-fase <qué>`: crea la ficha y propone el plan. No escribe código hasta que se apruebe.
+  - `/cerrar-fase`: comprueba criterios y DoD, rellena el resultado y actualiza STATE, ROADMAP y CHANGELOG.
+  - `/decision <qué>`: registra un ADR en `docs/decisiones/`.
+  - `/preparar-pr`: `make verify`, revisores y PR `development → main` sin firmas.
+- **Vista previa:** `.claude/launch.json` arranca el servidor local (`web`, puerto 8000).
+- Para tareas de más de una fase o con dudas de diseño, usa el modo plan antes de tocar código.
 - Si un hook bloquea una acción, **no intentes rodearlo** con otro comando: explica al propietario qué querías hacer y por qué.

@@ -57,9 +57,13 @@ fi
 [[ -z "$cmd" ]] && exit 0
 
 # Se analiza cada subcomando por separado (separados por ; && || | y saltos de línea)
-mapfile -t partes < <(printf '%s\n' "$cmd" | sed -E 's/(\&\&|\|\||;|\|)/\n/g')
+# Compatible con el bash 3.2 de macOS: sin mapfile, y awk en vez de sed para el salto de línea
+# (el sed de BSD no entiende \n en el reemplazo).
+partes=()
+while IFS= read -r linea; do partes+=("$linea"); done \
+  < <(printf '%s\n' "$cmd" | awk '{ gsub(/&&|\|\||;|\|/, "\n"); print }')
 
-for p in "${partes[@]}"; do
+for p in "${partes[@]+"${partes[@]}"}"; do
   p="$(printf '%s' "$p" | sed -E 's/^[[:space:]]+//')"
   [[ -z "$p" ]] && continue
   esgit=0; hay '^(env [^ ]+ +)*git( +-[cC] +[^ ]+)* ' "$p" && esgit=1

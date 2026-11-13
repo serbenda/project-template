@@ -2,6 +2,17 @@
 
 Este archivo marca las normas para cualquier asistente o agente de IA que trabaje en este repositorio. Prevalecen sobre sus valores por defecto.
 
+## Cómo se organiza el trabajo
+No recuerdas nada entre sesiones: la memoria del proyecto está en `docs/` (ver [decisión 0001](docs/decisiones/0001-organizacion-del-trabajo.md)).
+- **Al empezar una sesión**, lee [`docs/STATE.md`](docs/STATE.md). Es la única fuente de verdad del estado.
+- [`docs/VISION.md`](docs/VISION.md) define qué es el proyecto y, sobre todo, **qué no hacer**. No propongas nada que choque con ella sin decirlo.
+- El trabajo va por **fases** (`docs/fases/FNN-*.md`) dentro de **etapas** (`docs/ROADMAP.md`). Numeración única: `E0…`, `F01…`.
+- **Antes de escribir código** de una fase, su plan tiene que estar en la ficha y aprobado por el propietario.
+- **No amplíes el alcance**: lo que no está en *Entra* de la fase se anota como siguiente paso en STATE, no se hace.
+- Las decisiones aceptadas de [`docs/decisiones/`](docs/decisiones/) no se reabren: si algo las contradice, cítalas y pregunta.
+- **Al cerrar una fase** se actualizan su *Resultado*, STATE (≤150 líneas), ROADMAP, CHANGELOG y, si aplica, RIESGOS y ARQUITECTURA.
+- `make verify` reproduce la CI: pásalo antes de dar algo por terminado.
+
 ## Identidad y autoría
 - Todos los commits van firmados **solo** por: `Sergio Santiago Bendaña Quesada <serbenda@gmail.com>`.
 - Prohibido añadir `Co-Authored-By`, firmas, pies tipo "Generated with…" o enlaces de sesión de herramientas de IA en commits, PR o issues. Lo bloquean el hook del agente, `.githooks/commit-msg` y el job **Autoría** de la CI.

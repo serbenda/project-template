@@ -5,6 +5,7 @@ Thumbs.db
 # Editores
 .vscode/*
 !.vscode/extensions.json
+!.vscode/settings.json
 .idea/
 
 # Dependencias y builds
