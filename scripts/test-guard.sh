@@ -74,6 +74,7 @@ check 2 "Grep on .env"                    "$(python3 -c 'import json; print(json
 
 echo "Must ALLOW:"
 check 0 "git status"                      "$(bash_json 'git status')"
+check 0 "Write .claude/launch.json (phase P03)" "$(file_json Write /repo/.claude/launch.json '{"version":"0.0.1","configurations":[]}')"
 check 0 "normal commit"                   "$(bash_json 'git commit -m "feat: add the stops map"')"
 check 0 "commit mentioning .claude/"      "$(bash_json 'git commit -m "chore: adjust permissions in .claude/settings.json"')"
 check 0 "push to development"             "$(bash_json 'git push origin development')"

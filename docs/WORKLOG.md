@@ -16,6 +16,16 @@
 - **Pending:**
 -->
 
+## 2026-11-13 — Gaps for starting a project from scratch
+- **Phase / issue:** —
+- **What:** (1) deny rules narrowed so Claude can edit `.claude/launch.json` in P03; (2) stack checklist in `docs/SETUP.md`, linked from ROADMAP and copied by `/new-phase` into P03; (3) `setup-repo.sh` warns on private repos with GitHub Free, is idempotent and no longer stops halfway; (4) placeholder replacement no longer touches skills or `README.es.md`.
+- **Why:** review of whether the template is complete for any new project: the P03 plan was blocked by our own permissions, removing CodeQL/Dependabot left the project's code and dependencies unchecked unless P03 restores them, and private repos on GitHub Free silently got no protection.
+- **Rejected:** adding Dependabot/CodeQL back to the template (they need the stack); release/deploy guidance (left for each project's S3).
+- **Files:** `.claude/settings.json`, `scripts/setup-repo.sh`, `scripts/test-guard.sh`, `docs/SETUP.md`, `docs/ROADMAP.md`, `.claude/commands/new-phase.md`, `docs/SECURITY_GUIDE.md`, `README.md`, `README.es.md`, `CLAUDE.md`, `.github/workflows/ci.yml`.
+- **Commits:** this entry's commit.
+- **Tested:** `test-guard.sh` 64/64; `setup-repo.sh` run against a fake `gh` in a local clone for three cases (private+Free → warns and exits 1 with the rest configured; public → protects main; second run → no duplicate rulesets) and the placeholder no longer changes skills; `.githooks/commit-msg` strips `Co-Authored-By` and rejects another author.
+- **Pending:** a real end-to-end run on GitHub (needs `gh`, not installed): create a repo from the template, run `setup-repo.sh`, `/status` → `/new-phase` → `/close-phase` → `/prepare-pr`, and see CI pass.
+
 ## 2026-11-13 — Remove the Office and PDF skills
 - **Phase / issue:** —
 - **What:** `docx`, `xlsx`, `pptx` and `pdf` removed from `.claude/skills/`; `UPSTREAM.md`, `AGENTS.md`, `CLAUDE.md`, `README.es.md` and `CHANGELOG.md` updated. 18 skills remain.

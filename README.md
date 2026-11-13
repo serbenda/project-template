@@ -79,7 +79,7 @@ The code may be viewed, but not copied, modified or redistributed without the au
 3. Replace `PROJECT_NAME` in this README (the script already replaces it everywhere else).
 4. Write [docs/VISION.md](docs/VISION.md) (or dictate it to Claude and review it).
 5. With Claude: `/decision project stack`, then `/new-phase` for the first phase of Stage S0.
-6. In phase P03 (local environment), Claude fills in `docs/SETUP.md`, `.claude/launch.json` and the stack's CI job.
+6. In phase P03, Claude works through the *Stack checklist* in `docs/SETUP.md`: run and verify commands, `.claude/launch.json`, CI job, Dependabot, static analysis and `.gitignore`.
 7. Delete this section.
 8. Once on your Mac: follow [docs/SECURITY_GUIDE.md](docs/SECURITY_GUIDE.md) → "What you have to do yourself".
 

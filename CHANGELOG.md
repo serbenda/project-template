@@ -4,6 +4,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versio
 
 ## [Unreleased]
 ### Added
+- Stack checklist for phase P03 in `docs/SETUP.md` (run/verify commands, `launch.json`, CI job, Dependabot, CodeQL or Semgrep, `.gitignore`, required check); `/new-phase` copies it into the P03 acceptance criteria.
 - `README.es.md`: Spanish guide explaining the structure, the workflow, the subagents and every skill.
 - 15 skills from [anthropics/skills](https://github.com/anthropics/skills) (commit `2c5958e`) in `.claude/skills/`, registered in `UPSTREAM.md`. `docx`, `pdf`, `pptx` and `xlsx` are not included: they already ship with the account.
 - Own `record-changes` skill and `docs/WORKLOG.md`: after every change, the agent records what, why, what was discarded, commits, how it was tested and what is pending, and updates `CHANGELOG.md` if the change is visible.
@@ -29,6 +30,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versio
 - No license: `LICENSE` (MIT) is removed and the README states "all rights reserved". If a project goes public and reuse should be allowed, a license is chosen through an ADR.
 
 ### Fixed
+- Claude could not fill in `.claude/launch.json` in phase P03: the deny rules covered all of `.claude/`. They now cover only settings, hooks, agents, commands and skills, matching the hook (new hook test).
+- `setup-repo.sh` aborted halfway on private repos with GitHub Free (rulesets refused) and on a second run (duplicate ruleset). It now warns up front, skips existing rulesets, configures everything else and exits with an error if `main` could not be protected.
+- `setup-repo.sh` replaced `PROJECT_NAME` inside a third-party skill script (`web-artifacts-builder`); skills and `README.es.md` are now excluded.
 - `guard.sh` failed with macOS's bash 3.2 (`mapfile` does not exist and BSD `sed` does not understand `\n`): it exited with code 1, which Claude Code does not treat as a block, so **it blocked no shell command on Mac**. It is now bash 3.2 compatible and the tests pass on macOS.
 
 <!--

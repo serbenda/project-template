@@ -95,5 +95,5 @@ jobs:
       - name: Security hook tests
         run: bash scripts/test-guard.sh
 
-  # When the stack is chosen (phase P03), add a job here with the project's tests and lint,
+  # When the stack is chosen (phase P03, see the stack checklist in docs/SETUP.md), add a job here with the project's tests and lint,
   # the same commands as "Verify" in docs/SETUP.md.

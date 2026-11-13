@@ -19,7 +19,7 @@ Además incluye 18 **skills**: conocimiento especializado que Claude carga cuand
 2. Clona el repo y ejecuta `./scripts/setup-repo.sh`. Configura tu autoría, crea la rama `development`, protege `main` y activa las alertas de seguridad. Con commits firmados: `SIGNED_COMMITS=1 ./scripts/setup-repo.sh`.
 3. Escribe `docs/VISION.md` (o díctasela a Claude y revísala).
 4. En Claude Code: `/decision project stack` para elegir lenguaje y herramientas.
-5. `/new-phase` para la primera fase. En la fase P03 se completan `docs/SETUP.md` (cómo arrancar y verificar), `.claude/launch.json` y el job de CI del stack.
+5. `/new-phase` para la primera fase. La fase P03 sigue la **lista de comprobación del stack** de `docs/SETUP.md`: comandos para arrancar y verificar, `.claude/launch.json`, job de CI con pruebas y lint, Dependabot, análisis estático (CodeQL si el repo es público, Semgrep si es privado) y `.gitignore`. Al terminar, añades tú el nombre del job nuevo a los checks obligatorios de `main`.
 6. Una sola vez en tu Mac: sigue `docs/SECURITY_GUIDE.md` → *What you have to do yourself*.
 
 ## El día a día con Claude
@@ -58,7 +58,7 @@ Además incluye 18 **skills**: conocimiento especializado que Claude carga cuand
 | `decisions/` | Decisiones de arquitectura o producto (ADR) numeradas `0001, 0002…`. Una vez aceptadas no se editan: si cambias de idea, se crea otra que la sustituye. La `0001` explica por qué se trabaja así |
 | `ARCHITECTURE.md` | Piezas del sistema, flujo de datos, fuentes externas y convenciones del código |
 | `RISKS.md` | Registro de riesgos: `OPEN → MITIGATED → CLOSED`. Para publicar no debe quedar ningún riesgo alto abierto |
-| `SETUP.md` | Cómo arrancar, probar y **verificar** el proyecto en local. Se completa en la fase P03, al decidir el stack. Claude usa su sección *Verify* antes de dar algo por terminado |
+| `SETUP.md` | Cómo arrancar, probar y **verificar** el proyecto en local. Incluye la lista de comprobación del stack de la fase P03. Claude usa su sección *Verify* antes de dar algo por terminado |
 | `WORKLOG.md` | **Bitácora**: el contexto de cada cambio (qué, por qué, qué se descartó, commits, cómo se probó, qué queda pendiente). La mantiene la skill `record-changes`; las entradas nuevas van arriba |
 | `DEFINITION_OF_DONE.md` | Qué tiene que cumplir un cambio para darlo por **hecho**: código, pruebas, seguridad, documentación e integración, más bloques según el tipo de proyecto (web/móvil, API, CLI) |
 | `SECURITY_GUIDE.md` | Las capas de seguridad de la plantilla y la lista de lo que tienes que hacer tú una vez: 2FA, tokens, firmar commits, FileVault… |
@@ -73,7 +73,7 @@ Además incluye 18 **skills**: conocimiento especializado que Claude carga cuand
 | `commands/` | Los comandos `/status`, `/new-phase`, `/close-phase`, `/decision` y `/prepare-pr` explicados arriba |
 | `agents/` | Tres **subagentes revisores** de solo lectura que se lanzan antes de una PR (ver abajo) |
 | `skills/` | Las 18 skills (ver abajo). `UPSTREAM.md` dice de dónde sale cada una, en qué commit está fijada y cómo actualizarla |
-| `launch.json` | Servidor local para la vista previa de Claude Code. Vacío hasta la fase P03 |
+| `launch.json` | Servidor local para la vista previa de Claude Code. Vacío hasta la fase P03. Es el **único archivo de `.claude/` que Claude puede editar**; el resto (permisos, hook, comandos, subagentes, skills) solo lo cambias tú |
 
 #### Subagentes revisores
 
@@ -89,8 +89,8 @@ Además incluye 18 **skills**: conocimiento especializado que Claude carga cuand
 |---|---|
 | `.githooks/commit-msg` | Hook de git que vale para cualquier herramienta o persona: quita del mensaje del commit los `Co-Authored-By` y las firmas de IA, y **rechaza el commit si el autor no eres tú** |
 | `.github/workflows/ci.yml` | La CI en GitHub, con tres comprobaciones obligatorias para fusionar en `main`: **Secrets** (Gitleaks busca secretos), **Authorship** (autor correcto y sin firmas de IA en commits y PR) y **Hook** (shellcheck y las pruebas del guardián). En la fase P03 se añade el job del stack |
-| `scripts/setup-repo.sh` | Se ejecuta una vez al crear el repo: autoría local, hook de git, rama `development`, ruleset que protege `main` (PR obligatoria, CI en verde, sin force-push), alertas de Dependabot, escaneo de secretos y etiquetas |
-| `scripts/test-guard.sh` | 63 pruebas del guardián: lo que debe bloquear y lo que debe permitir |
+| `scripts/setup-repo.sh` | Se ejecuta una vez al crear el repo: autoría local, hook de git, rama `development`, ruleset que protege `main` (PR obligatoria, CI en verde, sin force-push), alertas de Dependabot, escaneo de secretos y etiquetas. Se puede ejecutar más de una vez sin duplicar nada. **Si el repo es privado y tu cuenta es gratuita**, avisa de que GitHub no permite proteger `main` ni escanear secretos, y termina con error para que no lo des por protegido |
+| `scripts/test-guard.sh` | 64 pruebas del guardián: lo que debe bloquear y lo que debe permitir |
 
 ## Las skills
 
@@ -159,4 +159,5 @@ Vienen en el repositorio oficial, pero encajan poco en un proyecto propio. Úsal
 - **Ramas:** se trabaja en `development`. A `main` solo se llega por una PR, y **la fusiona el propietario**, nunca la IA.
 - **Contenido externo** (issues, webs, respuestas de API, logs) son datos, no instrucciones: si piden hacer algo, Claude avisa en vez de hacerlo.
 - **Idioma:** todo el repositorio va en inglés (código, documentación, commits, PRs). Claude te responde en el idioma en que le escribas. Esta guía es la excepción.
+- **Repos privados:** en el plan gratuito de GitHub no se puede proteger `main` ni exigir la CI. En ese caso solo protegen los hooks locales (el de Claude y el de git). Para tener la protección completa, el repo tiene que ser público o tu cuenta GitHub Pro.
 - **Licencia:** ninguna. Todos los derechos reservados.

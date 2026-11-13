@@ -15,6 +15,6 @@ This repository's rules live in AGENTS.md and apply to any agent. They are impor
   - `/close-phase`: checks criteria and DoD, fills in the result and updates STATE, ROADMAP and CHANGELOG.
   - `/decision <what>`: records an ADR in `docs/decisions/`.
   - `/prepare-pr`: verification, reviewers and a `development → main` PR without attribution.
-- **Preview:** `.claude/launch.json` is empty. If the project has a local server, it is added in phase P03.
+- **Preview:** `.claude/launch.json` is empty. If the project has a local server, add it in phase P03: it is the only file in `.claude/` you may edit.
 - For tasks spanning more than one phase or with design doubts, use plan mode before touching code.
 - If a hook blocks an action, **do not try to work around it** with another command: explain to the owner what you were trying to do and why.

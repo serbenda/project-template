@@ -19,7 +19,7 @@ Legend: ⬜ not started · ⏳ in progress · ✅ done
 |---|---|---|
 | P01 | Vision and scope | ⬜ |
 | P02 | Stack decision and code structure | ⬜ |
-| P03 | Local environment: run, test and verify; CI job for the stack | ⬜ |
+| P03 | Local environment and stack tooling: complete the [stack checklist](SETUP.md#stack-checklist-phase-p03) | ⬜ |
 
 ## S1 — Minimal core
 <!-- Detailed once S0 is done. Don't plan in detail more than one stage ahead. -->
