@@ -19,8 +19,10 @@ GitHub (server) ─────┴─ main ruleset, CI (Secrets, Authorship, Hoo
 | Agent | Asks before `git push`, `curl`, installing packages | `permissions.ask` |
 | Agent | Blocks push to main, force push, `gh pr merge`, `rm -rf`, `curl \| sh`, dumping tokens, writing secrets to files | `.claude/hooks/guard.sh` (tested by `scripts/test-guard.sh`) |
 | Git | Strips AI `Co-Authored-By` and rejects commits with a different email | `.githooks/commit-msg` |
+| Git | Scans staged changes for secrets with Gitleaks before the commit exists (warns if Gitleaks isn't installed) | `.githooks/pre-commit` |
 | GitHub | `main` protected: PR required, green CI, no force-push or deletion. **Not available on private repos with GitHub Free**: the script warns and exits with an error | `scripts/setup-repo.sh` |
-| CI | Gitleaks (secrets), AI signatures and author, shellcheck and hook tests | `.github/workflows/ci.yml` |
+| CI | Gitleaks (secrets), AI signatures and author, shellcheck and hook tests, worklog entry and STATE size (Records) | `.github/workflows/ci.yml` |
+| Dependencies | Dependabot updates the pinned GitHub Actions weekly | `.github/dependabot.yml` |
 | CI | Actions pinned to a **SHA** (not to a tag that can be moved) | all workflows |
 | CI | Minimal permissions (`contents: read`) and PR text passed via environment variables (no injection) | workflows |
 | GitHub | Dependabot alerts and private vulnerability reporting | `scripts/setup-repo.sh` |
@@ -45,6 +47,7 @@ git config --global commit.gpgsign true
 Add the same key on GitHub as a **Signing key** (Settings → SSH and GPG keys) and enable **Vigilant mode**. Then, in each new repo: `SIGNED_COMMITS=1 ./scripts/setup-repo.sh`.
 
 ### Your Mac
+- [ ] `brew install gitleaks`, so `.githooks/pre-commit` can stop a secret before it is committed.
 - [ ] **FileVault** enabled and a quick screen lock.
 - [ ] Copy `docs/claude-settings-global.json` to `~/.claude/settings.json`: it applies the protection **to all your projects**, including those not created from the template. If you already have that file, merge the keys by hand.
 - [ ] Secrets go in the **Keychain** or in a `.env` outside the repo, never in the code.

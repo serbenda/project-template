@@ -95,5 +95,27 @@ jobs:
       - name: Security hook tests
         run: bash scripts/test-guard.sh
 
+      - name: Records check tests
+        run: bash scripts/test-check-records.sh
+
+  records:
+    name: Records
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # STATE size always; on PRs, also "code changes need a worklog entry".
+      # The SHAs go through environment variables, never interpolated into the script.
+      - name: STATE size and worklog entry
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ -n "$BASE" ]; then bash scripts/check-records.sh "$BASE" "$HEAD"
+          else bash scripts/check-records.sh; fi
+
   # When the stack is chosen (phase P03, see the stack checklist in docs/SETUP.md), add a job here with the project's tests and lint,
   # the same commands as "Verify" in docs/SETUP.md.

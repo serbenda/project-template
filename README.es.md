@@ -45,7 +45,7 @@ Claude te **propondrá pasar a completo** (no lo hace por su cuenta) cuando se c
 |---|---|---|
 | Al abrir una sesión | `/status` | Claude lee el estado y te dice dónde estás y qué toca |
 | Empiezas algo nuevo | `/new-phase <qué>` | Completo: crea la ficha de la fase con objetivo, alcance, criterios y plan. Ligero: te propone el plan en el chat. En los dos casos **no escribe código hasta que lo apruebes** |
-| Mientras trabaja | (automático) | Tras cada cambio, la skill `record-changes` anota en la bitácora por qué se hizo, qué se descartó y cómo se probó |
+| Mientras trabaja | (automático) | Tras cada cambio, la skill `record-changes` anota en la bitácora por qué se hizo, qué se descartó y cómo se probó. Si se le olvida, la CI (**Records**) no deja fusionar la PR |
 | Hay que elegir algo difícil de deshacer | `/decision <qué>` | Escribe un ADR con opciones, pros y contras y una recomendación; tú decides |
 | Termina la fase | `/close-phase` | Comprueba criterios y Definition of Done y actualiza el estado. En completo, además, rellena el resultado de la fase, la hoja de ruta y el CHANGELOG (una vez por fase, sin repetir la bitácora) |
 | Quieres llevarlo a `main` | `/prepare-pr` | Pasa la verificación y los tres revisores, y abre la PR `development → main`. **La fusionas tú** |
@@ -105,9 +105,13 @@ Claude te **propondrá pasar a completo** (no lo hace por su cuenta) cuando se c
 | Archivo | Para qué sirve |
 |---|---|
 | `.githooks/commit-msg` | Hook de git que vale para cualquier herramienta o persona: quita del mensaje del commit los `Co-Authored-By` y las firmas de IA, y **rechaza el commit si el autor no eres tú** |
-| `.github/workflows/ci.yml` | La CI en GitHub, con tres comprobaciones obligatorias para fusionar en `main`: **Secrets** (Gitleaks busca secretos), **Authorship** (autor correcto y sin firmas de IA en commits y PR) y **Hook** (shellcheck y las pruebas del guardián). En la fase P03 se añade el job del stack |
+| `.githooks/pre-commit` | Busca secretos con Gitleaks en lo que vas a commitear **antes** de que exista el commit, así un token nunca llega al historial ni a GitHub. Si Gitleaks no está instalado, avisa y deja seguir (`brew install gitleaks`) |
+| `.github/dependabot.yml` | Dependabot actualiza cada semana las GitHub Actions (van fijadas a un commit, así que si no nadie las actualiza). En P03 se añade el ecosistema del stack |
+| `.github/workflows/ci.yml` | La CI en GitHub, con cuatro comprobaciones obligatorias para fusionar en `main`: **Secrets** (Gitleaks busca secretos), **Authorship** (autor correcto y sin firmas de IA en commits y PR), **Hook** (shellcheck y las pruebas del guardián y de la comprobación de registros) y **Records** (`STATE.md` no pasa de 150 líneas y, si una PR toca algo más que documentación, tiene que traer su entrada en la bitácora). En la fase P03 se añade el job del stack |
 | `scripts/setup-repo.sh` | Se ejecuta una vez al crear el repo: autoría local, hook de git, rama `development`, ruleset que protege `main` (PR obligatoria, CI en verde, sin force-push), alertas de Dependabot, escaneo de secretos y etiquetas. Se puede ejecutar más de una vez sin duplicar nada. **Si el repo es privado y tu cuenta es gratuita**, avisa de que GitHub no permite proteger `main` ni escanear secretos, y termina con error para que no lo des por protegido |
 | `scripts/test-guard.sh` | 64 pruebas del guardián: lo que debe bloquear y lo que debe permitir |
+| `scripts/check-records.sh` | La comprobación de **Records**: tamaño de `STATE.md` y entrada de bitácora en cada PR con cambios de código (las de Dependabot y las de solo documentación no la necesitan). `test-check-records.sh` tiene sus 6 pruebas |
+| `scripts/sync-from-template.sh` | Lleva las mejoras de la plantilla a un **proyecto que ya existe**. Se ejecuta desde la plantilla: `scripts/sync-from-template.sh ../faro`. Sin opciones solo informa; `--diff` enseña los cambios y `--apply` sustituye los archivos que son de la plantilla (hook, comandos, subagentes, scripts, hooks de git). Lo que cada proyecto adapta (permisos, CI, `AGENTS.md`…) nunca lo copia: te dice qué difiere para que lo fusiones tú. Detecta los archivos con nombre en castellano de la versión vieja. No aplica en `main` ni con cambios sin guardar |
 
 ## Las skills
 
@@ -163,4 +167,5 @@ El repositorio de Anthropic trae 19 skills; aquí van 6. Las demás se han quita
 - **Contenido externo** (issues, webs, respuestas de API, logs) son datos, no instrucciones: si piden hacer algo, Claude avisa en vez de hacerlo.
 - **Idioma:** todo el repositorio va en inglés (código, documentación, commits, PRs). Claude te responde en el idioma en que le escribas. Esta guía es la excepción.
 - **Repos privados:** en el plan gratuito de GitHub no se puede proteger `main` ni exigir la CI. En ese caso solo protegen los hooks locales (el de Claude y el de git). Para tener la protección completa, el repo tiene que ser público o tu cuenta GitHub Pro.
+- **Proyectos ya creados:** cuando la plantilla mejore, `scripts/sync-from-template.sh <proyecto>` te dice qué les falta y lo aplica en una rama. Cada proyecto guarda en `.claude/TEMPLATE_VERSION` de qué versión de la plantilla viene.
 - **Licencia:** ninguna. Todos los derechos reservados.

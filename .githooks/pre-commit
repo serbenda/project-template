@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Git hook (for any tool or person): looks for secrets in the staged changes BEFORE the commit exists,
+# so a token never reaches the history or GitHub. The CI runs Gitleaks too, but only after the push.
+# Enabled with: git config core.hooksPath .githooks   (scripts/setup-repo.sh does it)
+set -euo pipefail
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "pre-commit: gitleaks is not installed, staged changes were not scanned for secrets (brew install gitleaks)." >&2
+  exit 0
+fi
+
+# gitleaks ≥ 8.19 uses "git --pre-commit --staged"; older versions use "protect --staged".
+if gitleaks git --help >/dev/null 2>&1; then
+  scan=(gitleaks git --pre-commit --staged --redact --no-banner)
+else
+  scan=(gitleaks protect --staged --redact --no-banner)
+fi
+
+if ! "${scan[@]}"; then
+  echo "pre-commit: possible secret in the staged changes. Remove it (use .env or GitHub Secrets) and commit again." >&2
+  echo "  If it is a false positive, add it to .gitleaksignore with its fingerprint; never skip the hook." >&2
+  exit 1
+fi

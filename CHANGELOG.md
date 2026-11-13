@@ -4,6 +4,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versio
 
 ## [Unreleased]
 ### Added
+- **Records** CI check (`scripts/check-records.sh`, 6 tests): PRs that change more than documentation need a worklog entry, and `docs/STATE.md` can't exceed 150 lines. Added to the required checks of `main`.
+- `.githooks/pre-commit`: Gitleaks scans staged changes before the commit exists.
+- `.github/dependabot.yml` for the pinned GitHub Actions (stack-independent).
+- `scripts/sync-from-template.sh`: reports and applies template improvements to existing projects, never on `main`, never overwriting project-adapted files, and records the template version in `.claude/TEMPLATE_VERSION`.
 - Project mode, light or full (`docs/STATE.md` → *Mode*, `MODE=light ./scripts/setup-repo.sh`): light keeps only VISION, STATE, WORKLOG and SETUP and plans in chat; full uses phases, roadmap, ADRs, risks and CHANGELOG. Claude proposes switching to full when the project grows.
 - Stack checklist for phase P03 in `docs/SETUP.md` (run/verify commands, `launch.json`, CI job, Dependabot, CodeQL or Semgrep, `.gitignore`, required check); `/new-phase` copies it into the P03 acceptance criteria.
 - `README.es.md`: Spanish guide explaining the structure, the workflow, the subagents and every skill.

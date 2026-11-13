@@ -35,7 +35,7 @@ The template ships no stack-specific tooling. Phase P03 is not done until every 
 - [ ] **Requirements, Daily use and Verify** in this file filled in with real commands, and `Verify` passes locally.
 - [ ] **`.claude/launch.json`** defines the local server, if there is one (Claude may edit this file; the rest of `.claude/` is owner-only).
 - [ ] **CI job** in `.github/workflows/ci.yml` running the same tests and lint as `Verify`, with actions pinned to a full commit SHA and `permissions: contents: read`.
-- [ ] **Dependabot** in `.github/dependabot.yml`: the `github-actions` ecosystem plus the stack's (`npm`, `pip`, `gomod`, `cargo`, `pub`…), `target-branch: development`, weekly.
+- [ ] **Dependabot**: add the stack's ecosystem (`npm`, `pip`, `gomod`, `cargo`, `pub`…) to `.github/dependabot.yml`, next to the `github-actions` entry the template already has.
 - [ ] **Static analysis**: a CodeQL workflow for the project's language if the repo is public (code scanning is free only on public repos); if it is private, a Semgrep step in the CI job instead.
 - [ ] **`.gitignore`** extended with the stack's build output, caches and virtual environments.
 - [ ] **Environment variables** documented in the section below; real values only in `.env`.

@@ -36,10 +36,10 @@ How to start and verify it: [docs/SETUP.md](docs/SETUP.md).
 │   ├── SETUP.md         # start and verify (filled in in phase P03)
 │   ├── DEFINITION_OF_DONE.md
 │   └── SECURITY_GUIDE.md
-├── scripts/       # setup-repo.sh (configures GitHub) and hook tests
+├── scripts/       # setup-repo.sh, sync-from-template.sh, check-records.sh and tests
 ├── .claude/       # permissions, hook, skills, subagents, commands and launch.json
 ├── .github/       # CI: secrets, authorship and hook tests
-├── .githooks/     # git hook: strips AI attribution and checks the author
+├── .githooks/     # git hooks: secrets scan before commit, AI attribution and author check
 ├── CHANGELOG.md   # visible changes, Keep a Changelog format
 ├── README.es.md   # Spanish guide to the template: every file and skill explained
 ├── AGENTS.md      # rules for any AI agent

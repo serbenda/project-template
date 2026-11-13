@@ -96,7 +96,8 @@ elif gh api -X POST "repos/$REPO/rulesets" --input - >/dev/null 2>&1 <<'JSON'
       "required_status_checks": [
         {"context": "Secrets"},
         {"context": "Hook"},
-        {"context": "Authorship"}
+        {"context": "Authorship"},
+        {"context": "Records"}
       ]
     }}
   ]

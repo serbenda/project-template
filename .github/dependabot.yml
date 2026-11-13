@@ -1,0 +1,16 @@
+version: 2
+updates:
+  # Keeps the GitHub Actions of the workflows up to date (they are pinned to a commit SHA, so
+  # nothing updates them otherwise). This part doesn't depend on the stack; in phase P03 add the
+  # stack's ecosystem (npm, pip, gomod, cargo, pub…) below (see docs/SETUP.md → Stack checklist).
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    target-branch: "development"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "ci"
+    groups:
+      actions:
+        patterns: ["*"]

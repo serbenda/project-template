@@ -23,7 +23,7 @@ You remember nothing between sessions: the project's memory lives in `docs/` (se
 - **Before writing code**, the plan must be approved by the owner: in the phase file (full) or in chat and STATE (light).
 - **Do not expand the scope**: anything outside the approved plan (the phase's *In*, in full mode) is noted as a next step in STATE, not done.
 - Accepted decisions in [`docs/decisions/`](docs/decisions/) are not reopened: if something contradicts them, cite them and ask.
-- **After every change**, before committing, use the `record-changes` skill: an entry in [`docs/WORKLOG.md`](docs/WORKLOG.md) (why, what was rejected, how it was tested, what is pending).
+- **After every change**, before committing, use the `record-changes` skill: an entry in [`docs/WORKLOG.md`](docs/WORKLOG.md) (why, what was rejected, how it was tested, what is pending). The CI (**Records**) rejects PRs that change more than documentation without a worklog entry, and a STATE over 150 lines.
 - **When closing a phase** (full mode), update its *Result*, STATE (≤150 lines), ROADMAP, CHANGELOG (the phase's user-visible changes, once) and, if applicable, RISKS and ARCHITECTURE. In light mode, closing a piece of work means updating STATE.
 - Before calling something done, run the *Verify* commands in [`docs/SETUP.md`](docs/SETUP.md).
 
