@@ -1,33 +1,33 @@
-# Visión de NOMBRE_DEL_PROYECTO
+# PROJECT_NAME vision
 
-> Escríbela **antes de la primera línea de código** y mantenla en una página.
-> Es el filtro para decidir qué entra y qué no: Claude la lee antes de proponer funcionalidades.
+> Write it **before the first line of code** and keep it to one page.
+> It is the filter for deciding what goes in and what doesn't: Claude reads it before proposing features.
 
-## El problema
-<!-- Qué le pasa a quién, hoy, sin este proyecto. Una o dos frases concretas. -->
+## The problem
+<!-- What happens to whom, today, without this project. One or two concrete sentences. -->
 
-## Para quién
-<!-- La persona concreta que lo va a usar. Si son varios perfiles, el principal primero. -->
+## Who it is for
+<!-- The specific person who will use it. If there are several profiles, the main one first. -->
 
-## La idea
-<!-- Qué hace el proyecto, en una frase que entienda alguien que no programa. -->
+## The idea
+<!-- What the project does, in one sentence a non-programmer would understand. -->
 
-## Hipótesis principal
-<!-- Lo que tiene que ser verdad para que merezca la pena. Se valida con usuarios reales. -->
-> Una persona usará NOMBRE_DEL_PROYECTO si …
+## Main hypothesis
+<!-- What has to be true for it to be worth it. Validated with real users. -->
+> A person will use PROJECT_NAME if …
 
-## Con qué compite de verdad
-<!-- Lo que la gente hace hoy en su lugar (a menudo no es otro producto, sino un apaño). -->
+## What it really competes with
+<!-- What people do today instead (often not another product, but a workaround). -->
 
-## Diferenciales
+## Differentiators
 1.
 2.
 3.
 
-## Qué NO hacer
-<!-- Lo que diluiría el producto aunque parezca buena idea. Es la sección más útil para Claude. -->
-- No …
-- No …
+## What NOT to do
+<!-- What would dilute the product even if it looks like a good idea. The most useful section for Claude. -->
+- Don't …
+- Don't …
 
-## Cómo sabremos que funciona
-<!-- Una o dos señales medibles: uso real, no opiniones. -->
+## How we'll know it works
+<!-- One or two measurable signals: real usage, not opinions. -->

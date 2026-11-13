@@ -1,52 +1,52 @@
 # Definition of Done (DoD)
 
-Un cambio está **hecho** solo cuando cumple todo lo de esta lista. Si algo no aplica, se indica en la PR con el motivo.
+A change is **done** only when it meets everything on this list. If something does not apply, say so in the PR with the reason.
 
-## 1. Código
-- [ ] Hace lo que pide la issue y la ficha de fase, y nada más (sin cambios colaterales no pedidos).
-- [ ] Cumple los criterios de aceptación de la ficha de fase.
-- [ ] Legible: nombres claros, sin código muerto, sin trazas de depuración (`print`, `console.log`…).
-- [ ] Sigue el estilo del proyecto (`docs/ARQUITECTURA.md` → Convenciones).
-- [ ] Sin dependencias nuevas innecesarias; si las hay, están justificadas en la PR.
+## 1. Code
+- [ ] Does what the issue and the phase file ask for, and nothing more (no unrequested side changes).
+- [ ] Meets the acceptance criteria in the phase file.
+- [ ] Readable: clear names, no dead code, no debug output (`print`, `console.log`…).
+- [ ] Follows the project style (`docs/ARCHITECTURE.md` → Code conventions).
+- [ ] No unnecessary new dependencies; any new ones are justified in the PR.
 
-## 2. Pruebas
-- [ ] Probado en local (ver `docs/SETUP.md`) siguiendo los criterios de aceptación.
-- [ ] Tests automáticos añadidos o actualizados para lo que cambia.
-- [ ] Los comandos de *Verificar* de `docs/SETUP.md` pasan en local y la CI está en verde.
+## 2. Tests
+- [ ] Tested locally (see `docs/SETUP.md`) against the acceptance criteria.
+- [ ] Automated tests added or updated for what changes.
+- [ ] The *Verify* commands in `docs/SETUP.md` pass locally and CI is green.
 
-## 3. Seguridad
-- [ ] Ningún secreto, token, clave ni dato personal en el código o en el historial.
-- [ ] Las entradas de usuario y los datos externos se tratan como no confiables y se validan antes de llegar a consultas, comandos, rutas o HTML.
-- [ ] Las llamadas a APIs externas van por HTTPS y sus fallos se gestionan (timeouts, mensaje claro, sin caerse).
-- [ ] El escaneo de secretos no reporta nada nuevo.
-- [ ] Si el cambio toca autenticación, datos externos, workflows o dependencias: revisado con la skill `security-audit` (modo guía).
-- [ ] Antes de cada versión mayor: auditoría completa con `security-audit`, sin hallazgos `confirmed` abiertos.
-- [ ] Antes de cada versión mayor: `repo-security-posture` sin hallazgos Critical ni High.
+## 3. Security
+- [ ] No secrets, tokens, keys or personal data in the code or in the history.
+- [ ] User input and external data are treated as untrusted and validated before reaching queries, commands, paths or HTML.
+- [ ] Calls to external APIs use HTTPS and their failures are handled (timeouts, clear message, no crash).
+- [ ] Secret scanning reports nothing new.
+- [ ] If the change touches authentication, external data, workflows or dependencies: reviewed with the `security-audit` skill (guidance mode).
+- [ ] Before each major release: full audit with `security-audit`, with no open `confirmed` findings.
+- [ ] Before each major release: `repo-security-posture` with no Critical or High findings.
 
-## 4. Según el tipo de proyecto (borra lo que no aplique)
-**Interfaz web o móvil**
-- [ ] Accesible: textos alternativos, contraste suficiente, navegable con teclado.
-- [ ] Probado en escritorio y móvil, sin errores en consola.
-- [ ] Datos externos con `textContent`, nunca `innerHTML`.
+## 4. By project type (delete what does not apply)
+**Web or mobile UI**
+- [ ] Accessible: alt text, sufficient contrast, keyboard navigable.
+- [ ] Tested on desktop and mobile, no console errors.
+- [ ] External data via `textContent`, never `innerHTML`.
 
-**API o backend**
-- [ ] Cada endpoint valida la entrada y comprueba la autorización.
-- [ ] Errores sin filtrar detalles internos; logs sin secretos ni datos personales.
-- [ ] Migraciones de base de datos reversibles o con plan de vuelta atrás.
+**API or backend**
+- [ ] Every endpoint validates input and checks authorization.
+- [ ] Errors don't leak internal details; logs contain no secrets or personal data.
+- [ ] Database migrations are reversible or have a rollback plan.
 
-**CLI o librería**
-- [ ] `--help` y README reflejan el cambio; códigos de salida coherentes.
+**CLI or library**
+- [ ] `--help` and README reflect the change; consistent exit codes.
 
-## 5. Documentación
-- [ ] README actualizado si cambia el uso, la configuración o las fuentes de datos.
-- [ ] Entrada en `docs/BITACORA.md` (qué, por qué, commits, cómo se probó) y, si el cambio es visible, en `CHANGELOG.md` → *Sin publicar*.
-- [ ] Ficha de fase con *Resultado* relleno y `docs/STATE.md` actualizado (`/cerrar-fase`).
-- [ ] Si se ha tomado una decisión difícil de deshacer, tiene su ADR en `docs/decisiones/`.
-- [ ] Las fuentes de datos públicas usadas aparecen citadas con su licencia.
+## 5. Documentation
+- [ ] README updated if usage, configuration or data sources change.
+- [ ] Entry in `docs/WORKLOG.md` (what, why, commits, how it was tested) and, if the change is visible, in `CHANGELOG.md` → *Unreleased*.
+- [ ] Phase file with *Result* filled in and `docs/STATE.md` updated (`/close-phase`).
+- [ ] If a hard-to-reverse decision was made, it has its ADR in `docs/decisions/`.
+- [ ] Public data sources used are cited with their license.
 
-## 6. Integración
-- [ ] Trabajo en `development` (o una rama que sale de ella), nunca directamente en `main`.
-- [ ] Commits con formato Conventional Commits y autor correcto.
-- [ ] PR de `development` → `main` con la plantilla rellena y revisada.
-- [ ] Tras el merge, lo desplegado (si hay despliegue) funciona.
-- [ ] Issue cerrada y tarjeta movida a *Done* en GitHub Projects.
+## 6. Integration
+- [ ] Work on `development` (or a branch off it), never directly on `main`.
+- [ ] Commits follow Conventional Commits with the correct author.
+- [ ] PR from `development` → `main` with the template filled in and reviewed.
+- [ ] After the merge, what is deployed (if anything) works.
+- [ ] Issue closed and card moved to *Done* in GitHub Projects.

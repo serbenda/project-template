@@ -1,25 +1,25 @@
-# Hoja de ruta
+# Roadmap
 
-> **Un solo sistema de numeración:** etapas `E0, E1, E2…` y, dentro de cada una, fases `F01, F02…` (numeración global, no se reinicia).
-> Una etapa termina cuando se cumple su **criterio de salida**, que debe poder comprobarse, no ser una sensación.
-> Si cambia el plan, se edita este archivo y se explica en una [decisión](decisiones/).
+> **A single numbering system:** stages `S0, S1, S2…` and, within each, phases `P01, P02…` (global numbering, never reset).
+> A stage ends when its **exit criterion** is met, which must be checkable, not a feeling.
+> If the plan changes, edit this file and explain it in a [decision](decisions/).
 
-| Etapa | Objetivo | Criterio de salida | Estado |
+| Stage | Goal | Exit criterion | Status |
 |---|---|---|---|
-| E0 | Definir | VISION escrita, stack decidido (ADR), entorno local arrancando y verificable (`docs/SETUP.md`) | ⏳ |
-| E1 | Núcleo mínimo | <!-- p. ej.: un usuario puede hacer X de principio a fin en local --> | ⬜ |
-| E2 | Probar con gente | <!-- p. ej.: 3 personas lo usan una semana sin ayuda --> | ⬜ |
-| E3 | Publicar | <!-- p. ej.: desplegado, con backups y sin riesgos Altos abiertos --> | ⬜ |
+| S0 | Define | VISION written, stack decided (ADR), local environment running and verifiable (`docs/SETUP.md`) | ⏳ |
+| S1 | Minimal core | <!-- e.g.: a user can do X end to end locally --> | ⬜ |
+| S2 | Test with people | <!-- e.g.: 3 people use it for a week without help --> | ⬜ |
+| S3 | Release | <!-- e.g.: deployed, with backups and no High risks open --> | ⬜ |
 
-Leyenda: ⬜ sin empezar · ⏳ en curso · ✅ hecha
+Legend: ⬜ not started · ⏳ in progress · ✅ done
 
-## E0 — Definir
+## S0 — Define
 
-| Fase | Qué | Estado |
+| Phase | What | Status |
 |---|---|---|
-| F01 | Visión y alcance | ⬜ |
-| F02 | Decisión de stack y estructura del código | ⬜ |
-| F03 | Entorno local: arrancar, probar y verificar; job de CI del stack | ⬜ |
+| P01 | Vision and scope | ⬜ |
+| P02 | Stack decision and code structure | ⬜ |
+| P03 | Local environment: run, test and verify; CI job for the stack | ⬜ |
 
-## E1 — Núcleo mínimo
-<!-- Se detalla al terminar E0. No planifiques en detalle más de una etapa por delante. -->
+## S1 — Minimal core
+<!-- Detailed once S0 is done. Don't plan in detail more than one stage ahead. -->

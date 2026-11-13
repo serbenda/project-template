@@ -1,39 +1,39 @@
-# Skills de terceros
+# Third-party skills
 
-> `registro-cambios/` es **propia** de esta plantilla: no tiene origen externo y se puede editar.
+> `record-changes/` is this template's **own** skill: it has no external origin and can be edited.
 
-Copias **fijadas a un commit**, revisadas antes de incorporarlas. No se editan a mano: para actualizar, se sustituye la carpeta entera por la versión nueva, se revisa el diff en una PR y se actualiza esta tabla.
+Copies **pinned to a commit**, reviewed before being added. They are not edited by hand: to update, replace the whole folder with the new version, review the diff in a PR and update this table.
 
-| Skill | Origen | Commit | Licencia | Revisada |
+| Skill | Origin | Commit | License | Reviewed |
 |---|---|---|---|---|
-| `security-audit` | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill) | `c1c8a8c1471069fb0e188eeaff69b8e8db6564a8` | MIT (ver `security-audit/LICENSE`) | 2026-11-10 |
-| `repo-security-posture` | [superagent-ai/skills](https://github.com/superagent-ai/skills) → `skills/repo-security-posture` | `0da315b873ed141025fa601ed6e0ebe0c878d5af` | MIT (ver `repo-security-posture/LICENSE`) | 2026-11-11 |
+| `security-audit` | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill) | `c1c8a8c1471069fb0e188eeaff69b8e8db6564a8` | MIT (see `security-audit/LICENSE`) | 2026-11-10 |
+| `repo-security-posture` | [superagent-ai/skills](https://github.com/superagent-ai/skills) → `skills/repo-security-posture` | `0da315b873ed141025fa601ed6e0ebe0c878d5af` | MIT (see `repo-security-posture/LICENSE`) | 2026-11-11 |
 
 ## security-audit
 
-Auditoría de seguridad defensiva en seis fases: reconocimiento, búsqueda, validación adversarial, salida estructurada, verificación independiente e informe.
+Defensive security audit in six phases: reconnaissance, hunting, adversarial validation, structured output, independent verification and report.
 
-- **Modo guía** (por defecto): preguntas o revisiones puntuales. No crea archivos.
-- **Modo auditoría completa**: solo si se pide explícitamente, por ejemplo: *«haz una auditoría de seguridad completa de este repo»*.
-- Los resultados se guardan **fuera del repo** (`~/security-audit-skill/<repo>/run-N`). Si alguna vez se guardan dentro, la carpeta tiene que estar en `.gitignore`.
-- Para validar los hallazgos hace falta Node.js:
+- **Guidance mode** (default): questions or targeted reviews. Creates no files.
+- **Full audit mode**: only when explicitly requested, for example: *"run a full security audit of this repo"*.
+- Results are saved **outside the repo** (`~/security-audit-skill/<repo>/run-N`). If they are ever saved inside, the folder must be in `.gitignore`.
+- Validating the findings requires Node.js:
   `node .claude/skills/security-audit/validate-findings.cjs <findings.json>`
 
 ## repo-security-posture
 
-Revisa la configuración del repo en GitHub: protección de ramas, CODEOWNERS, Actions, releases, accesos y dependencias. Entrega una lista de tareas ordenadas por gravedad.
+Reviews the repo's GitHub configuration: branch protection, CODEOWNERS, Actions, releases, access and dependencies. Delivers a task list ordered by severity.
 
-- Revisado: `scripts/collect.py` solo hace peticiones **de lectura** a `api.github.com` y `raw.githubusercontent.com`, no cambia ningún ajuste y oculta los tokens que encuentra en los archivos.
-- Uso: `GITHUB_TOKEN=<token de solo lectura> python3 .claude/skills/repo-security-posture/scripts/collect.py serbenda/<repo> --output /tmp/audit.json`
-- Usa el token con menos permisos posible (fine-grained, solo lectura, solo ese repo). Complementa a `scripts/setup-repo.sh`: el script aplica la protección y esta skill comprueba que sigue en pie.
+- Reviewed: `scripts/collect.py` only makes **read** requests to `api.github.com` and `raw.githubusercontent.com`, changes no settings and masks any tokens it finds in files.
+- Usage: `GITHUB_TOKEN=<read-only token> python3 .claude/skills/repo-security-posture/scripts/collect.py serbenda/<repo> --output /tmp/audit.json`
+- Use the token with the fewest permissions possible (fine-grained, read-only, that repo only). It complements `scripts/setup-repo.sh`: the script applies the protection and this skill checks it is still in place.
 
-## Actualizar `security-audit`
+## Updating `security-audit`
 ```bash
 git clone --depth 1 https://github.com/cloudflare/security-audit-skill /tmp/sas
 rm -rf .claude/skills/security-audit
 cp -a /tmp/sas/skills/security-audit .claude/skills/
 cp /tmp/sas/LICENSE .claude/skills/security-audit/
-git -C /tmp/sas rev-parse HEAD   # anota el commit en la tabla
+git -C /tmp/sas rev-parse HEAD   # record the commit in the table
 ```
 
-Para `repo-security-posture` el proceso es el mismo, copiando `skills/<nombre>` del repo de origen y su `LICENSE`.
+For `repo-security-posture` the process is the same, copying `skills/<name>` from the source repo and its `LICENSE`.

@@ -1,13 +1,13 @@
 ---
-description: Registra una decisión de arquitectura o de producto (ADR) numerada en docs/decisiones/.
-argument-hint: "<qué hay que decidir>"
+description: Records a numbered architecture or product decision (ADR) in docs/decisions/.
+argument-hint: "<what needs deciding>"
 ---
 
-Decisión: $ARGUMENTS
+Decision: $ARGUMENTS
 
-1. Lee `docs/decisiones/README.md` y las decisiones aceptadas. Si alguna ya cubre esto, cítala y pregúntame si la queremos sustituir.
-2. Calcula el siguiente número (`NNNN`) y crea `docs/decisiones/NNNN-titulo-corto.md` desde `_plantilla.md`.
-3. Rellena el contexto con hechos del repo y del proyecto, y al menos **dos opciones reales** con pros y contras honestos. Si falta información para comparar, dilo en vez de inventarla.
-4. Deja el estado en **propuesta**, con tu recomendación en *Decisión*, y enséñamela.
-5. Cuando la acepte: estado **aceptada**, añádela a la tabla de `docs/decisiones/README.md` y, si sustituye a otra, marca la vieja como "sustituida por NNNN".
-6. Si la decisión cambia piezas o flujos, actualiza `docs/ARQUITECTURA.md`.
+1. Read `docs/decisions/README.md` and the accepted decisions. If one already covers this, cite it and ask me whether we want to supersede it.
+2. Work out the next number (`NNNN`) and create `docs/decisions/NNNN-short-title.md` from `_template.md`.
+3. Fill in the context with facts from the repo and the project, and at least **two real options** with honest pros and cons. If information is missing to compare them, say so instead of making it up.
+4. Leave the status as **proposed**, with your recommendation under *Decision*, and show it to me.
+5. Once I accept it: status **accepted**, add it to the table in `docs/decisions/README.md` and, if it replaces another, mark the old one as "superseded by NNNN".
+6. If the decision changes components or flows, update `docs/ARCHITECTURE.md`.

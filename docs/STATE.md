@@ -1,33 +1,33 @@
-# Estado de NOMBRE_DEL_PROYECTO
+# PROJECT_NAME status
 
-> **Fuente única de verdad del estado.** Claude la lee al empezar cada sesión (`/estado`) y la actualiza al cerrar una fase (`/cerrar-fase`).
-> Máximo **150 líneas**: sustituye lo obsoleto en vez de acumular y **enlaza** documentos en vez de copiarlos.
+> **Single source of truth for status.** Claude reads it at the start of every session (`/status`) and updates it when closing a phase (`/close-phase`).
+> At most **150 lines**: replace what is outdated instead of piling up, and **link** documents instead of copying them.
 
-Última actualización: AAAA-MM-DD
+Last updated: YYYY-MM-DD
 
-## Dónde estamos
-- **Etapa actual:** E0 — Definir (ver [ROADMAP](ROADMAP.md))
-- **Fase en curso:** ninguna
-- **Entorno:** local
-- **Rama de trabajo:** `development`
+## Where we are
+- **Current stage:** S0 — Define (see [ROADMAP](ROADMAP.md))
+- **Phase in progress:** none
+- **Environment:** local
+- **Working branch:** `development`
 
-## Hecho recientemente
-<!-- Las 3–5 últimas fases cerradas, una línea cada una con enlace a su ficha. Lo anterior vive en las fichas. -->
+## Recently done
+<!-- The last 3–5 closed phases, one line each with a link to its phase file. Older ones live in the phase files. -->
 - —
 
-## Siguiente
-<!-- Lo próximo que toca, en orden. Lo primero debería poder empezarse ya. -->
-1. Rellenar [VISION.md](VISION.md).
-2. Decidir el stack → [decisiones/](decisiones/).
-3. Planificar la Etapa 1 en [ROADMAP.md](ROADMAP.md).
+## Next
+<!-- What comes next, in order. The first item should be ready to start now. -->
+1. Fill in [VISION.md](VISION.md).
+2. Decide the stack → [decisions/](decisions/).
+3. Plan Stage 1 in [ROADMAP.md](ROADMAP.md).
 
-## Bloqueado / pendiente de decidir
-<!-- Qué está parado y qué hace falta para desbloquearlo (normalmente, una decisión del propietario). -->
+## Blocked / awaiting decision
+<!-- What is stuck and what is needed to unblock it (usually, a decision by the owner). -->
 - —
 
-## Riesgos abiertos
-<!-- Solo los que están abiertos ahora. El detalle, en RIESGOS.md. -->
-- Ninguno registrado. Ver [RIESGOS.md](RIESGOS.md).
+## Open risks
+<!-- Only those open right now. Details in RISKS.md. -->
+- None recorded. See [RISKS.md](RISKS.md).
 
-## Cómo arrancarlo
-Ver [SETUP.md](SETUP.md). Arrancar y verificar: ver sus secciones *Día a día* y *Verificar*.
+## How to run it
+See [SETUP.md](SETUP.md). To run and verify: see its *Daily use* and *Verify* sections.

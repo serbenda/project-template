@@ -1,19 +1,19 @@
-# Sistema
+# System
 .DS_Store
 Thumbs.db
 
-# Editores
+# Editors
 .vscode/
 .idea/
 
-# Dependencias y builds
+# Dependencies and builds
 node_modules/
 dist/
 build/
 .cache/
 __pycache__/
 
-# Secretos: nunca al repo
+# Secrets: never in the repo
 .env
 .env.*
 *.pem

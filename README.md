@@ -1,83 +1,83 @@
-# NOMBRE_DEL_PROYECTO
+# PROJECT_NAME
 
-> Una frase que explique qué es y para quién.
+> One sentence explaining what it is and who it is for.
 
-## Qué hace
-- Funcionalidad principal 1
-- Funcionalidad principal 2
+## What it does
+- Main feature 1
+- Main feature 2
 
-## Fuentes de datos
-| Fuente | Qué aporta | Licencia |
+## Data sources
+| Source | What it provides | License |
 |---|---|---|
-| _Ej.: Red Eléctrica (REData)_ | _Precio de la luz_ | _Uso libre con atribución_ |
+| _E.g.: OpenStreetMap_ | _Map data_ | _ODbL, attribution required_ |
 
-## Uso en local
+## Running locally
 ```bash
-git clone https://github.com/serbenda/NOMBRE_DEL_PROYECTO.git
-cd NOMBRE_DEL_PROYECTO
+git clone https://github.com/serbenda/PROJECT_NAME.git
+cd PROJECT_NAME
 git switch development
 ```
-Cómo arrancarlo y verificarlo: [docs/SETUP.md](docs/SETUP.md).
+How to start and verify it: [docs/SETUP.md](docs/SETUP.md).
 
-## Estructura
+## Structure
 ```
 .
 ├── docs/
-│   ├── VISION.md        # qué es, para quién y qué NO hacer
-│   ├── STATE.md         # estado vivo (≤150 líneas): lo primero que lee el agente
-│   ├── BITACORA.md      # contexto de cada cambio: qué, por qué, commits, pendiente
-│   ├── ROADMAP.md       # etapas E0… con criterio de salida
-│   ├── fases/           # una ficha por bloque de trabajo (F01…)
-│   ├── decisiones/      # ADR numerados
-│   ├── ARQUITECTURA.md  # piezas, flujo de datos, fuentes externas
-│   ├── RIESGOS.md       # registro de riesgos
-│   ├── SETUP.md         # arrancar y verificar (se completa en F03)
+│   ├── VISION.md        # what it is, who it is for and what NOT to do
+│   ├── STATE.md         # living state (≤150 lines): the first thing the agent reads
+│   ├── WORKLOG.md       # context of every change: what, why, commits, pending
+│   ├── ROADMAP.md       # stages S0… with exit criteria
+│   ├── phases/          # one phase file per block of work (P01…)
+│   ├── decisions/       # numbered ADRs
+│   ├── ARCHITECTURE.md  # components, data flow, external sources
+│   ├── RISKS.md         # risk register
+│   ├── SETUP.md         # start and verify (filled in in phase P03)
 │   ├── DEFINITION_OF_DONE.md
-│   └── SEGURIDAD.md
-├── scripts/       # setup-repo.sh (configura GitHub) y pruebas del hook
-├── .claude/       # permisos, hook, skills, subagentes, comandos y launch.json
-├── .github/       # CI: secretos, autoría y pruebas del hook
-├── .githooks/     # hook de git: quita firmas de IA y comprueba el autor
-├── CHANGELOG.md   # cambios visibles, formato Keep a Changelog
-├── AGENTS.md      # normas para cualquier agente de IA
-└── CLAUDE.md      # importa AGENTS.md y añade lo específico de Claude Code
+│   └── SECURITY_GUIDE.md
+├── scripts/       # setup-repo.sh (configures GitHub) and hook tests
+├── .claude/       # permissions, hook, skills, subagents, commands and launch.json
+├── .github/       # CI: secrets, authorship and hook tests
+├── .githooks/     # git hook: strips AI attribution and checks the author
+├── CHANGELOG.md   # visible changes, Keep a Changelog format
+├── AGENTS.md      # rules for any AI agent
+└── CLAUDE.md      # imports AGENTS.md and adds what is specific to Claude Code
 ```
 
-## Cómo se trabaja con Claude
+## How to work with Claude
 
 ```
-/estado                      al empezar cada sesión
-/nueva-fase <qué>            ficha + plan → lo apruebas → Claude implementa en development
-(automático)                 skill registro-cambios: CHANGELOG + BITACORA tras cada cambio
-/cerrar-fase                 criterios + DoD + actualiza STATE, ROADMAP y CHANGELOG
-/preparar-pr                 revisores + PR development → main (la fusionas tú)
-/decision <qué>              cuando haya que elegir algo difícil de deshacer
+/status                      at the start of every session
+/new-phase <what>            phase file + plan → you approve → Claude implements on development
+(automatic)                  record-changes skill: CHANGELOG + WORKLOG after every change
+/close-phase                 criteria + DoD + updates STATE, ROADMAP and CHANGELOG
+/prepare-pr                  reviewers + development → main PR (you merge it)
+/decision <what>             when something hard to undo has to be chosen
 ```
 
-## Cómo contribuir
-Lee [AGENTS.md](AGENTS.md) y la [Definition of Done](docs/DEFINITION_OF_DONE.md).
+## Contributing
+Read [AGENTS.md](AGENTS.md) and the [Definition of Done](docs/DEFINITION_OF_DONE.md).
 
-## Licencia
-Sin licencia: © Sergio Santiago Bendaña Quesada. Todos los derechos reservados.
-El código se puede consultar, pero no copiar, modificar ni redistribuir sin permiso escrito del autor.
+## License
+No license: © Sergio Santiago Bendaña Quesada. All rights reserved.
+The code may be viewed, but not copied, modified or redistributed without the author's written permission.
 
 ---
 
 <details>
-<summary>📦 Cómo usar esta plantilla (borra esta sección en el proyecto nuevo)</summary>
+<summary>📦 How to use this template (delete this section in the new project)</summary>
 
-1. En GitHub: **Use this template → Create a new repository**.
-2. Clona el repo nuevo y ejecuta:
+1. On GitHub: **Use this template → Create a new repository**.
+2. Clone the new repo and run:
    ```bash
    ./scripts/setup-repo.sh
    ```
-   Crea la rama `development`, protege `main` y activa las alertas de seguridad y el hook de git.
-   Con commits firmados: `FIRMAS=1 ./scripts/setup-repo.sh`.
-3. Sustituye `NOMBRE_DEL_PROYECTO` en este README (el script ya lo cambia en el resto).
-4. Escribe [docs/VISION.md](docs/VISION.md) (o díctasela a Claude y revísala).
-5. Con Claude: `/decision stack del proyecto`, y luego `/nueva-fase` para la primera fase de la Etapa 0.
-6. En la fase F03 (entorno local), Claude completa `docs/SETUP.md`, `.claude/launch.json` y el job de CI del stack.
-7. Borra esta sección.
-8. Una sola vez en tu Mac: sigue [docs/SEGURIDAD.md](docs/SEGURIDAD.md) → "Lo que tienes que hacer tú".
+   It creates the `development` branch, protects `main` and enables security alerts and the git hook.
+   With signed commits: `SIGNED_COMMITS=1 ./scripts/setup-repo.sh`.
+3. Replace `PROJECT_NAME` in this README (the script already replaces it everywhere else).
+4. Write [docs/VISION.md](docs/VISION.md) (or dictate it to Claude and review it).
+5. With Claude: `/decision project stack`, then `/new-phase` for the first phase of Stage S0.
+6. In phase P03 (local environment), Claude fills in `docs/SETUP.md`, `.claude/launch.json` and the stack's CI job.
+7. Delete this section.
+8. Once on your Mac: follow [docs/SECURITY_GUIDE.md](docs/SECURITY_GUIDE.md) → "What you have to do yourself".
 
 </details>

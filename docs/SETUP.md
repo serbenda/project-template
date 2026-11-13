@@ -1,33 +1,33 @@
-# Entorno local
+# Local environment
 
-> Se completa en la fase F03, después de la decisión de stack. Claude lo lee para saber cómo arrancar y verificar el proyecto.
+> Filled in during phase P03, after the stack decision. Claude reads it to know how to run and verify the project.
 
-## Requisitos
-- git y python3 (para el hook de seguridad)
-- Lo que pida el stack del proyecto: <!-- p. ej.: Node.js 22, Python 3.13 con uv… -->
+## Requirements
+- git and python3 (for the security hook)
+- Whatever the project stack needs: <!-- e.g.: Node.js 22, Python 3.13 with uv… -->
 
-## Primera vez
+## First time
 ```bash
-git clone https://github.com/serbenda/NOMBRE_DEL_PROYECTO.git
-cd NOMBRE_DEL_PROYECTO
+git clone https://github.com/serbenda/PROJECT_NAME.git
+cd PROJECT_NAME
 git switch development
 git config core.hooksPath .githooks
 ```
 
-## Día a día
-| Para | Comando |
+## Daily use
+| To | Command |
 |---|---|
-| Arrancar en local | <!-- p. ej.: npm run dev --> |
-| Ejecutar las pruebas | <!-- p. ej.: pytest --> |
+| Run locally | <!-- e.g.: npm run dev --> |
+| Run the tests | <!-- e.g.: pytest --> |
 
-Si el proyecto tiene servidor local, defínelo también en `.claude/launch.json` para la vista previa de Claude Code.
+If the project has a local server, also define it in `.claude/launch.json` for the Claude Code preview.
 
-## Verificar
-Lo mismo que la CI. Hay que pasarlo antes de dar algo por terminado:
+## Verify
+Same as CI. Must pass before anything is considered done:
 ```bash
-bash scripts/test-guardia.sh   # hook de seguridad
-# + pruebas y lint del stack, p. ej.: npm test && npm run lint
+bash scripts/test-guard.sh   # security hook
+# + stack tests and lint, e.g.: npm test && npm run lint
 ```
 
-## Variables de entorno
-Los valores reales van en `.env`, que nunca se sube al repo. Documenta aquí cada variable: para qué sirve y dónde se consigue, nunca su valor.
+## Environment variables
+Real values go in `.env`, which is never committed. Document each variable here: what it is for and where to get it, never its value.

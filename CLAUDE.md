@@ -1,20 +1,20 @@
 # CLAUDE.md
 
-Las normas de este repositorio están en AGENTS.md y valen para cualquier agente. Se importan aquí:
+This repository's rules live in AGENTS.md and apply to any agent. They are imported here:
 
 @AGENTS.md
 
-## Específico de Claude Code
+## Specific to Claude Code
 
-- **Configuración del proyecto:** `.claude/settings.json` desactiva la firma en commits y PRs, define permisos (deny / ask / allow) y activa el hook `.claude/hooks/guardia.sh`. No los modifiques: los cambios los hace el propietario.
-- **Skills:** `.claude/skills/` (`security-audit`, `repo-security-posture` y la propia `registro-cambios`, que mantiene CHANGELOG y `docs/BITACORA.md` tras cada cambio). Las skills globales de `~/.claude/skills` también están disponibles. Están fijadas a un commit; ver `.claude/skills/UPSTREAM.md`.
-- **Subagentes:** `revisor-seguridad`, `revisor-dod` y `revisor-arquitectura` en `.claude/agents/`. Lánzalos antes de abrir una PR. Son de solo lectura.
-- **Comandos** (`.claude/commands/`):
-  - `/estado`: al empezar cada sesión. Resume STATE y dice qué toca.
-  - `/nueva-fase <qué>`: crea la ficha y propone el plan. No escribe código hasta que se apruebe.
-  - `/cerrar-fase`: comprueba criterios y DoD, rellena el resultado y actualiza STATE, ROADMAP y CHANGELOG.
-  - `/decision <qué>`: registra un ADR en `docs/decisiones/`.
-  - `/preparar-pr`: verificación, revisores y PR `development → main` sin firmas.
-- **Vista previa:** `.claude/launch.json` está vacío. Si el proyecto tiene servidor local, se añade en la fase F03.
-- Para tareas de más de una fase o con dudas de diseño, usa el modo plan antes de tocar código.
-- Si un hook bloquea una acción, **no intentes rodearlo** con otro comando: explica al propietario qué querías hacer y por qué.
+- **Project configuration:** `.claude/settings.json` disables attribution in commits and PRs, defines permissions (deny / ask / allow) and enables the `.claude/hooks/guard.sh` hook. Do not modify them: changes are made by the owner.
+- **Skills:** `.claude/skills/` (`security-audit`, `repo-security-posture` and our own `record-changes`, which maintains CHANGELOG and `docs/WORKLOG.md` after every change). Global skills in `~/.claude/skills` are also available. They are pinned to a commit; see `.claude/skills/UPSTREAM.md`.
+- **Subagents:** `security-reviewer`, `dod-reviewer` and `architecture-reviewer` in `.claude/agents/`. Run them before opening a PR. They are read-only.
+- **Commands** (`.claude/commands/`):
+  - `/status`: at the start of every session. Summarizes STATE and says what's next.
+  - `/new-phase <what>`: creates the phase file and proposes the plan. Writes no code until it is approved.
+  - `/close-phase`: checks criteria and DoD, fills in the result and updates STATE, ROADMAP and CHANGELOG.
+  - `/decision <what>`: records an ADR in `docs/decisions/`.
+  - `/prepare-pr`: verification, reviewers and a `development → main` PR without attribution.
+- **Preview:** `.claude/launch.json` is empty. If the project has a local server, it is added in phase P03.
+- For tasks spanning more than one phase or with design doubts, use plan mode before touching code.
+- If a hook blocks an action, **do not try to work around it** with another command: explain to the owner what you were trying to do and why.
