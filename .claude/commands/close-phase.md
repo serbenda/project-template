@@ -11,7 +11,7 @@ Phase to close: $ARGUMENTS (if empty, the "Current phase" in `docs/STATE.md`).
 
 1. Read the phase file and `docs/DEFINITION_OF_DONE.md`.
 2. Run the *Verify* commands in `docs/SETUP.md`. If anything fails, **stop** and show me the error.
-3. Go through each acceptance criterion: ✅ met (with the evidence: test, command or manual step) or ❌ not met. If there is any ❌, **stop**: the phase is not closed.
+3. Go through each acceptance criterion (criteria that need my approval are checked against *Owner approvals* in the phase file): ✅ met (with the evidence: test, command or manual step) or ❌ not met. If there is any ❌, **stop**: the phase is not closed.
 4. Launch the `dod-reviewer` subagent. If its verdict is MISSING, stop and show me what is missing.
 5. Fill in the phase file's **Result** section: what was done, how it was tested, what was left out and why, and lessons learned. Status ✅ and end date.
 6. Update:

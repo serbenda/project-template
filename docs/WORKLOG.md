@@ -16,6 +16,16 @@
 - **Pending:**
 -->
 
+## 2026-11-13 — Claude commands tested end to end; fixes from the test
+- **Phase / issue:** —
+- **What:** ran Claude Code headless (`claude -p`) in `serbenda/template-smoke-test` through `/status` → `/new-phase` → approval → implementation → `/close-phase` → reviewers → `/prepare-pr`, and fixed what it found in the template: guard false positives (and the bypasses the first fix opened), ineffective `Write(...)` deny rules, the example High risk in RISKS, the README template section on setup, and a place to record owner approvals.
+- **Why:** the commands and the guard had never run in a real Claude session; every finding came from actual use.
+- **Rejected:** keeping the first per-subcommand guard fix: the security-reviewer showed it could be bypassed (`cd --`, `pushd`, `for`, `find | xargs`); the guard is now strict by default and relaxes only for simple commands.
+- **Files:** `.claude/hooks/guard.sh`, `scripts/test-guard.sh`, `.claude/settings.json`, `docs/RISKS.md`, `scripts/setup-repo.sh`, `docs/phases/_template.md`, `.claude/commands/new-phase.md`, `.claude/commands/close-phase.md`, `README.es.md`, `CHANGELOG.md`.
+- **Commits:** `e598da0`, `90a78ef` and this entry's commit.
+- **Tested:** in the smoke repo, `/status` read the state and flagged real issues; `/new-phase` created the phase file and waited for approval; after approval Claude made two commits, a worklog entry and passed Verify; `/close-phase` stopped on an unrecorded owner approval, then closed with dod-reviewer OK; `/prepare-pr` ran the three reviewers (security-reviewer found the guard regression, fixed here). Guard: 83/83 tests, including the reviewer's bypass cases. README trimming tested with a fake `gh`. `sync-from-template.sh` used twice for real on the smoke repo.
+- **Pending:** light mode not exercised in a real session; owner: delete the smoke repo, merge `development → main`, mark project-template as a template.
+
 ## 2026-11-13 — End-to-end test on GitHub
 - **Phase / issue:** —
 - **What:** private throwaway repo `serbenda/template-smoke-test` created with the content of `development`, `setup-repo.sh` run for real, and the protections exercised. Fix found by the test: `setup-repo.sh` now starts CHANGELOG and WORKLOG empty on the first run.

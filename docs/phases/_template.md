@@ -4,6 +4,7 @@
 - **Status:** ⬜ planned · ⏳ in progress · ✅ done · ⛔ dropped
 - **Issue:** #
 - **Dates:** YYYY-MM-DD → YYYY-MM-DD
+- **Owner approvals:** <!-- one line per approval, with its date: "2026-01-31 plan", "2026-02-03 VISION text". /close-phase checks criteria that need the owner against this list. -->
 
 ## Goal
 <!-- What changes for the user or the project when this phase ends. One or two sentences. -->

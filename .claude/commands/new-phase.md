@@ -18,4 +18,4 @@ Phase to plan: $ARGUMENTS
 7. Add the phase to the table in `docs/phases/README.md` and to its stage in `docs/ROADMAP.md`.
 8. Show me a summary of the plan and **wait for my approval**. Do not write any code for the phase in this step.
 
-Once I approve it: mark it ⏳ in progress, set the start date and update "Current phase" in `docs/STATE.md`.
+Once I approve it: mark it ⏳ in progress, set the start date, add the approval with its date under *Owner approvals* in the phase file, and update "Current phase" in `docs/STATE.md`. Every later approval I give during the phase (a text, a design, a trade-off) is recorded there too, as soon as I give it.

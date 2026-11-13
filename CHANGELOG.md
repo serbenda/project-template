@@ -4,6 +4,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versio
 
 ## [Unreleased]
 ### Added
+- *Owner approvals* in the phase file: `/new-phase` records each approval with its date and `/close-phase` checks owner-dependent criteria against it.
 - **Records** CI check (`scripts/check-records.sh`, 6 tests): PRs that change more than documentation need a worklog entry, and `docs/STATE.md` can't exceed 150 lines. Added to the required checks of `main`.
 - `.githooks/pre-commit`: Gitleaks scans staged changes before the commit exists.
 - `.github/dependabot.yml` for the pinned GitHub Actions (stack-independent).
@@ -36,6 +37,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versio
 - No license: `LICENSE` (MIT) is removed and the README states "all rights reserved". If a project goes public and reuse should be allowed, a license is chosen through an ADR.
 
 ### Fixed
+- Guard: read-only commands that only mention `.claude/` (`... 2>/dev/null`, `git grep -- ':!.claude/skills'`) and reading `git config user.email` were blocked. Writes to protected paths are now checked per subcommand only for simple commands; anything with `cd`/`pushd`, loops, `find`/`xargs`, variables or command substitution stays strict. Also covers a bare `.claude` path, `dd of=`, `git checkout/restore --`, `patch`, `tar`, `unzip`, `rsync` and `git config --unset/--add`. 83 hook tests.
+- `.claude/settings.json` had `Write(...)` deny rules, which Claude Code ignores (only `Edit(...)` rules apply to file tools); removed.
+- `docs/RISKS.md` shipped an example risk marked High/OPEN, so every new project started with an open High risk; it is now a commented example.
+- `setup-repo.sh` replaced `PROJECT_NAME` inside the README's "How to use this template" section; it now removes that section on the first run.
 - New projects inherited the template's own CHANGELOG and WORKLOG history: `setup-repo.sh` now starts both empty on its first run and records the origin in `.claude/TEMPLATE_VERSION`.
 - Claude could not fill in `.claude/launch.json` in phase P03: the deny rules covered all of `.claude/`. They now cover only settings, hooks, agents, commands and skills, matching the hook (new hook test).
 - `setup-repo.sh` aborted halfway on private repos with GitHub Free (rulesets refused) and on a second run (duplicate ruleset). It now warns up front, skips existing rulesets, configures everything else and exits with an error if `main` could not be protected.

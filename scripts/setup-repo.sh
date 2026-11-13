@@ -40,6 +40,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versio
 ## [Unreleased]
 MD
   echo "created from serbenda/project-template on $(date +%F)" > .claude/TEMPLATE_VERSION
+  # The README's "How to use this template" section is for the template only: drop it (and the rule above it).
+  awk '/^<details>/ { skip = 1 } !skip { print } /^<\/details>/ { skip = 0 }' README.md \
+    | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}' | sed -e '${/^---$/d;}' | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}' > README.md.new
+  mv README.md.new README.md
   echo "  ✓ Fresh CHANGELOG and WORKLOG for this project (the template's own history was removed)"
 fi
 

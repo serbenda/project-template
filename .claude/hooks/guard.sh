@@ -34,12 +34,14 @@ if [[ -n "$path" ]] && has '(^|/)(\.claude/(settings(\.local)?\.json|hooks/|agen
   has '"tool_name" *: *"(Read|Grep|Glob)"' "$input" ||
     block "the security configuration (.claude/, .githooks/) is changed only by the owner."
 fi
-# Via the shell. Checked per subcommand (split on ; && || | and newlines), so a read-only command like
-# "git rm app.py && git grep x -- ':!.claude/skills'" or "ls .claude/commands 2>/dev/null" is not taken
-# for a write. Harmless redirections (2>/dev/null, >&2, 2>&1) don't count as writing. Indirection is still
-# blocked: cd into a protected folder, a variable or command substitution holding its path, plus any write.
-protected_re='(\.claude/(settings|hooks|agents|commands|skills)|\.githooks)'
-write_re='(>|sed +-i|tee |cp |mv |rm |chmod |ln |truncate|install |perl +-[a-z]*i|python3? +-c)'
+# Via the shell. Strict by default: a command that mentions a protected path and writes anything is blocked.
+# The only relaxation is for simple commands (no cd/pushd, loops, read/set/printf -v, find/xargs, eval/source,
+# variables or command substitution): there each subcommand is checked on its own, so read-only commands like
+# "git rm app.py && git grep x -- ':!.claude/skills'" or "ls .claude/commands 2>/dev/null" are not taken for
+# writes. Harmless redirections (2>/dev/null, >&2, 2>&1) never count as writing.
+protected_re='(\.claude/(settings|hooks|agents|commands|skills)|\.githooks|(^|[ /=])\.claude/?( |$))'
+write_re='(>|sed +-i|tee |cp |mv |rm |chmod |ln |truncate|install |dd .*of=|patch |tar |unzip |rsync |perl +-[a-z]*i|python3? +-c|git( +[^ ]+)* +(checkout|restore)( +[^ ]+)* +-- )'
+indirect_re='((^|[ ;&|])(cd|pushd|for|while|until|read|set|printf +-v|xargs|find|eval|source|exec)( |$)|=|\$\(|`|\$\{?[A-Za-z_])'
 strip_redirs() { printf '%s' "$1" | sed -E 's/[0-9]*>&[0-9-]+//g; s/&?[0-9]*>>? *\/dev\/(null|stderr|stdout)//g'; }
 
 # Each subcommand is analysed separately (split on ; && || | and newlines)
@@ -49,10 +51,9 @@ parts=()
 while IFS= read -r line; do parts+=("$line"); done \
   < <(printf '%s\n' "$cmd" | awk '{ gsub(/&&|\|\||;|\|/, "\n"); print }')
 
-if [[ -n "$cmd" ]] && has "$protected_re" "$cmd"; then
-  if has "$write_re" "$(strip_redirs "$cmd")" && has "(cd +[^ ]*$protected_re|=[^ ]*$protected_re|\\\$\(|\`)" "$cmd"; then
+if [[ -n "$cmd" ]] && has "$protected_re" "$cmd" && has "$write_re" "$(strip_redirs "$cmd")"; then
+  has "$indirect_re" "$cmd" &&
     block "the security configuration (.claude/, .githooks/) is changed only by the owner."
-  fi
   for p in "${parts[@]+"${parts[@]}"}"; do
     if has "$protected_re" "$p" && has "$write_re" "$(strip_redirs "$p")"; then
       block "the security configuration (.claude/, .githooks/) is changed only by the owner."
@@ -107,8 +108,8 @@ for p in "${parts[@]+"${parts[@]}"}"; do
 
   # --- Git identity ---
   # Reading is allowed (AGENTS.md asks to check them before committing): no value after the key, or --get.
-  if (( isgit )) && has ' config( +--(global|local))? +(user\.(name|email)|core\.hooksPath)' "$p" &&
-     ! has ' config( +--(global|local))?( +--get)? +(user\.(name|email)|core\.hooksPath) *$' "$p"; then
+  if (( isgit )) && has ' config( +-[-a-z]+)* +(user\.(name|email)|core\.hooksPath)' "$p" &&
+     ! has ' config( +--(global|local|system|worktree))*( +--get)? +(user\.(name|email)|core\.hooksPath) *$' "$p"; then
     value="$(printf '%s' "$p" | sed -E 's/.* (user\.(name|email)|core\.hooksPath) +//')"
     [[ "$value" == "serbenda@gmail.com" || "$value" == "Sergio Santiago Bendaña Quesada" || "$value" == ".githooks" ]] ||
       block "the git identity and hooks path are not changed."
