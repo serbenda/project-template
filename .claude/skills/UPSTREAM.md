@@ -22,7 +22,7 @@ Auditoría de seguridad defensiva en seis fases: reconocimiento, búsqueda, vali
 
 Auditoría de rendimiento web: Core Web Vitals, Lighthouse, análisis de red, accesibilidad y código.
 
-- Para medir trazas reales necesita el servidor MCP de Chrome DevTools. Sin él, hace un análisis del código y de la red y dice qué no ha podido medir.
+- Para medir trazas reales necesita el servidor MCP de Chrome DevTools. Instálalo con una **versión fija** (`chrome-devtools-mcp@X.Y.Z`), no con `@latest` como sugiere la skill. Sin él, hace un análisis del código y de la red y dice qué no ha podido medir.
 - Su archivo `references/skill-feedback.md` sirve para abrir issues **públicas** en `cloudflare/skills`. Solo se usa si el propietario lo pide y tras aprobar el texto exacto.
 
 ## repo-security-posture

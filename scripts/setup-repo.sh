@@ -38,10 +38,11 @@ gh api -X PATCH "repos/$REPO" \
 
 # 5. Seguridad: alertas de Dependabot, avisos privados de vulnerabilidades,
 #    escaneo de secretos y protección en push (gratis en repos públicos)
-gh api -X PUT "repos/$REPO/vulnerability-alerts" >/dev/null || true
-gh api -X PUT "repos/$REPO/automated-security-fixes" >/dev/null || true
-gh api -X PUT "repos/$REPO/private-vulnerability-reporting" >/dev/null || true
-gh api -X PATCH "repos/$REPO" --input - >/dev/null <<'JSON' || true
+aviso() { echo "  ⚠ No se pudo activar: $1 (revísalo a mano en Settings → Security)" >&2; }
+gh api -X PUT "repos/$REPO/vulnerability-alerts" >/dev/null 2>&1 || aviso "alertas de Dependabot"
+gh api -X PUT "repos/$REPO/automated-security-fixes" >/dev/null 2>&1 || aviso "correcciones automáticas de Dependabot"
+gh api -X PUT "repos/$REPO/private-vulnerability-reporting" >/dev/null 2>&1 || aviso "avisos privados de vulnerabilidades"
+gh api -X PATCH "repos/$REPO" --input - >/dev/null 2>&1 <<'JSON' || aviso "escaneo de secretos y protección en push (en repos privados requiere GitHub Advanced Security)"
 {"security_and_analysis": {
   "secret_scanning": {"status": "enabled"},
   "secret_scanning_push_protection": {"status": "enabled"}

@@ -16,7 +16,8 @@ if grep -Eiq "$patron" "$msg_file"; then
 fi
 
 esperado="serbenda@gmail.com"
-actual="$(git config user.email || true)"
+# git var refleja también --author y GIT_AUTHOR_EMAIL
+actual="$(git var GIT_AUTHOR_IDENT | sed -E 's/.*<([^>]*)>.*/\1/')"
 if [[ "$actual" != "$esperado" ]]; then
   echo "commit-msg: el email de autor es '$actual' y debe ser '$esperado'." >&2
   echo "  git config user.email \"$esperado\"" >&2

@@ -3,6 +3,7 @@ name: CI
 on:
   pull_request:
     branches: [main, development]
+    types: [opened, synchronize, reopened, edited]
   push:
     branches: [development]
 
@@ -57,14 +58,18 @@ jobs:
           if [ "$PR_AUTOR" = "dependabot[bot]" ]; then
             echo "PR de Dependabot: no se comprueba el autor de los commits."; exit $fallo
           fi
-          while IFS='|' read -r sha email; do
+          while IFS='|' read -r sha email committer; do
             if [ "$email" != "serbenda@gmail.com" ]; then
               echo "::error::Commit $sha con autor '$email' (debe ser serbenda@gmail.com)."; fallo=1
+            fi
+            # noreply@github.com: commits hechos desde la web de GitHub
+            if [ "$committer" != "serbenda@gmail.com" ] && [ "$committer" != "noreply@github.com" ]; then
+              echo "::error::Commit $sha con committer '$committer'."; fallo=1
             fi
             if git log -1 --format=%B "$sha" | grep -Eiq "$patron"; then
               echo "::error::Commit $sha contiene firmas de IA en el mensaje."; fallo=1
             fi
-          done < <(git log --no-merges --format='%h|%ae' "$BASE..$HEAD")
+          done < <(git log --no-merges --format='%h|%ae|%ce' "$BASE..$HEAD")
           [ $fallo -eq 0 ] && echo "✓ Autoría correcta y sin firmas de IA."
           exit $fallo
 
@@ -81,12 +86,12 @@ jobs:
           node-version: "lts/*"
 
       - name: Formato (.editorconfig)
-        run: npx --yes editorconfig-checker@6 -disable-indent-size -exclude 'LICENSE|\.git/|\.claude/skills/'
+        run: npx --yes editorconfig-checker@6.2.0 -disable-indent-size -exclude 'LICENSE|\.git/|\.claude/skills/'
 
       - name: HTML válido
         run: |
           if find . -name '*.html' -not -path './node_modules/*' | grep -q .; then
-            npx --yes htmlhint@1 "**/*.html" --ignore "node_modules/**"
+            npx --yes htmlhint@1.9.2 "**/*.html" --ignore "node_modules/**"
           else
             echo "No hay HTML todavía."
           fi
