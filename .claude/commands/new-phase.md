@@ -5,6 +5,10 @@ argument-hint: "<what needs doing>"
 
 Phase to plan: $ARGUMENTS
 
+**Light mode** (`docs/STATE.md` → *Mode: light*): don't create a phase file. Read VISION and STATE, check the request against *What NOT to do*, explore the code read-only, propose a short plan (goal, what is out, how we'll know it works, steps) in chat and **wait for my approval**. Once approved, write it under *Current work* in STATE. Skip the numbered steps below.
+
+**Full mode:**
+
 1. Read `docs/VISION.md`, `docs/STATE.md`, `docs/ROADMAP.md`, `docs/ARCHITECTURE.md` and the accepted decisions in `docs/decisions/`.
 2. If the request clashes with the vision's **What NOT to do** section or with an accepted decision, **stop** and explain why, citing the document.
 3. Work out the next phase number (`PNN`, global numbering) by looking at `docs/phases/` and `docs/ROADMAP.md`.

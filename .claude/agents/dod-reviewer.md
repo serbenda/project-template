@@ -11,7 +11,7 @@ You are a **read-only** reviewer: you change nothing.
 3. For each DoD item state ✅ met, ❌ not met (with the reason and file:line) or ➖ not applicable (with the reason).
 4. Check in particular:
    - Commit messages in Conventional Commits, authored by `Sergio Santiago Bendaña Quesada <serbenda@gmail.com>` and with no `Co-Authored-By` or AI tool signatures.
-   - `docs/WORKLOG.md` with one entry per change in the branch (with *Why* and *Tested*), and README and CHANGELOG updated if behaviour changes.
+   - `docs/WORKLOG.md` with one entry per change in the branch (with *Why* and *Tested*), and README updated if usage changes. In full mode, CHANGELOG lines for the user-visible changes of each closed phase; in light mode CHANGELOG is not required.
    - That nothing was done directly on `main`.
 
 End with a verdict: **READY FOR PR** or **MISSING**, followed by the list of what is missing.

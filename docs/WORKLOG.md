@@ -2,7 +2,7 @@
 
 > The **context** of each change: what, why, what was rejected, commits, how it was tested and what is pending.
 > Maintained by the agent with the `record-changes` skill. New entries **on top**.
-> What is visible to users of the project also goes in [CHANGELOG.md](../CHANGELOG.md); the current status, in [STATE.md](STATE.md).
+> In full mode, user-visible changes go once per phase in [CHANGELOG.md](../CHANGELOG.md); the current status is in [STATE.md](STATE.md).
 
 <!--
 ## YYYY-MM-DD — Short title of the change
@@ -15,6 +15,16 @@
 - **Tested:**
 - **Pending:**
 -->
+
+## 2026-11-13 — Leaner template: 9 skills, light/full mode, no duplicated records
+- **Phase / issue:** —
+- **What:** 9 Anthropic skills removed (6 kept for software work); project mode light/full in `AGENTS.md`, `STATE.md`, the commands, the reviewers, the DoD and `setup-repo.sh` (`MODE=light`); CHANGELOG now written once per phase, worklog after every change.
+- **Why:** review of the template: unused skills cost context in every session and compete to trigger; the full process is too heavy for experiments and would end up skipped; writing every change twice (CHANGELOG and worklog) was friction with no extra information.
+- **Rejected:** dropping CHANGELOG entirely (useful once others use the project); removing the PR flow (it is the control over the agent, kept in both modes); a third "medium" mode (two are easier to reason about).
+- **Files:** `.claude/skills/` (9 folders removed), `.claude/skills/UPSTREAM.md`, `.claude/skills/record-changes/SKILL.md`, `.claude/commands/{status,new-phase,close-phase,prepare-pr}.md`, `.claude/agents/{architecture,dod}-reviewer.md`, `AGENTS.md`, `CLAUDE.md`, `docs/STATE.md`, `docs/DEFINITION_OF_DONE.md`, `docs/WORKLOG.md`, `scripts/setup-repo.sh`, `README.md`, `README.es.md`, `CHANGELOG.md`.
+- **Commits:** this entry's commit.
+- **Tested:** hook tests; `setup-repo.sh` with a fake `gh` in both modes (light sets *Mode: light* in STATE, default keeps full); skill frontmatter; links; every remaining skill listed in the guide and UPSTREAM.
+- **Pending:** real end-to-end run on GitHub (needs `gh auth login`), in both modes.
 
 ## 2026-11-13 — Gaps for starting a project from scratch
 - **Phase / issue:** —

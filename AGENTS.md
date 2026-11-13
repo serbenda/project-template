@@ -2,16 +2,29 @@
 
 This file sets the rules for any AI assistant or agent working in this repository. They take precedence over its defaults.
 
+## Project mode: light or full
+`docs/STATE.md` → *Mode* says how much process this project uses. Follow it.
+
+| | **light** (experiments, prototypes, small tools) | **full** (anything that lasts or that others use) |
+|---|---|---|
+| Docs kept up to date | `VISION.md`, `STATE.md`, `WORKLOG.md`, `SETUP.md` | All of `docs/` |
+| Planning | Before coding, propose the plan in chat and wait for approval; write it under *Current work* in STATE | A phase file per block of work (`/new-phase`), inside the stages of `ROADMAP.md` |
+| Decisions | Only irreversible ones get an ADR | ADR for anything hard to undo |
+| CHANGELOG / RISKS | Not used | Used |
+| Branches, PRs, hooks and CI | Same as full | — |
+
+**Propose switching to full** (don't switch on your own) as soon as any of these holds: someone other than the owner uses it, it is deployed, it handles personal data or money, it has been going on for more than a month, or someone else contributes. Switching means setting *Mode: full* and creating ROADMAP and the first phase file from what STATE and WORKLOG already say.
+
 ## How the work is organized
 You remember nothing between sessions: the project's memory lives in `docs/` (see [decision 0001](docs/decisions/0001-working-with-ai-agents.md)).
 - **At the start of a session**, read [`docs/STATE.md`](docs/STATE.md). It is the single source of truth for the project's state.
 - [`docs/VISION.md`](docs/VISION.md) defines what the project is and, above all, **what NOT to do**. Do not propose anything that conflicts with it without saying so.
-- Work is organized in **phases** (`docs/phases/PNN-*.md`) within **stages** (`docs/ROADMAP.md`). Single numbering: `S0…`, `P01…`.
-- **Before writing code** for a phase, its plan must be in the phase file and approved by the owner.
-- **Do not expand the scope**: anything not listed under the phase's *In* is noted as a next step in STATE, not done.
+- **Full mode:** work is organized in **phases** (`docs/phases/PNN-*.md`) within **stages** (`docs/ROADMAP.md`). Single numbering: `S0…`, `P01…`.
+- **Before writing code**, the plan must be approved by the owner: in the phase file (full) or in chat and STATE (light).
+- **Do not expand the scope**: anything outside the approved plan (the phase's *In*, in full mode) is noted as a next step in STATE, not done.
 - Accepted decisions in [`docs/decisions/`](docs/decisions/) are not reopened: if something contradicts them, cite them and ask.
-- **After every change**, before committing, use the `record-changes` skill: an entry in [`docs/WORKLOG.md`](docs/WORKLOG.md) (what, why, commits, how it was tested, pending) and, if the change is visible, a line in `CHANGELOG.md`.
-- **When closing a phase**, update its *Result*, STATE (≤150 lines), ROADMAP, CHANGELOG and, if applicable, RISKS and ARCHITECTURE.
+- **After every change**, before committing, use the `record-changes` skill: an entry in [`docs/WORKLOG.md`](docs/WORKLOG.md) (why, what was rejected, how it was tested, what is pending).
+- **When closing a phase** (full mode), update its *Result*, STATE (≤150 lines), ROADMAP, CHANGELOG (the phase's user-visible changes, once) and, if applicable, RISKS and ARCHITECTURE. In light mode, closing a piece of work means updating STATE.
 - Before calling something done, run the *Verify* commands in [`docs/SETUP.md`](docs/SETUP.md).
 
 ## Identity and authorship
@@ -42,8 +55,8 @@ You remember nothing between sessions: the project's memory lives in `docs/` (se
 ## Available skills
 Skills live in `.claude/skills/`. Load them when the task fits:
 - `security-audit/`: security review and audit (Cloudflare, MIT). Use it for any security question or review. The **full audit** runs only if the owner explicitly asks for it, and its artifacts go outside the repo. Before opening a PR that touches authentication, external data, workflows or dependencies, do a review in guidance mode.
-- `record-changes/`: CHANGELOG and worklog. Always use it when finishing a change, without being asked.
-- Anthropic skills (`mcp-builder`, `frontend-design`, `webapp-testing`, `skill-creator`, `claude-api`, `doc-coauthoring` and others; full list in `UPSTREAM.md`): load them when the task fits. Skills that ship scripts are never run on files of unknown origin.
+- `record-changes/`: worklog after every change, and CHANGELOG when closing a phase in full mode. Always use it when finishing a change, without being asked.
+- Anthropic skills: `mcp-builder` (MCP servers), `claude-api` (Claude API and SDKs), `skill-creator` (new skills and their evals), `webapp-testing` (Playwright), `frontend-design` (UI design) and `doc-coauthoring` (specs and proposals). Load them when the task fits. Skills that ship scripts are never run on files of unknown origin.
 - `repo-security-posture/`: review of the repo's GitHub configuration. Read-only, it does not change settings; the owner applies the fixes.
 - `record-changes` is our own and can be improved. Third-party skills are not modified; see `.claude/skills/UPSTREAM.md`.
 

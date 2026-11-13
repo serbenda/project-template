@@ -6,13 +6,18 @@
 Last updated: YYYY-MM-DD
 
 ## Where we are
+- **Mode:** full <!-- light | full — see AGENTS.md → Project mode -->
 - **Current stage:** S0 — Define (see [ROADMAP](ROADMAP.md))
-- **Phase in progress:** none
+- **Phase in progress:** none <!-- full mode -->
 - **Environment:** local
 - **Working branch:** `development`
 
+## Current work
+<!-- Light mode: the approved plan for what is being done now (a few steps). Full mode: link to the phase file. -->
+- —
+
 ## Recently done
-<!-- The last 3–5 closed phases, one line each with a link to its phase file. Older ones live in the phase files. -->
+<!-- The last 3–5 closed phases (full) or finished pieces of work (light), one line each with a link. Older ones live in the phase files or WORKLOG. -->
 - —
 
 ## Next
@@ -26,7 +31,7 @@ Last updated: YYYY-MM-DD
 - —
 
 ## Open risks
-<!-- Only those open right now. Details in RISKS.md. -->
+<!-- Only those open right now. Details in RISKS.md (full mode). -->
 - None recorded. See [RISKS.md](RISKS.md).
 
 ## How to run it

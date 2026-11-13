@@ -32,6 +32,13 @@ chmod +x .githooks/* .claude/hooks/*.sh scripts/*.sh
 grep -rl --exclude-dir=.git --exclude-dir=skills --exclude=setup-repo.sh --exclude=README.es.md "PROJECT_NAME" . | xargs -r sed -i.bak "s/PROJECT_NAME/$NAME/g"
 find . -name '*.bak' -not -path './.git/*' -delete
 
+# 2b. Project mode: MODE=light ./scripts/setup-repo.sh for experiments and small tools (default: full).
+#     See AGENTS.md → Project mode.
+if [[ "${MODE:-full}" == "light" ]]; then
+  sed -i.bak 's/^- \*\*Mode:\*\* full/- **Mode:** light/' docs/STATE.md && rm -f docs/STATE.md.bak
+  echo "  ✓ Light mode: VISION, STATE, WORKLOG and SETUP; no phases, roadmap, CHANGELOG or risks"
+fi
+
 # 3. development branch
 if ! git ls-remote --exit-code --heads origin development >/dev/null 2>&1; then
   git push origin "HEAD:refs/heads/development"

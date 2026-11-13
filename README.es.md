@@ -11,15 +11,32 @@ Una plantilla de repositorio para **empezar cualquier proyecto nuevo trabajando 
 2. **Una forma de trabajar.** Comandos como `/status`, `/new-phase` o `/prepare-pr` que llevan el trabajo por fases pequeñas, con el plan aprobado antes de escribir código.
 3. **Barreras de seguridad.** Un hook que impide a Claude hacer cosas peligrosas, un hook de git que quita firmas de IA de los commits, una CI que lo comprueba en GitHub y un script que protege la rama `main`.
 
-Además incluye 18 **skills**: conocimiento especializado que Claude carga cuando la tarea lo pide (seguridad, servidores MCP, API de Claude, pruebas web, diseño…). Las de Word, Excel, PowerPoint y PDF no van en la plantilla porque ya vienen con tu cuenta de Claude.
+Además incluye 9 **skills**: conocimiento especializado que Claude carga cuando la tarea lo pide (bitácora, seguridad, servidores MCP, API de Claude, pruebas web, diseño de interfaces, documentación). Solo van las útiles para desarrollar software: cada skill ocupa contexto en todas las sesiones y compite por activarse.
+
+Y tiene **dos modos**, para no cargar de papeleo un experimento ni dejar sin control un proyecto serio (ver abajo).
+
+## Modo ligero o completo
+
+Se elige al crear el proyecto y queda escrito en `docs/STATE.md` → *Mode*. Claude lo lee y trabaja según el modo.
+
+| | **Ligero** (`light`) | **Completo** (`full`) |
+|---|---|---|
+| Para | Experimentos, prototipos, herramientas pequeñas | Lo que va a durar o lo usan otros |
+| Documentos que se mantienen | `VISION`, `STATE`, `WORKLOG` y `SETUP` | Todo `docs/` |
+| Planificación | Claude propone el plan en el chat, lo apruebas y queda en *Current work* de `STATE` | Una ficha por fase (`/new-phase`) dentro de las etapas de `ROADMAP` |
+| Decisiones (ADR) | Solo las irreversibles | Todo lo difícil de deshacer |
+| CHANGELOG y riesgos | No se usan | Sí |
+| Ramas, PR, hooks y CI | Igual | Igual |
+
+Claude te **propondrá pasar a completo** (no lo hace por su cuenta) cuando se cumpla algo de esto: lo usa alguien más, se despliega, maneja datos personales o dinero, lleva más de un mes, o colabora otra persona. Pasar es poner *Mode: full* y crear `ROADMAP` y la primera fase con lo que ya dicen `STATE` y `WORKLOG`.
 
 ## Cómo se empieza un proyecto
 
 1. En GitHub: **Use this template → Create a new repository**.
-2. Clona el repo y ejecuta `./scripts/setup-repo.sh`. Configura tu autoría, crea la rama `development`, protege `main` y activa las alertas de seguridad. Con commits firmados: `SIGNED_COMMITS=1 ./scripts/setup-repo.sh`.
+2. Clona el repo y ejecuta `./scripts/setup-repo.sh`. Configura tu autoría, crea la rama `development`, protege `main` y activa las alertas de seguridad. Con commits firmados: `SIGNED_COMMITS=1 ./scripts/setup-repo.sh`. En modo ligero: `MODE=light ./scripts/setup-repo.sh` (por defecto, completo).
 3. Escribe `docs/VISION.md` (o díctasela a Claude y revísala).
 4. En Claude Code: `/decision project stack` para elegir lenguaje y herramientas.
-5. `/new-phase` para la primera fase. La fase P03 sigue la **lista de comprobación del stack** de `docs/SETUP.md`: comandos para arrancar y verificar, `.claude/launch.json`, job de CI con pruebas y lint, Dependabot, análisis estático (CodeQL si el repo es público, Semgrep si es privado) y `.gitignore`. Al terminar, añades tú el nombre del job nuevo a los checks obligatorios de `main`.
+5. `/new-phase` para la primera fase (en modo ligero, el primer plan). En modo completo, la fase P03 sigue la **lista de comprobación del stack** de `docs/SETUP.md`: comandos para arrancar y verificar, `.claude/launch.json`, job de CI con pruebas y lint, Dependabot, análisis estático (CodeQL si el repo es público, Semgrep si es privado) y `.gitignore`. Al terminar, añades tú el nombre del job nuevo a los checks obligatorios de `main`.
 6. Una sola vez en tu Mac: sigue `docs/SECURITY_GUIDE.md` → *What you have to do yourself*.
 
 ## El día a día con Claude
@@ -27,10 +44,10 @@ Además incluye 18 **skills**: conocimiento especializado que Claude carga cuand
 | Cuándo | Qué haces | Qué pasa |
 |---|---|---|
 | Al abrir una sesión | `/status` | Claude lee el estado y te dice dónde estás y qué toca |
-| Empiezas algo nuevo | `/new-phase <qué>` | Crea la ficha de la fase con objetivo, alcance, criterios y plan. **No escribe código hasta que lo apruebes** |
-| Mientras trabaja | (automático) | Tras cada cambio, la skill `record-changes` anota en la bitácora qué se hizo y por qué, y en el CHANGELOG si se nota desde fuera |
+| Empiezas algo nuevo | `/new-phase <qué>` | Completo: crea la ficha de la fase con objetivo, alcance, criterios y plan. Ligero: te propone el plan en el chat. En los dos casos **no escribe código hasta que lo apruebes** |
+| Mientras trabaja | (automático) | Tras cada cambio, la skill `record-changes` anota en la bitácora por qué se hizo, qué se descartó y cómo se probó |
 | Hay que elegir algo difícil de deshacer | `/decision <qué>` | Escribe un ADR con opciones, pros y contras y una recomendación; tú decides |
-| Termina la fase | `/close-phase` | Comprueba criterios y Definition of Done, rellena el resultado y actualiza estado, hoja de ruta y CHANGELOG |
+| Termina la fase | `/close-phase` | Comprueba criterios y Definition of Done y actualiza el estado. En completo, además, rellena el resultado de la fase, la hoja de ruta y el CHANGELOG (una vez por fase, sin repetir la bitácora) |
 | Quieres llevarlo a `main` | `/prepare-pr` | Pasa la verificación y los tres revisores, y abre la PR `development → main`. **La fusionas tú** |
 
 ## Estructura, archivo por archivo
@@ -43,7 +60,7 @@ Además incluye 18 **skills**: conocimiento especializado que Claude carga cuand
 | `README.es.md` | Esta guía |
 | `AGENTS.md` | **Las normas para cualquier agente de IA**: cómo se organiza el trabajo, autoría, ramas, seguridad, skills e idioma. Vale para Claude, Copilot, Cursor… |
 | `CLAUDE.md` | Lo que lee Claude Code al empezar. Importa `AGENTS.md` y añade lo propio de Claude: comandos, subagentes, skills y vista previa |
-| `CHANGELOG.md` | Cambios **visibles** del proyecto, una línea cada uno, formato *Keep a Changelog* |
+| `CHANGELOG.md` | Cambios **visibles** del proyecto, una línea cada uno, formato *Keep a Changelog*. Solo en modo completo y se escribe al cerrar cada fase, así no repite la bitácora |
 | `SECURITY.md` | Política para informar de vulnerabilidades (aviso privado en GitHub, no issues públicas) |
 | `.gitignore` | Lo que nunca se sube: `.env`, claves, dependencias, builds |
 
@@ -72,7 +89,7 @@ Además incluye 18 **skills**: conocimiento especializado que Claude carga cuand
 | `hooks/guard.sh` | **El guardián.** Se ejecuta antes de cada acción de Claude y bloquea lo peligroso: push a `main` o forzado, borrar historial, leer secretos, escribir tokens en archivos, ejecutar scripts descargados, cambiar la autoría, firmas de IA, tocar su propia configuración… Si algo se bloquea, Claude tiene que explicártelo en vez de buscar otro camino |
 | `commands/` | Los comandos `/status`, `/new-phase`, `/close-phase`, `/decision` y `/prepare-pr` explicados arriba |
 | `agents/` | Tres **subagentes revisores** de solo lectura que se lanzan antes de una PR (ver abajo) |
-| `skills/` | Las 18 skills (ver abajo). `UPSTREAM.md` dice de dónde sale cada una, en qué commit está fijada y cómo actualizarla |
+| `skills/` | Las 9 skills (ver abajo). `UPSTREAM.md` dice de dónde sale cada una, en qué commit está fijada y cómo actualizarla |
 | `launch.json` | Servidor local para la vista previa de Claude Code. Vacío hasta la fase P03. Es el **único archivo de `.claude/` que Claude puede editar**; el resto (permisos, hook, comandos, subagentes, skills) solo lo cambias tú |
 
 #### Subagentes revisores
@@ -100,7 +117,7 @@ Una skill es una carpeta con un `SKILL.md` que explica a Claude cómo hacer algo
 
 | Skill | Para qué sirve |
 |---|---|
-| `record-changes` | Tras cada cambio y antes del commit, anota en `docs/WORKLOG.md` el qué, el porqué, lo descartado, los commits, cómo se probó y lo pendiente. Si el cambio se nota desde fuera, añade una línea en `CHANGELOG.md`. Claude la usa siempre, sin que se la pidas |
+| `record-changes` | Tras cada cambio y antes del commit, anota en `docs/WORKLOG.md` el porqué, lo descartado, los commits, cómo se probó y lo pendiente. Al cerrar una fase en modo completo, escribe las líneas del `CHANGELOG`. Claude la usa siempre, sin que se la pidas |
 
 ### Seguridad
 
@@ -124,31 +141,17 @@ Una skill es una carpeta con un `SKILL.md` que explica a Claude cómo hacer algo
 | `skill-creator` | Crear skills nuevas, mejorar las existentes y medir si funcionan con evaluaciones y benchmarks |
 | `webapp-testing` | Probar aplicaciones web locales con Playwright: verificar la interfaz, depurar, sacar capturas y leer los logs del navegador |
 | `frontend-design` | Criterio de diseño para interfaces nuevas o rediseños: dirección estética y tipografía, sin que parezca una plantilla genérica |
-| `web-artifacts-builder` | Artifacts HTML complejos de claude.ai con React, Tailwind y shadcn/ui (estado, rutas, varios componentes) |
 
-### Diseño y creatividad
+### Las que no van y por qué
 
-| Skill | Para qué sirve |
-|---|---|
-| `canvas-design` | Pósters, piezas gráficas y diseños estáticos en `.png` o `.pdf` |
-| `algorithmic-art` | Arte generativo con p5.js: campos de flujo, sistemas de partículas, parámetros interactivos |
-| `theme-factory` | Aplicar uno de 10 temas de colores y fuentes (o crear uno) a presentaciones, documentos o páginas |
-| `slack-gif-creator` | GIFs animados optimizados para Slack |
-
-### Pensadas para uso interno de Anthropic
-
-Vienen en el repositorio oficial, pero encajan poco en un proyecto propio. Úsalas solo si te sirven.
-
-| Skill | Para qué sirve |
-|---|---|
-| `brand-guidelines` | Aplica los colores y la tipografía de la **marca Anthropic** |
-| `internal-comms` | Comunicaciones internas con los formatos de una empresa: informes de estado, newsletters, FAQs, actualizaciones 3P |
-| `academy-guide` | Recomienda cursos de Claude Academy cuando preguntas cómo usar Claude |
-| `discernment-nudge` | Tras una respuesta importante, añade 2 o 3 preguntas para que revises lo que Claude te ha dado antes de usarlo |
+El repositorio de Anthropic trae 19 skills; aquí van 6. Las demás se han quitado a propósito, y se pueden recuperar de [anthropics/skills](https://github.com/anthropics/skills) si un proyecto las necesita:
+- `docx`, `xlsx`, `pptx` y `pdf`: ya vienen con tu cuenta de Claude (`anthropic-skills:`).
+- `canvas-design`, `algorithmic-art`, `theme-factory`, `slack-gif-creator` y `web-artifacts-builder`: son de diseño gráfico o de artifacts de claude.ai, no de proyectos de software.
+- `brand-guidelines`, `internal-comms`, `academy-guide` y `discernment-nudge`: pensadas para uso interno de Anthropic o sus cursos.
 
 ### Avisos sobre las skills
 
-- `canvas-design`, `slack-gif-creator`, `webapp-testing` y `web-artifacts-builder` **traen scripts** que se ejecutan al usarlas. Revísalos la primera vez y no los uses con archivos de origen desconocido.
+- `webapp-testing` y `skill-creator` **traen scripts** que se ejecutan al usarlas. Revísalos la primera vez y no los uses con archivos de origen desconocido.
 - `skill-creator` y `claude-api` también vienen con tu cuenta de Claude; dentro del proyecto manda la copia del repo. Para Word, Excel, PowerPoint y PDF usa las de tu cuenta (`anthropic-skills:docx`, `xlsx`, `pptx`, `pdf`).
 - Las skills de terceros **no se editan**. Para actualizarlas se sustituye la carpeta entera por la versión nueva, se revisa el diff y se actualiza `UPSTREAM.md`.
 - Cada skill añade su descripción al contexto de cada sesión. Si un proyecto no necesita alguna, puedes borrar su carpeta.

@@ -39,9 +39,9 @@ A change is **done** only when it meets everything on this list. If something do
 
 ## 5. Documentation
 - [ ] README updated if usage, configuration or data sources change.
-- [ ] Entry in `docs/WORKLOG.md` (what, why, commits, how it was tested) and, if the change is visible, in `CHANGELOG.md` → *Unreleased*.
-- [ ] Phase file with *Result* filled in and `docs/STATE.md` updated (`/close-phase`).
-- [ ] If a hard-to-reverse decision was made, it has its ADR in `docs/decisions/`.
+- [ ] Entry in `docs/WORKLOG.md` (why, what was rejected, how it was tested, pending).
+- [ ] `docs/STATE.md` updated (`/close-phase`). Full mode: phase file with *Result* filled in and the phase's user-visible changes in `CHANGELOG.md` → *Unreleased*.
+- [ ] If a hard-to-reverse decision was made, it has its ADR in `docs/decisions/` (light mode: only irreversible ones).
 - [ ] Public data sources used are cited with their license.
 
 ## 6. Integration

@@ -51,8 +51,8 @@ How to start and verify it: [docs/SETUP.md](docs/SETUP.md).
 ```
 /status                      at the start of every session
 /new-phase <what>            phase file + plan → you approve → Claude implements on development
-(automatic)                  record-changes skill: CHANGELOG + WORKLOG after every change
-/close-phase                 criteria + DoD + updates STATE, ROADMAP and CHANGELOG
+(automatic)                  record-changes skill: WORKLOG after every change
+/close-phase                 criteria + DoD + updates STATE, ROADMAP and CHANGELOG (once per phase)
 /prepare-pr                  reviewers + development → main PR (you merge it)
 /decision <what>             when something hard to undo has to be chosen
 ```
@@ -75,7 +75,7 @@ The code may be viewed, but not copied, modified or redistributed without the au
    ./scripts/setup-repo.sh
    ```
    It creates the `development` branch, protects `main` and enables security alerts and the git hook.
-   With signed commits: `SIGNED_COMMITS=1 ./scripts/setup-repo.sh`.
+   With signed commits: `SIGNED_COMMITS=1 ./scripts/setup-repo.sh`. For an experiment or small tool: `MODE=light ./scripts/setup-repo.sh` (see `AGENTS.md` → Project mode).
 3. Replace `PROJECT_NAME` in this README (the script already replaces it everywhere else).
 4. Write [docs/VISION.md](docs/VISION.md) (or dictate it to Claude and review it).
 5. With Claude: `/decision project stack`, then `/new-phase` for the first phase of Stage S0.
