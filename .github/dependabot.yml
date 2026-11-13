@@ -1,0 +1,23 @@
+version: 2
+updates:
+  # Mantiene al día las GitHub Actions de los workflows
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    target-branch: "development"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "ci"
+    groups:
+      actions:
+        patterns: ["*"]
+
+  # Descomenta si el proyecto usa npm
+  # - package-ecosystem: "npm"
+  #   directory: "/"
+  #   target-branch: "development"
+  #   schedule:
+  #     interval: "weekly"
+  #   commit-message:
+  #     prefix: "chore"

@@ -1,0 +1,109 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, development]
+    types: [opened, synchronize, reopened, edited]
+  push:
+    branches: [development]
+
+# Permisos mínimos por defecto
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  secretos:
+    name: Secretos
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read   # gitleaks lista los commits de la PR
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7  # v2.3.9
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  autoria:
+    name: Autoría
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # Los textos de la PR van por variables de entorno, nunca interpolados en el script (evita inyección)
+      - name: Sin firmas de IA y autor correcto
+        env:
+          PR_TITULO: ${{ github.event.pull_request.title }}
+          PR_CUERPO: ${{ github.event.pull_request.body }}
+          PR_AUTOR: ${{ github.event.pull_request.user.login }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          patron='co-authored-by:|generated (with|by) \[?(claude|cursor|copilot|codex)|claude-session:|noreply@anthropic|claude\.ai/code|claude\.com/claude-code|🤖'
+          fallo=0
+          if printf '%s\n%s' "$PR_TITULO" "$PR_CUERPO" | grep -Eiq "$patron"; then
+            echo "::error::El título o la descripción de la PR contiene firmas de IA."; fallo=1
+          fi
+          if [ "$PR_AUTOR" = "dependabot[bot]" ]; then
+            echo "PR de Dependabot: no se comprueba el autor de los commits."; exit $fallo
+          fi
+          while IFS='|' read -r sha email committer; do
+            if [ "$email" != "serbenda@gmail.com" ]; then
+              echo "::error::Commit $sha con autor '$email' (debe ser serbenda@gmail.com)."; fallo=1
+            fi
+            # noreply@github.com: commits hechos desde la web de GitHub
+            if [ "$committer" != "serbenda@gmail.com" ] && [ "$committer" != "noreply@github.com" ]; then
+              echo "::error::Commit $sha con committer '$committer'."; fallo=1
+            fi
+            if git log -1 --format=%B "$sha" | grep -Eiq "$patron"; then
+              echo "::error::Commit $sha contiene firmas de IA en el mensaje."; fallo=1
+            fi
+          done < <(git log --no-merges --format='%h|%ae|%ce' "$BASE..$HEAD")
+          [ $fallo -eq 0 ] && echo "✓ Autoría correcta y sin firmas de IA."
+          exit $fallo
+
+  calidad:
+    name: Calidad
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
+        with:
+          node-version: "lts/*"
+
+      - name: Formato (.editorconfig)
+        run: npx --yes editorconfig-checker@6.2.0 -disable-indent-size -exclude 'LICENSE|\.git/|\.claude/skills/'
+
+      - name: HTML válido
+        run: |
+          if find . -name '*.html' -not -path './node_modules/*' | grep -q .; then
+            npx --yes htmlhint@1.9.2 "**/*.html" --ignore "node_modules/**"
+          else
+            echo "No hay HTML todavía."
+          fi
+
+      - name: Scripts de shell
+        run: shellcheck --severity=error scripts/*.sh .claude/hooks/*.sh .githooks/*
+
+      - name: Pruebas del hook de seguridad
+        run: bash scripts/test-guardia.sh
+
+      - name: Enlaces internos rotos
+        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8  # v2.9.0
+        with:
+          args: --offline --no-progress --include-fragments --exclude-path .claude/skills './**/*.html' './**/*.md'
+          fail: true

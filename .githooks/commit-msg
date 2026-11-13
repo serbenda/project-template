@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Hook de git (vale para cualquier herramienta o persona): quita del mensaje de commit
+# las firmas automáticas de asistentes de IA y comprueba el autor.
+# Se activa con: git config core.hooksPath .githooks   (lo hace scripts/setup-repo.sh)
+set -euo pipefail
+
+msg_file="$1"
+patron='^(co-authored-by:.*(claude|anthropic|copilot|cursor|codex|openai|devin|noreply@)|.*generated (with|by) \[?(claude|cursor|copilot|codex)|claude-session:|.*claude\.ai/code|🤖)'
+
+if grep -Eiq "$patron" "$msg_file"; then
+  grep -Eiv "$patron" "$msg_file" > "$msg_file.tmp" || true
+  # quita líneas en blanco sobrantes al final
+  sed -e :a -e '/^\n*$/{$d;N;ba' -e '}' "$msg_file.tmp" > "$msg_file"
+  rm -f "$msg_file.tmp"
+  echo "commit-msg: eliminadas firmas automáticas de IA del mensaje." >&2
+fi
+
+esperado="serbenda@gmail.com"
+# git var refleja también --author y GIT_AUTHOR_EMAIL
+actual="$(git var GIT_AUTHOR_IDENT | sed -E 's/.*<([^>]*)>.*/\1/')"
+if [[ "$actual" != "$esperado" ]]; then
+  echo "commit-msg: el email de autor es '$actual' y debe ser '$esperado'." >&2
+  echo "  git config user.email \"$esperado\"" >&2
+  exit 1
+fi

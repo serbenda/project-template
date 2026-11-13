@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
+  "includeCoAuthoredBy": false,
+  "permissions": {
+    "defaultMode": "default",
+    "deny": [
+      "Read(./.env)",
+      "Read(**/.env)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Read(**/secrets/**)",
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Read(~/.config/gh/**)",
+      "Read(~/.netrc)",
+      "Edit(./.env)",
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(git push origin main*)",
+      "Bash(git push * main)",
+      "Bash(git reset --hard *)",
+      "Bash(git filter-branch *)",
+      "Bash(gh pr merge *)",
+      "Bash(gh repo delete *)",
+      "Bash(gh secret *)",
+      "Bash(rm -rf *)",
+      "Bash(sudo *)",
+      "Bash(printenv*)",
+      "Read(./.env.local)",
+      "Read(./.env.production)",
+      "Read(./.env.development)",
+      "Edit(./.claude/**)",
+      "Write(./.claude/**)",
+      "Edit(./.githooks/**)",
+      "Write(./.githooks/**)",
+      "Bash(git push --all*)",
+      "Bash(git push --mirror*)",
+      "Bash(git commit --no-verify*)",
+      "Bash(git -c *)",
+      "Bash(git remote add *)",
+      "Bash(git remote set-url *)",
+      "Bash(gh repo edit *)",
+      "Bash(gh repo archive *)",
+      "Bash(gh repo rename *)",
+      "Bash(gh auth *)",
+      "Bash(rm -fr *)",
+      "Bash(export -p*)"
+    ],
+    "ask": [
+      "Bash(git push *)",
+      "Bash(gh pr create *)",
+      "Bash(gh api *)",
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Bash(npm install *)",
+      "Bash(npm i *)",
+      "Bash(npx *)",
+      "Bash(pip install *)",
+      "WebFetch",
+      "Bash(node *)",
+      "Bash(rm -r *)",
+      "Bash(git remote *)"
+    ],
+    "allow": [
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git switch development)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(python3 -m http.server --bind 127.0.0.1 *)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Read|Edit|Write|MultiEdit|NotebookEdit|Grep|Glob",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/guardia.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
