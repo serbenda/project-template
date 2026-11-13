@@ -2,6 +2,8 @@
 
 > One sentence explaining what it is and who it is for.
 
+🇪🇸 Guía de la plantilla en castellano: [README.es.md](README.es.md)
+
 ## What it does
 - Main feature 1
 - Main feature 2
@@ -39,6 +41,7 @@ How to start and verify it: [docs/SETUP.md](docs/SETUP.md).
 ├── .github/       # CI: secrets, authorship and hook tests
 ├── .githooks/     # git hook: strips AI attribution and checks the author
 ├── CHANGELOG.md   # visible changes, Keep a Changelog format
+├── README.es.md   # Spanish guide to the template: every file and skill explained
 ├── AGENTS.md      # rules for any AI agent
 └── CLAUDE.md      # imports AGENTS.md and adds what is specific to Claude Code
 ```

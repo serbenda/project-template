@@ -16,6 +16,16 @@
 - **Pending:**
 -->
 
+## 2026-11-13 — Spanish guide to the template
+- **Phase / issue:** —
+- **What:** `README.es.md` explains in Spanish what the template is for, how to start a project, the day-to-day commands, every file and folder, the three reviewer subagents and all 22 skills. Linked from `README.md`.
+- **Why:** the owner wants a Spanish explanation of everything while the template itself stays in English.
+- **Rejected:** a full Spanish copy of every doc (two versions drift apart); translating the skills (done and reverted earlier).
+- **Files:** `README.es.md`, `README.md`, `AGENTS.md`, `CHANGELOG.md`.
+- **Commits:** this entry's commit.
+- **Tested:** relative links checked; skill list matches `.claude/skills/` (22 folders).
+- **Pending:** keep the guide in sync when files, commands or skills change (rule added to `AGENTS.md`).
+
 ## 2026-11-13 — Anthropic skills
 - **Phase / issue:** —
 - **What:** the 19 skills from anthropics/skills (commit `2c5958e`) copied unchanged into `.claude/skills/` and registered in `UPSTREAM.md`, with the source repo's third-party notices.

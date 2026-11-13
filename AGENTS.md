@@ -50,4 +50,4 @@ Skills live in `.claude/skills/`. Load them when the task fits:
 ## Project conventions
 - **Stack:** whatever the stack decision (ADR) of Stage S0 in [`docs/decisions/`](docs/decisions/) sets. Until then there is no code: do not pick a language or framework on your own.
 - Code conventions are in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
-- **Language:** everything in the repository is written in English: code, comments, docs, commit messages, PRs and issues. Reply to the owner in the language they write in.
+- **Language:** everything in the repository is written in English: code, comments, docs, commit messages, PRs and issues. Reply to the owner in the language they write in. The only exception is `README.es.md`, a Spanish guide to the template for the owner: keep it in sync when files, commands or skills change.
