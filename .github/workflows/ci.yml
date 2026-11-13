@@ -59,6 +59,14 @@ jobs:
             echo "PR de Dependabot: no se comprueba el autor de los commits."; exit $fallo
           fi
           while IFS='|' read -r sha email committer; do
+            # Commits de Dependabot ya fusionados en development (los confirma GitHub)
+            if [ "$email" = "49699333+dependabot[bot]@users.noreply.github.com" ] && [ "$committer" = "noreply@github.com" ]; then
+              echo "Commit $sha de Dependabot: se acepta."
+              if git log -1 --format=%B "$sha" | grep -Eiq "$patron"; then
+                echo "::error::Commit $sha contiene firmas de IA en el mensaje."; fallo=1
+              fi
+              continue
+            fi
             if [ "$email" != "serbenda@gmail.com" ]; then
               echo "::error::Commit $sha con autor '$email' (debe ser serbenda@gmail.com)."; fallo=1
             fi
