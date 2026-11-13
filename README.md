@@ -64,7 +64,8 @@ make verify                  lo mismo que la CI
 Lee [CONTRIBUTING.md](CONTRIBUTING.md) y la [Definition of Done](docs/DEFINITION_OF_DONE.md).
 
 ## Licencia
-[MIT](LICENSE) © Sergio Santiago Bendaña Quesada
+Sin licencia: © Sergio Santiago Bendaña Quesada. Todos los derechos reservados.
+El código se puede consultar, pero no copiar, modificar ni redistribuir sin permiso escrito del autor.
 
 ---
 
