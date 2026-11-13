@@ -11,9 +11,9 @@ fi
 
 # gitleaks ≥ 8.19 uses "git --pre-commit --staged"; older versions use "protect --staged".
 if gitleaks git --help >/dev/null 2>&1; then
-  scan=(gitleaks git --pre-commit --staged --redact --no-banner)
+  scan=(gitleaks git --pre-commit --staged --redact --no-banner --log-level warn)
 else
-  scan=(gitleaks protect --staged --redact --no-banner)
+  scan=(gitleaks protect --staged --redact --no-banner --log-level warn)
 fi
 
 if ! "${scan[@]}"; then

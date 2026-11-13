@@ -23,8 +23,8 @@
 - **Rejected:** a Claude Code Stop hook to force the worklog (it would fire on every turn, not per change); requiring CHANGELOG in CI (only full mode uses it, once per phase); copying `settings.json`/`ci.yml` in the sync script (projects adapt them, so it only reports them).
 - **Files:** `scripts/check-records.sh`, `scripts/test-check-records.sh`, `scripts/sync-from-template.sh`, `.githooks/pre-commit`, `.github/dependabot.yml`, `.github/workflows/ci.yml`, `scripts/setup-repo.sh`, `docs/SETUP.md`, `docs/SECURITY_GUIDE.md`, `AGENTS.md`, `README.md`, `README.es.md`, `CHANGELOG.md`.
 - **Commits:** this entry's commit.
-- **Tested:** `test-check-records.sh` 6/6; `check-records.sh origin/main HEAD` on this repo passes; pre-commit without Gitleaks warns and lets the commit through (the path with Gitleaks installed is **untested**, it isn't installed); sync script on a clone at `e8484d9` (old Spanish template): dry run lists new/changed/legacy files and the stale `guardia.sh` hook, `--apply` copies 16 files and the project's tests pass, a second run is clean, and it refuses to apply on `main`; YAML of `ci.yml` and `dependabot.yml` parses.
-- **Pending:** see the Records job and Dependabot run on GitHub; test the Gitleaks path (`brew install gitleaks`); run the sync script on Faro and Everskope (owner's call, repo by repo).
+- **Tested:** `test-check-records.sh` 6/6; `check-records.sh origin/main HEAD` on this repo passes; pre-commit without Gitleaks warns and lets the commit through; with Gitleaks 8.30.1 a clean commit passes silently and a commit with a fake `ghp_` token is blocked (tested 2026-11-13, corrected); sync script on a clone at `e8484d9` (old Spanish template): dry run lists new/changed/legacy files and the stale `guardia.sh` hook, `--apply` copies 16 files and the project's tests pass, a second run is clean, and it refuses to apply on `main`; YAML of `ci.yml` and `dependabot.yml` parses.
+- **Pending:** see the Records job and Dependabot run on GitHub; run the sync script on Faro and Everskope (owner's call, repo by repo).
 
 ## 2026-11-13 — Leaner template: 9 skills, light/full mode, no duplicated records
 - **Phase / issue:** —
