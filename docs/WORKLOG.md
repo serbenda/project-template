@@ -16,6 +16,16 @@
 - **Pending:**
 -->
 
+## 2026-11-13 — Anthropic skills
+- **Phase / issue:** —
+- **What:** the 19 skills from anthropics/skills (commit `2c5958e`) copied unchanged into `.claude/skills/` and registered in `UPSTREAM.md`, with the source repo's third-party notices.
+- **Why:** the owner wants all of them available in every project created from the template.
+- **Rejected:** copying only the 5 useful ones that don't already ship with the account; translating the skills into Spanish (done and then reverted: the whole template stays in English, and untouched copies are easier to update and verify against upstream).
+- **Files:** `.claude/skills/*`, `.claude/skills/UPSTREAM.md`, `.claude/skills/ANTHROPIC_THIRD_PARTY_NOTICES.md`, `AGENTS.md`, `CLAUDE.md`, `CHANGELOG.md`.
+- **Commits:** this entry's commit.
+- **Tested:** `diff -r` against the upstream clone shows the folders are identical; every `SKILL.md` frontmatter parses and its `name` matches the folder; `bash scripts/test-guard.sh` passes.
+- **Pending:** check in a new project that the skills trigger; the template is now ~13 MB; review the `docx`/`pptx`/`xlsx`/`pdf` scripts before first use.
+
 ## 2026-11-13 — Template fully in English
 - **Phase / issue:** —
 - **What:** all files, folders, commands, subagents, the skill and the hook translated/renamed to English (`docs/fases` → `docs/phases`, `decisiones` → `decisions`, `RIESGOS` → `RISKS`, `ARQUITECTURA` → `ARCHITECTURE`, `SEGURIDAD` → `SECURITY_GUIDE`, `BITACORA` → `WORKLOG`, `/estado` → `/status`, `/nueva-fase` → `/new-phase`, `/cerrar-fase` → `/close-phase`, `/preparar-pr` → `/prepare-pr`, `guardia.sh` → `guard.sh`, `registro-cambios` → `record-changes`; stages `S0…`, phases `P01…`; CI checks Secrets/Authorship/Hook; `FIRMAS=1` → `SIGNED_COMMITS=1` in setup-repo.sh).

@@ -4,6 +4,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versio
 
 ## [Unreleased]
 ### Added
+- All 19 skills from [anthropics/skills](https://github.com/anthropics/skills) (commit `2c5958e`) in `.claude/skills/`, registered in `UPSTREAM.md`.
 - Own `record-changes` skill and `docs/WORKLOG.md`: after every change, the agent records what, why, what was discarded, commits, how it was tested and what is pending, and updates `CHANGELOG.md` if the change is visible.
 - Work organization with agents ([decision 0001](docs/decisions/0001-working-with-ai-agents.md)): `docs/VISION.md`, `docs/STATE.md`, `docs/ROADMAP.md` (stages `S0…`, phases `P01…`), phase files in `docs/phases/`, ADRs in `docs/decisions/`, `docs/RISKS.md`, `docs/ARCHITECTURE.md` and `docs/SETUP.md`.
 - Commands `/status`, `/new-phase`, `/close-phase` and `/decision`, and the `architecture-reviewer` subagent. `/prepare-pr` runs `make verify` and the three reviewers.
