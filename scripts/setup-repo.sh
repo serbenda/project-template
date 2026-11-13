@@ -27,6 +27,22 @@ git config user.email "serbenda@gmail.com"
 git config core.hooksPath .githooks
 chmod +x .githooks/* .claude/hooks/*.sh scripts/*.sh
 
+# 1b. Start the project's own history: the CHANGELOG and WORKLOG that come with the template describe
+#     the template, not this project. Only on the first run (no .claude/TEMPLATE_VERSION yet) and
+#     never in the template repo itself.
+if [[ "$NAME" != "project-template" && ! -f .claude/TEMPLATE_VERSION ]]; then
+  awk '{ print } /^-->$/ { exit }' docs/WORKLOG.md > docs/WORKLOG.md.new && mv docs/WORKLOG.md.new docs/WORKLOG.md
+  cat > CHANGELOG.md <<'MD'
+# Changelog
+
+Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioned with [SemVer](https://semver.org/).
+
+## [Unreleased]
+MD
+  echo "created from serbenda/project-template on $(date +%F)" > .claude/TEMPLATE_VERSION
+  echo "  ✓ Fresh CHANGELOG and WORKLOG for this project (the template's own history was removed)"
+fi
+
 # 2. Replace the project name placeholder (not inside third-party skills, whose scripts use their own
 #    PROJECT_NAME variable, nor in the Spanish guide, which explains the placeholder)
 grep -rl --exclude-dir=.git --exclude-dir=skills --exclude=setup-repo.sh --exclude=README.es.md "PROJECT_NAME" . | xargs -r sed -i.bak "s/PROJECT_NAME/$NAME/g"

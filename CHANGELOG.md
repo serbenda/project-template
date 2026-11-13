@@ -36,6 +36,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versio
 - No license: `LICENSE` (MIT) is removed and the README states "all rights reserved". If a project goes public and reuse should be allowed, a license is chosen through an ADR.
 
 ### Fixed
+- New projects inherited the template's own CHANGELOG and WORKLOG history: `setup-repo.sh` now starts both empty on its first run and records the origin in `.claude/TEMPLATE_VERSION`.
 - Claude could not fill in `.claude/launch.json` in phase P03: the deny rules covered all of `.claude/`. They now cover only settings, hooks, agents, commands and skills, matching the hook (new hook test).
 - `setup-repo.sh` aborted halfway on private repos with GitHub Free (rulesets refused) and on a second run (duplicate ruleset). It now warns up front, skips existing rulesets, configures everything else and exits with an error if `main` could not be protected.
 - `setup-repo.sh` replaced `PROJECT_NAME` inside a third-party skill script (`web-artifacts-builder`); skills and `README.es.md` are now excluded.

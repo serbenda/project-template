@@ -16,6 +16,16 @@
 - **Pending:**
 -->
 
+## 2026-11-13 — End-to-end test on GitHub
+- **Phase / issue:** —
+- **What:** private throwaway repo `serbenda/template-smoke-test` created with the content of `development`, `setup-repo.sh` run for real, and the protections exercised. Fix found by the test: `setup-repo.sh` now starts CHANGELOG and WORKLOG empty on the first run.
+- **Why:** nothing had been verified on GitHub itself; the CI and the ruleset only existed on paper.
+- **Rejected:** running the Claude commands (`/status`, `/new-phase`…) from here: they need a Claude Code session opened in that repo, left to the owner.
+- **Files:** `scripts/setup-repo.sh`, `README.es.md`, `CHANGELOG.md`.
+- **Commits:** this entry's commit.
+- **Tested:** on GitHub (account on Pro, private repo): `setup-repo.sh` created `development`, the "Protect main" ruleset and the labels (private vulnerability reporting and secret scanning need GitHub Advanced Security: warned, as expected); a direct push to `main` was rejected (GH013); PR #1 with code and no worklog → Records failed, merge BLOCKED; with a worklog entry → Secrets, Authorship, Hook and Records passed, CLEAN; an AI signature in the PR body → Authorship failed, BLOCKED. The history reset was tested locally with a fake `gh` (first run resets, second run doesn't).
+- **Pending:** owner: delete `serbenda/template-smoke-test`; merge `development → main` in project-template (until then "Use this template" copies the old web template); mark project-template as a template repository and protect its `main`; try `/status` → `/new-phase` → `/close-phase` → `/prepare-pr` in a Claude Code session.
+
 ## 2026-11-13 — Enforce the records, scan secrets before commit, sync existing projects
 - **Phase / issue:** —
 - **What:** `Records` CI job and `scripts/check-records.sh` (worklog entry required when a PR changes more than docs; STATE ≤150 lines); `.githooks/pre-commit` with Gitleaks; `.github/dependabot.yml` for GitHub Actions; `scripts/sync-from-template.sh` for projects created from older versions.
