@@ -4,6 +4,5 @@
   "files.insertFinalNewline": true,
   "[markdown]": { "files.trimTrailingWhitespace": false },
   "cSpell.language": "en,es",
-  "html.format.wrapLineLength": 100,
   "search.exclude": { "**/.claude/skills": true }
 }

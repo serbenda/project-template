@@ -12,17 +12,16 @@ Closes #
 - [ ] `refactor` / `chore` / `ci`
 
 ## Cómo se ha probado
-<!-- Navegadores, móvil, pasos seguidos -->
+<!-- Pruebas automáticas, pasos manuales, entornos -->
 
 ## Capturas (si cambia la interfaz)
 
 ## Definition of Done
 - [ ] Hace lo que pide la issue, sin cambios colaterales
-- [ ] Probado en local en escritorio y móvil
-- [ ] CI en verde
+- [ ] `make verify` en local y CI en verde
 - [ ] Sin secretos ni datos personales
-- [ ] Datos externos tratados como no confiables (`textContent`, no `innerHTML`)
-- [ ] Accesible (alt, contraste, teclado) y sin errores en consola
+- [ ] Entradas y datos externos tratados como no confiables
+- [ ] Si hay interfaz: accesible y sin errores en consola
 - [ ] README y CHANGELOG actualizados
 - [ ] Commits con Conventional Commits y autor correcto
 - [ ] Nada que no aplique; si algo no aplica, explico por qué:

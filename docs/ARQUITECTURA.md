@@ -7,13 +7,13 @@
 
 ```mermaid
 flowchart LR
-  U[Usuario] --> W[Web]
-  W --> D[(Datos)]
+  U[Usuario] --> A[Aplicación]
+  A --> D[(Datos)]
 ```
 
 | Pieza | Qué hace | Tecnología | Carpeta |
 |---|---|---|---|
-| Web | Interfaz | HTML, CSS y JS sin framework | `index.html`, `css/`, `js/` |
+| <!-- p. ej.: API --> | | <!-- según la decisión de stack --> | |
 
 ## Flujo de datos
 <!-- De dónde vienen los datos, por dónde pasan y dónde acaban. Marca qué es dato externo no confiable. -->

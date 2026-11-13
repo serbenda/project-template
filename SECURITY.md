@@ -9,7 +9,7 @@ Incluye una descripción del problema, los pasos para reproducirlo y su posible 
 
 ## Versiones con soporte
 
-Solo la última versión publicada en `main` (la web en GitHub Pages).
+Solo la última versión publicada en `main`.
 
 ## Medidas del repositorio
 

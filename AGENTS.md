@@ -41,11 +41,10 @@ No recuerdas nada entre sesiones: la memoria del proyecto está en `docs/` (ver 
 ## Skills disponibles
 Las skills están en `.claude/skills/`. Cárgalas cuando la tarea encaje:
 - `security-audit/`: revisión y auditoría de seguridad (Cloudflare, MIT). Úsala para cualquier pregunta o revisión de seguridad. La **auditoría completa** se ejecuta solo si el propietario la pide explícitamente, y sus artefactos van fuera del repo. Antes de abrir una PR que toque autenticación, datos externos, workflows o dependencias, haz una revisión en modo guía.
-- `web-perf/`: rendimiento web (Core Web Vitals, Lighthouse). Úsala antes de cada versión y cuando una página vaya lenta. No abras issues públicas de feedback sin aprobación explícita del texto.
 - `repo-security-posture/`: revisión de la configuración del repo en GitHub. Solo lee, no cambia ajustes; las correcciones las aplica el propietario.
 - Las skills de terceros no se modifican; consulta `.claude/skills/UPSTREAM.md`.
 
 ## Estilo del proyecto
-- Web estática (HTML, CSS, JS sin framework salvo que se indique) publicada en GitHub Pages.
-- Interfaz y documentación en español.
-- Prioriza la accesibilidad y el móvil.
+- **Stack:** el que fije la decisión de stack de la Etapa 0 en [`docs/decisiones/`](docs/decisiones/). Hasta entonces no hay código: no elijas lenguaje ni framework por tu cuenta.
+- Las convenciones del código están en [`docs/ARQUITECTURA.md`](docs/ARQUITECTURA.md).
+- Documentación y mensajes al usuario en español.

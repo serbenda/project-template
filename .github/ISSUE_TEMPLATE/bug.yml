@@ -29,9 +29,9 @@ body:
   - type: input
     id: entorno
     attributes:
-      label: Navegador y dispositivo
-      placeholder: "Ej.: Chrome 130 en Android"
+      label: Entorno
+      placeholder: "Ej.: macOS 15, Python 3.13, versión 1.2.0"
   - type: textarea
     id: capturas
     attributes:
-      label: Capturas o errores de consola
+      label: Capturas, logs o mensajes de error

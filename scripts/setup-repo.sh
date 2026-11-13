@@ -89,11 +89,7 @@ JSON
   echo "  ✓ Commits firmados obligatorios en main y development"
 fi
 
-# 7. GitHub Pages publicado desde Actions
-gh api -X POST "repos/$REPO/pages" -f build_type=workflow >/dev/null 2>&1 \
-  || gh api -X PUT "repos/$REPO/pages" -f build_type=workflow >/dev/null
-
-# 8. Etiquetas básicas
+# 7. Etiquetas básicas
 for etiqueta in "bug:d73a4a" "enhancement:a2eeef" "docs:0075ca" "security:b60205" "dependencies:0366d6"; do
   gh label create "${etiqueta%%:*}" --color "${etiqueta##*:}" --repo "$REPO" --force >/dev/null
 done

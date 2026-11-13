@@ -96,22 +96,17 @@ jobs:
       - name: Formato (.editorconfig)
         run: npx --yes editorconfig-checker@6.2.0 -disable-indent-size -exclude 'LICENSE|\.git/|\.claude/skills/'
 
-      - name: HTML válido
-        run: |
-          if find . -name '*.html' -not -path './node_modules/*' | grep -q .; then
-            npx --yes htmlhint@1.9.2 "**/*.html" --ignore "node_modules/**"
-          else
-            echo "No hay HTML todavía."
-          fi
-
       - name: Scripts de shell
         run: shellcheck --severity=error scripts/*.sh .claude/hooks/*.sh .githooks/*
 
       - name: Pruebas del hook de seguridad
         run: bash scripts/test-guardia.sh
 
+      # Al decidir el stack (fase F03), añade aquí su setup (setup-python, setup-go, flutter…)
+      # y los mismos comandos de `make test` y `make lint`.
+
       - name: Enlaces internos rotos
         uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8  # v2.9.0
         with:
-          args: --offline --no-progress --include-fragments --exclude-path .claude/skills './**/*.html' './**/*.md'
+          args: --offline --no-progress --include-fragments --exclude-path .claude/skills './**/*.md'
           fail: true

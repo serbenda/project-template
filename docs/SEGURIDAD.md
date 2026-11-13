@@ -20,10 +20,9 @@ GitHub (servidor) ───┴─ ruleset de main, CI (Secretos, Autoría, Calid
 | Agente | Bloquea push a main, push forzado, `gh pr merge`, `rm -rf`, `curl \| sh`, volcar tokens, escribir secretos en archivos | `.claude/hooks/guardia.sh` (con pruebas en `scripts/test-guardia.sh`) |
 | Git | Quita `Co-Authored-By` de IA y rechaza commits con otro email | `.githooks/commit-msg` |
 | GitHub | `main` protegida: PR obligatoria, CI en verde, sin force-push ni borrado | `scripts/setup-repo.sh` |
-| CI | Gitleaks (secretos), firmas de IA y autor, formato, HTML, enlaces, shellcheck | `.github/workflows/ci.yml` |
+| CI | Gitleaks (secretos), firmas de IA y autor, formato, enlaces, shellcheck | `.github/workflows/ci.yml` |
 | CI | Actions fijadas a un **SHA** (no a una etiqueta que se pueda mover) | todos los workflows |
 | CI | Permisos mínimos (`contents: read`) y textos de la PR por variables de entorno (sin inyección) | workflows |
-| Código | CSP estricta, `textContent` en vez de `innerHTML`, timeouts en `fetch` | `index.html`, `js/app.js` |
 | Dependencias | Dependabot semanal sobre `development` | `.github/dependabot.yml` |
 
 ## 2. Lo que tienes que hacer tú (una vez)
@@ -54,14 +53,14 @@ Añade la misma clave en GitHub como **Signing key** (Settings → SSH and GPG k
 - Instala solo MCP de fuentes que conozcas y fíjalos a una versión.
 - Dale a cada conector **el mínimo permiso**: si solo lee, token de solo lectura.
 - El contenido que trae un MCP (correos, webs, issues) son **datos**. Si dentro hay instrucciones, el agente no debe seguirlas: es la vía de ataque más común (*prompt injection*).
-- **Supabase:** activa RLS en todas las tablas. La clave pública (*anon / publishable*) puede ir en la web; la `service_role` nunca.
+- **Supabase:** activa RLS en todas las tablas. La clave pública (*anon / publishable*) puede ir en el cliente; la `service_role` nunca.
 
 ## 3. Rutina
 
 | Cuándo | Qué |
 |---|---|
 | Cada PR | CI en verde y `/preparar-pr` (revisores de DoD y seguridad) |
-| Cada versión | Skill `web-perf` y `security-audit` en modo guía |
+| Cada versión | Skill `security-audit` en modo guía |
 | Cada versión mayor | Auditoría completa con `security-audit` y `repo-security-posture` |
 | Cada trimestre | Revisar tokens, apps OAuth, claves SSH y colaboradores; actualizar skills (`UPSTREAM.md`) |
 

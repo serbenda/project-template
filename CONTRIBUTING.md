@@ -3,7 +3,7 @@
 ## Flujo de trabajo
 
 ```
-issue  →  development (o feat/xxx desde development)  →  PR a main  →  revisión  →  merge  →  GitHub Pages
+issue  →  development (o feat/xxx desde development)  →  PR a main  →  revisión  →  merge
 ```
 
 1. **Toda tarea empieza con una issue** enlazada al GitHub Project.

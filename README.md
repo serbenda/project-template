@@ -2,8 +2,6 @@
 
 > Una frase que explique qué es y para quién.
 
-🔗 **Web:** https://serbenda.github.io/NOMBRE_DEL_PROYECTO/
-
 ## Qué hace
 - Funcionalidad principal 1
 - Funcionalidad principal 2
@@ -18,16 +16,12 @@
 git clone https://github.com/serbenda/NOMBRE_DEL_PROYECTO.git
 cd NOMBRE_DEL_PROYECTO
 git switch development
-python3 -m http.server 8000   # abre http://localhost:8000
+make help        # comandos disponibles (make dev se define al elegir el stack)
 ```
 
 ## Estructura
 ```
 .
-├── index.html
-├── css/
-├── js/
-├── assets/
 ├── docs/
 │   ├── VISION.md        # qué es, para quién y qué NO hacer
 │   ├── STATE.md         # estado vivo (≤150 líneas): lo primero que lee el agente
@@ -43,7 +37,7 @@ python3 -m http.server 8000   # abre http://localhost:8000
 ├── .claude/       # permisos, hook, skills, subagentes, comandos y launch.json
 ├── .githooks/     # hook de git: quita firmas de IA y comprueba el autor
 ├── .vscode/       # extensiones recomendadas y ajustes del proyecto
-├── Makefile       # make dev · make test · make verify (= CI)
+├── Makefile       # make dev · make test · make verify (= CI); detecta el stack
 ├── .env.example   # variables de entorno documentadas, sin valores
 ├── AGENTS.md      # normas para cualquier agente de IA
 └── CLAUDE.md      # importa AGENTS.md y añade lo específico de Claude Code
@@ -77,12 +71,12 @@ El código se puede consultar, pero no copiar, modificar ni redistribuir sin per
    ```bash
    ./scripts/setup-repo.sh
    ```
-   Crea la rama `development`, protege `main`, activa Pages, las alertas de seguridad y el hook de git.
+   Crea la rama `development`, protege `main` y activa las alertas de seguridad y el hook de git.
    Con commits firmados: `FIRMAS=1 ./scripts/setup-repo.sh`.
 3. Sustituye `NOMBRE_DEL_PROYECTO` en este README (el script ya lo cambia en el resto).
 4. Escribe [docs/VISION.md](docs/VISION.md) (o díctasela a Claude y revísala).
 5. Con Claude: `/decision stack del proyecto`, y luego `/nueva-fase` para la primera fase de la Etapa 0.
-6. Si el proyecto no es una web estática, ajusta `make dev/test/lint` en el `Makefile` y la CI a la vez.
+6. En la fase F03 (entorno local), Claude define `make dev`, `.claude/launch.json`, el setup del stack en la CI y el lenguaje de CodeQL.
 7. Borra esta sección.
 8. Una sola vez en tu Mac: sigue [docs/SEGURIDAD.md](docs/SEGURIDAD.md) → "Lo que tienes que hacer tú".
 
