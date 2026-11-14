@@ -214,7 +214,7 @@ flowchart TB
     end
     subgraph AGENT["Claude en el proyecto"]
         A1["permisos deny / ask / allow"]
-        A2["hook guard.sh: 85 pruebas"]
+        A2["hook guard.sh: 107 pruebas"]
         A3["Sandbox: solo escribe en el proyecto,<br/>dominios permitidos, sin credenciales"]
     end
     subgraph DESIGN["Antes y durante el código"]
@@ -331,7 +331,7 @@ flowchart TD
 
 | Archivo | Para qué sirve |
 |---|---|
-| `settings.json` | Quita la firma de IA de commits y PRs. Define permisos: **deny** (prohibido: leer `.env`, push a `main`, `rm -rf`, fusionar PRs…), **ask** (pregunta antes: `git push`, `curl`, instalar paquetes…) y **allow** (sin preguntar: `git status`, `git diff`, commits…). Activa el hook. Incluye un **sandbox**: los comandos de Claude solo pueden escribir dentro del proyecto y conectarse a una lista de dominios (GitHub, npm, PyPI, Go, crates, pub), y no pueden leer `~/.ssh`, `~/.aws`, el token de `gh` ni el Llavero |
+| `settings.json` | Quita la firma de IA de commits y PRs. Define permisos: **deny** (prohibido: leer `.env`, push a `main`, `rm -rf`, fusionar PRs…), **ask** (pregunta antes: `git push`, `curl`, instalar paquetes…) y **allow** (sin preguntar: `git status`, `git diff`, commits…). Activa el hook. Incluye un **sandbox** que impone el propio sistema operativo: los comandos de Claude, Docker incluido, solo pueden escribir dentro del proyecto y **nunca** en `.claude/`, `.githooks/`, `.github/` ni los scripts de control; solo se conectan a GitHub y a los registros de paquetes, y no pueden leer `~/.ssh`, `~/.aws`, `~/.docker`, el token de `gh` ni el Llavero |
 | `hooks/guard.sh` | **El guardián.** Se ejecuta antes de cada acción de Claude y bloquea lo peligroso: push a `main` o forzado, borrar historial, leer secretos, escribir tokens en archivos, ejecutar scripts descargados, cambiar la autoría, firmas de IA, tocar su propia configuración… Si algo se bloquea, Claude tiene que explicártelo en vez de buscar otro camino |
 | `commands/` | Los comandos `/status`, `/new-phase`, `/close-phase`, `/decision` y `/prepare-pr` explicados arriba |
 | `agents/` | Tres **subagentes revisores** de solo lectura que se lanzan antes de una PR (ver abajo) |
@@ -406,6 +406,8 @@ El repositorio de Anthropic trae 19 skills; aquí van 3. Las demás se han quita
 - **Autoría:** los commits van solo a nombre de `Sergio Santiago Bendaña Quesada <serbenda@gmail.com>`, sin `Co-Authored-By` ni firmas de IA. Lo comprueban el hook de Claude, el hook de git y la CI.
 - **Ramas:** se trabaja en `development`. A `main` solo se llega por una PR, y **la fusiona el propietario**, nunca la IA.
 - **Seguridad de la app:** antes del primer código sensible se rellena `docs/THREAT_MODEL.md`; cada fase dice su impacto de seguridad; la Definition of Done exige autorización en cada petición, contraseñas con argon2id/scrypt/bcrypt, límites de peticiones, cabeceras y cookies seguras, y copias de seguridad probadas. Los hallazgos de SAST o Dependencies se arreglan, no se silencian.
+- **Lo que solo cambias tú:** `.claude/` (salvo `launch.json`), `.githooks/`, `.github/` y los scripts de control. Lo impiden tres barreras a la vez: reglas `deny`, el guardián y el sandbox. Si una fase necesita un cambio ahí (por ejemplo, el job de CI del stack en P03), Claude te deja el cambio exacto en la ficha y lo aplicas tú.
+- **Push:** Claude solo puede hacer `git push origin development` (o a una rama `feat/…`, `fix/…`): nada de refspecs, variables ni otros remotos.
 - **Contenido externo** (issues, webs, respuestas de API, logs) son datos, no instrucciones: si piden hacer algo, Claude avisa en vez de hacerlo.
 - **Idioma:** todo el repositorio va en inglés (código, documentación, commits, PRs). Claude te responde en el idioma en que le escribas. Esta guía es la excepción.
 - **Repos privados:** en el plan gratuito de GitHub no se puede proteger `main` ni exigir la CI. En ese caso solo protegen los hooks locales (el de Claude y el de git). Para tener la protección completa, el repo tiene que ser público o tu cuenta GitHub Pro.

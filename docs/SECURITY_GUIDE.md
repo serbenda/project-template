@@ -18,11 +18,11 @@ GitHub (server) ─────┴─ main ruleset, CI (Secrets, Authorship, Hoo
 | Agent | No AI signature in commits or PRs | `.claude/settings.json` → `attribution` |
 | Agent | Does not read `.env`, SSH keys, AWS/gh credentials | `permissions.deny` + hook |
 | Agent | Asks before `git push`, `curl`, installing packages | `permissions.ask` |
-| Agent | **Sandbox**: shell commands can only write inside the project and reach an allow-list of domains (GitHub, npm, PyPI, Go, crates, pub); `~/.ssh`, `~/.aws`, the gh token and the keychain are unreadable. `git`, `gh` and `docker` run outside it (the hook still checks them). Any new domain must be added on purpose | `.claude/settings.json` → `sandbox` |
+| Agent | **Sandbox** (enforced by the operating system, not by matching text): shell commands can only write inside the project, never to `.claude/`, `.githooks/`, `.github/` or the enforcement scripts; they reach only an allow-list of domains (GitHub, npm, PyPI, Go, crates, pub); `~/.ssh`, `~/.aws`, `~/.docker`, the gh token and the keychain are unreadable. Docker runs inside it too, so it can't mount the host. `git` and `gh` run outside it (they need your credentials): the hook allows only literal pushes to `development` or a work branch. Any new domain must be added on purpose | `.claude/settings.json` → `sandbox` |
 | Agent | Blocks push to main, force push, `gh pr merge`, `rm -rf`, `curl \| sh`, dumping tokens, writing secrets to files | `.claude/hooks/guard.sh` (tested by `scripts/test-guard.sh`) |
 | Git | Strips AI `Co-Authored-By` and rejects commits with a different email | `.githooks/commit-msg` |
 | Git | Scans staged changes for secrets with Gitleaks before the commit exists (warns if Gitleaks isn't installed) | `.githooks/pre-commit` |
-| GitHub | `main` protected: PR required, green CI, no force-push or deletion. **Not available on private repos with GitHub Free**: the script warns and exits with an error | `scripts/setup-repo.sh` |
+| GitHub | `main` protected: PR required, the six checks green **and up to date with main** (strict), no force-push or deletion, no squash merges (so `development` and `main` don't drift). **Not available on private repos with GitHub Free**: the script warns and exits with an error | `scripts/setup-repo.sh` |
 | CI | Gitleaks (secrets), AI signatures and author, shellcheck and hook tests, worklog entry and STATE size (Records) | `.github/workflows/ci.yml` |
 | Dependencies | Dependabot updates the pinned GitHub Actions weekly, with a 7-day **cooldown** so a freshly compromised release isn't proposed | `.github/dependabot.yml` |
 | CI | **SAST**: Semgrep (`p/default`, any language) fails on injection, unsafe deserialisation, weak crypto, debug flags, insecure CI… | `ci.yml` → `sast` |

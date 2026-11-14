@@ -47,6 +47,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versio
 - `docs/claude-settings-global.json`: its content is now a block in `docs/SECURITY_GUIDE.md` → *Global Claude Code settings*, since it is installed once per Mac, not per project.
 
 ### Security
+- Guardrails extended to `.github/` and the enforcement scripts (deny rules, hook and sandbox `denyWrite`): the agent can no longer weaken the CI or the checks that constrain it.
+- Pushes are an allow-list: only `git push [-u] origin development` or a work branch; refspecs (`+HEAD:x`, `HEAD:main`), variables, other remotes and `--config-env` are blocked. Environment dumps from interpreters (`os.environ`, `process.env`) blocked. 107 hook tests, including the bypasses found by the Codex review.
+- Docker no longer bypasses the sandbox; `main` requires up-to-date checks and squash merges are disabled.
 - GitHub Actions bumped: `actions/checkout` v4.4.0 → v7.0.1 and `gitleaks/gitleaks-action` v2.3.9 → v3.0.0 (Node 20 is gone from GitHub runners; v3 only moves to Node 24). Pinned by SHA.
 
 ### Fixed

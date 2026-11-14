@@ -50,7 +50,9 @@ You remember nothing between sessions: the project's memory lives in `docs/` (se
 - Do not run destructive commands (`rm -rf`, `git push --force`, `git reset --hard` on shared branches) without explicit confirmation.
 
 ## Controls you must not bypass
-- `.claude/hooks/guard.sh`, `.githooks/` and the CI are the security barriers. If something blocks you, stop and explain to the owner what you were trying to do.
+- `.claude/hooks/guard.sh`, the sandbox, `.githooks/` and the CI are the security barriers. If something blocks you, stop and explain to the owner what you were trying to do.
+- Owner-only (enforced by deny rules, the hook and the sandbox): `.claude/` except `launch.json`, `.githooks/`, `.github/` and the enforcement scripts (`setup-repo.sh`, `sync-from-template.sh`, `check-records.sh` and the test scripts). When work needs a change there, write the exact change for the owner to apply.
+- Push only with `git push [-u] origin development` (or a `feat/`, `fix/`… work branch): no refspecs, variables or other remotes.
 - Full guide: [`docs/SECURITY_GUIDE.md`](docs/SECURITY_GUIDE.md).
 
 ## Available skills

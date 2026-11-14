@@ -12,7 +12,7 @@
   <img alt="Dependencies" src="https://img.shields.io/badge/dependencies-OSV--Scanner-4285F4?logo=google&logoColor=white">
   <img alt="Secrets" src="https://img.shields.io/badge/secrets-Gitleaks-CC2E2E">
   <img alt="Sandbox" src="https://img.shields.io/badge/agent-sandboxed-0E7C86">
-  <img alt="Guard hook tests" src="https://img.shields.io/badge/guard%20hook-85%20tests-2EA44F">
+  <img alt="Guard hook tests" src="https://img.shields.io/badge/guard%20hook-107%20tests-2EA44F">
   <br>
   <img alt="Docs" src="https://img.shields.io/badge/docs-English%20%C2%B7%20gu%C3%ADa%20en%20espa%C3%B1ol-555">
   <img alt="License" src="https://img.shields.io/badge/license-all%20rights%20reserved-lightgrey">
@@ -106,8 +106,8 @@ flowchart LR
 | Layer | What it stops |
 |---|---|
 | **Global settings** | Reading `.env`, SSH/AWS keys, the gh token, browser data or the keychain; editing its own settings, your shell or git config; bypass-permissions mode |
-| **Guard hook** (85 tests) | Push to `main`, force push, rewriting history, `rm -rf`, `curl \| sh`, AI signatures, touching its own guardrails, changing the git identity |
-| **Sandbox** | Shell commands write only inside the project and reach only GitHub and package registries |
+| **Guard hook** (107 tests) | Any push other than `git push origin development` or a work branch, rewriting history, `rm -rf`, `curl \| sh`, AI signatures, touching its own guardrails, changing the git identity |
+| **Sandbox** (OS-enforced) | Shell commands, Docker included, write only inside the project and never to the guardrails (`.claude/`, `.githooks/`, `.github/`, enforcement scripts); they reach only GitHub and package registries |
 | **Threat model + DoD** | Sensitive code without a threat model; missing authorisation, weak password hashing, no rate limits, open CORS, missing security headers, untested backups |
 | **Git hooks** | A secret in a commit (before it exists), a commit with another author |
 | **CI on every PR** | `Secrets` · `Authorship` · `Hook` · `Records` · `SAST` (Semgrep, any language) · `Dependencies` (OSV-Scanner, any lockfile) |
@@ -159,7 +159,7 @@ It never touches `main`, never overwrites what each project adapts (permissions,
 
 ## 🧪 How it was tested
 
-- CI green on every push; guard hook (85 cases) and records check (6 cases) run on macOS bash 3.2 and Linux.
+- CI green on every push; guard hook (107 cases) and records check (6 cases) run on macOS bash 3.2 and Linux.
 - End to end on GitHub in a throwaway repo: direct push to `main` rejected, a PR without a worklog entry blocked, a PR with an AI signature blocked, all checks green with a proper PR.
 - Real Claude Code sessions in both modes: `/status`, `/new-phase` (it stopped a feature that contradicted the vision), `/close-phase` (it stopped on a missing owner approval), `/prepare-pr` with the three reviewers. The security reviewer found a guard regression that was fixed before release.
 - Sandbox: package registries reachable, other sites and writes outside the project blocked.

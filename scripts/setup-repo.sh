@@ -75,7 +75,7 @@ git switch development 2>/dev/null || git switch -c development --track origin/d
 gh api -X PATCH "repos/$REPO" \
   -F delete_branch_on_merge=false \
   -F allow_merge_commit=true \
-  -F allow_squash_merge=true \
+  -F allow_squash_merge=false \
   -F allow_rebase_merge=false \
   -F has_wiki=false >/dev/null
 
@@ -114,7 +114,7 @@ protect_main_json='{
       "required_review_thread_resolution": true
     }},
     {"type": "required_status_checks", "parameters": {
-      "strict_required_status_checks_policy": false,
+      "strict_required_status_checks_policy": true,
       "required_status_checks": [
         {"context": "Secrets"},
         {"context": "Hook"},

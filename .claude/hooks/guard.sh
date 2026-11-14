@@ -30,16 +30,19 @@ search_pattern="$(extract pattern)" || true
 cmd="$(printf '%s' "$cmd_raw" | tr -d "\"'\\\\")"
 
 # --- Security configuration: the agent cannot touch its own guardrails ---
-if [[ -n "$path" ]] && has '(^|/)(\.claude/(settings(\.local)?\.json|hooks/|agents/|commands/|skills/)|\.githooks/)' "$path"; then
+# Protected: the agent's own settings, hook, commands, subagents and skills; the git hooks; the CI and
+# Dependabot (.github/); and the scripts that enforce or test the rules. Only the owner changes them.
+protected_files_re='(^|/)(\.claude/(settings(\.local)?\.json|hooks/|agents/|commands/|skills/)|\.githooks/|\.github/|scripts/(setup-repo|sync-from-template|check-records|test-guard|test-check-records)\.sh)'
+if [[ -n "$path" ]] && has "$protected_files_re" "$path"; then
   has '"tool_name" *: *"(Read|Grep|Glob)"' "$input" ||
-    block "the security configuration (.claude/, .githooks/) is changed only by the owner."
+    block "the security configuration (.claude/, .githooks/, .github/, enforcement scripts) is changed only by the owner."
 fi
 # Via the shell. Strict by default: a command that mentions a protected path and writes anything is blocked.
 # The only relaxation is for simple commands (no cd/pushd, loops, read/set/printf -v, find/xargs, eval/source,
 # variables or command substitution): there each subcommand is checked on its own, so read-only commands like
 # "git rm app.py && git grep x -- ':!.claude/skills'" or "ls .claude/commands 2>/dev/null" are not taken for
 # writes. Harmless redirections (2>/dev/null, >&2, 2>&1) never count as writing.
-protected_re='(\.claude/(settings|hooks|agents|commands|skills)|\.githooks|(^|[ /=])\.claude/?( |$))'
+protected_re='(\.claude/(settings|hooks|agents|commands|skills)|\.githooks|(^|[ /=])\.claude/?( |$)|\.github|scripts/(setup-repo|sync-from-template|check-records|test-guard|test-check-records)\.sh)'
 write_re='(>|sed +-i|tee |cp |mv |rm |chmod |ln |truncate|install |dd .*of=|patch |tar |unzip |rsync |perl +-[a-z]*i|python3? +-c|git( +[^ ]+)* +(checkout|restore)( +[^ ]+)* +-- )'
 indirect_re='((^|[ ;&|])(cd|pushd|for|while|until|read|set|printf +-v|xargs|find|eval|source|exec)( |$)|=|\$\(|`|\$\{?[A-Za-z_])'
 strip_redirs() { printf '%s' "$1" | sed -E 's/[0-9]*>&[0-9-]+//g; s/&?[0-9]*>>? *\/dev\/(null|stderr|stdout)//g'; }
@@ -53,10 +56,10 @@ while IFS= read -r line; do parts+=("$line"); done \
 
 if [[ -n "$cmd" ]] && has "$protected_re" "$cmd" && has "$write_re" "$(strip_redirs "$cmd")"; then
   has "$indirect_re" "$cmd" &&
-    block "the security configuration (.claude/, .githooks/) is changed only by the owner."
+    block "the security configuration (.claude/, .githooks/, .github/, enforcement scripts) is changed only by the owner."
   for p in "${parts[@]+"${parts[@]}"}"; do
     if has "$protected_re" "$p" && has "$write_re" "$(strip_redirs "$p")"; then
-      block "the security configuration (.claude/, .githooks/) is changed only by the owner."
+      block "the security configuration (.claude/, .githooks/, .github/, enforcement scripts) is changed only by the owner."
     fi
   done
 fi
@@ -81,21 +84,27 @@ fi
 for p in "${parts[@]+"${parts[@]}"}"; do
   p="$(printf '%s' "$p" | sed -E 's/^[[:space:]]+//')"
   [[ -z "$p" ]] && continue
-  isgit=0; has '^(env [^ ]+ +)*git( +-[cC] +[^ ]+)* ' "$p" && isgit=1
+  isgit=0; has '^(env( +-[a-z]+)* +)?([A-Za-z_][A-Za-z0-9_]*=[^ ]* +)*(env [^ ]+ +)*git( +-[cC] +[^ ]+)*( +--[a-z-]+(=[^ ]+)?)* ' "$p" && isgit=1
 
   # --- Skipping git hooks ---
   if (( isgit )); then
-    has '(-c +core\.hooksPath|--no-verify|commit( +[^ ]+)* +-[a-zA-Z]*n[a-zA-Z]*( |$))' "$p" &&
-      block "git hooks cannot be skipped (--no-verify, -n, -c core.hooksPath)."
+    has '(-c +core\.|--config-env|--no-verify|commit( +[^ ]+)* +-[a-zA-Z]*n[a-zA-Z]*( |$))' "$p" &&
+      block "git hooks and git config cannot be overridden from the command line (--no-verify, -n, -c core.*, --config-env)."
   fi
 
   # --- Protected branches ---
-  if (( isgit )) && has ' push( |$)' "$p"; then
-    has '(--force|( |^)-f( |$)|--force-with-lease|--mirror|--delete|( |^)-d( |$)|--all|( |:|\+)(refs/heads/)?(main|master)( |$))' "$p" &&
-      block "push to main, forced, deleting, --all or mirror is not allowed. Work on development and open a PR."
-    branch="$(git branch --show-current 2>/dev/null || true)"
-    if [[ "$branch" =~ ^(main|master)$ ]] && ! has ' push +[^ -][^ ]* +[^ ]+' "$p"; then
-      block "you are on $branch: switch to development before pushing."
+  # Allow-list: the only pushes allowed are a plain "git push" from a work branch and
+  # "git push [-u] origin <development | feat/… fix/… docs/… chore/… refactor/… test/… ci/…>".
+  # Anything else (refspecs like +HEAD:x or HEAD:main, variables, --force, --all, other remotes…) is blocked.
+  if has '(^|[ ;&|])git( +[^ ]+)* +push( |$)' "$p"; then
+    has '[$`]' "$cmd" && block "git push with variables or command substitution is not allowed: write the branch name."
+    work_branch_re='(development|(feat|fix|docs|chore|refactor|test|ci)/[A-Za-z0-9._-]+)'
+    if has '^git +push *$' "$p"; then
+      branch="$(git branch --show-current 2>/dev/null || true)"
+      [[ "$branch" =~ ^${work_branch_re}$ ]] ||
+        block "you are on '${branch:-a detached HEAD}': plain git push is only allowed from development or a work branch."
+    elif ! has "^git +push( +(-u|--set-upstream))? +origin +${work_branch_re} *$" "$p"; then
+      block "only 'git push [-u] origin development' (or a feat/, fix/… work branch) is allowed. No refspecs, force, other remotes or main."
     fi
   fi
   if (( isgit )) && has ' commit( |$)' "$p" && [[ "$(git branch --show-current 2>/dev/null)" =~ ^(main|master)$ ]]; then
@@ -143,5 +152,7 @@ has '(^|[^a-zA-Z0-9_])\.env($|[^.a-zA-Z]|\.(local|production|development|prod|de
   block "access to credential files from the shell."
 has '(^|[ ;&|])(printenv|env|set|export +-p|declare +-x)( *$| *\|| *>)|echo[^;]*\$\{?(GITHUB_TOKEN|GH_TOKEN|[A-Z_]*SECRET|[A-Z_]*API_KEY|[A-Z_]*TOKEN)' "$cmd" &&
   block "dump of environment variables or tokens."
+has 'os\.environ($|[^.\[]|\.(copy|items|keys|values))|dict\(os\.environ|process\.env($|[^.\[A-Za-z_])|ENV\.(to_h|each|keys)|getenv\(\)|Environment\.GetEnvironmentVariables' "$cmd" &&
+  block "dump of environment variables from an interpreter."
 
 exit 0

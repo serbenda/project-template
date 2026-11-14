@@ -16,6 +16,16 @@
 - **Pending:**
 -->
 
+## 2026-11-14 — Part 1 of the 10/10 plan: real barriers
+- **Phase / issue:** —
+- **What:** `.github/` and the enforcement scripts become owner-only (deny rules, hook, sandbox `denyWrite`); pushes are an allow-list; `--config-env` and interpreter env dumps blocked; Docker inside the sandbox; strict required checks and no squash in `setup-repo.sh`.
+- **Why:** the Codex review showed the agent could rewrite the CI it is checked by (the ruleset only trusts job names), and found guard bypasses (`+HEAD:development`, `b=main; … $b`, `--config-env`, `os.environ`) and Docker escaping the sandbox. The fix moves the important protection to the sandbox, which the operating system enforces, and keeps the hook as a second net.
+- **Rejected:** more deny patterns for pushes (an allow-list can't be dodged by new spellings); keeping Docker excluded from the sandbox (it can mount the host).
+- **Files:** `.claude/hooks/guard.sh`, `.claude/settings.json`, `scripts/test-guard.sh`, `scripts/setup-repo.sh`, `docs/SETUP.md`, `docs/SECURITY_GUIDE.md`, `AGENTS.md`, `CLAUDE.md`, `README.md`, `README.es.md`, `docs/WORKFLOWS.md`, `CHANGELOG.md`.
+- **Commits:** this entry's commit.
+- **Tested:** 107/107 hook tests (all Codex bypasses as must-block cases). Real headless Claude session with the sandbox: a Python script the hook cannot recognise was denied writing to `.github/workflows/ci.yml`, `scripts/check-records.sh`, `.claude/settings.json` and `.githooks/pre-commit` (Operation not permitted), and allowed to write `docs/STATE.md`; Docker could not read `~/.docker` nor reach the daemon.
+- **Pending:** Codex re-review of this part.
+
 ## 2026-11-14 — Workflow diagrams, showcase README, Spanish guide
 - **Phase / issue:** —
 - **What:** 13 Mermaid diagrams in `docs/WORKFLOWS.md` (and translated in `README.es.md`), a showcase `README.md` with an SVG banner and badges, the project README skeleton moved to `docs/templates/README.project.md`, and `setup-repo.sh` swapping it in on the first run.

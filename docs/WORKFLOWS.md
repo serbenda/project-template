@@ -177,7 +177,7 @@ flowchart TB
     end
     subgraph AGENT["Claude in the project"]
         A1["permissions deny / ask / allow"]
-        A2["guard.sh hook: 85 tests"]
+        A2["guard.sh hook: 107 tests"]
         A3["Sandbox: writes only in the project,<br/>allow-listed domains, no credential files"]
     end
     subgraph DESIGN["Before and during the code"]
