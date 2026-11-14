@@ -3,7 +3,8 @@
 set -uo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 failures=0
-tmp="$(mktemp -d)"
+# $TMPDIR, not the system temp folder: the Claude Code sandbox only lets commands write there.
+tmp="$(mktemp -d "${TMPDIR:-/tmp}/test-check-records.XXXXXX")" || { echo "✗ could not create a temp dir" >&2; exit 1; }
 trap 'rm -rf "$tmp"' EXIT
 
 # new_repo <name>: a minimal repo with the script, a STATE and a WORKLOG, and one base commit

@@ -15,9 +15,16 @@ A change is **done** only when it meets everything on this list. If something do
 - [ ] The *Verify* commands in `docs/SETUP.md` pass locally and CI is green.
 
 ## 3. Security
-- [ ] No secrets, tokens, keys or personal data in the code or in the history.
-- [ ] User input and external data are treated as untrusted and validated before reaching queries, commands, paths or HTML.
-- [ ] Calls to external APIs use HTTPS and their failures are handled (timeouts, clear message, no crash).
+- [ ] `docs/THREAT_MODEL.md` exists before the first code that handles input, accounts, personal data, money or network exposure, and is updated if this change adds an entry point, an asset or a threat.
+- [ ] No secrets, tokens, keys or personal data in the code or in the history; real values only in `.env` or a secret store.
+- [ ] User input and external data are treated as untrusted and validated (type, length, format, allow-lists) before reaching queries, commands, paths, templates or HTML.
+- [ ] Queries are parameterised; no shell command or `eval` is built from user input.
+- [ ] Every request that reads or changes data checks **authorisation on the server**, for that user and that object (not only "is logged in").
+- [ ] Passwords hashed with a modern algorithm (argon2id, scrypt or bcrypt), never stored or logged in clear; sessions and tokens expire and are revocable.
+- [ ] Calls to external APIs use HTTPS, have timeouts and handle failures without crashing or leaking details.
+- [ ] Errors shown to users reveal nothing internal; logs contain no secrets, tokens or personal data.
+- [ ] New dependencies are justified, come from the official registry and are pinned in a lockfile.
+- [ ] CI is green, including **SAST** (Semgrep) and **Dependencies** (OSV-Scanner); a silenced finding has a `nosemgrep` comment with its reason.
 - [ ] Secret scanning reports nothing new.
 - [ ] If the change touches authentication, external data, workflows or dependencies: reviewed with the `security-audit` skill (guidance mode).
 - [ ] Before each major release: full audit with `security-audit`, with no open `confirmed` findings.
@@ -27,12 +34,19 @@ A change is **done** only when it meets everything on this list. If something do
 **Web or mobile UI**
 - [ ] Accessible: alt text, sufficient contrast, keyboard navigable.
 - [ ] Tested on desktop and mobile, no console errors.
-- [ ] External data via `textContent`, never `innerHTML`.
+- [ ] External data via `textContent` (or the framework's escaping), never `innerHTML` / `dangerouslySetInnerHTML` with untrusted data.
+- [ ] Security headers: a strict `Content-Security-Policy`, `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, and `frame-ancestors` or `X-Frame-Options`.
+- [ ] Cookies with `Secure`, `HttpOnly` and `SameSite`; state-changing requests protected against CSRF.
+- [ ] No secrets in the frontend bundle: only public keys meant to be public (and, with Supabase or similar, RLS on every table).
 
 **API or backend**
-- [ ] Every endpoint validates input and checks authorization.
+- [ ] Every endpoint validates input and checks authorisation; deny by default.
+- [ ] Rate limiting on login, sign-up, password reset and any expensive endpoint.
+- [ ] CORS limited to the known origins; no `*` with credentials.
+- [ ] Uploads: size and type limits, stored outside the web root, never executed.
+- [ ] The database user has only the permissions it needs; no admin credentials in the app.
 - [ ] Errors don't leak internal details; logs contain no secrets or personal data.
-- [ ] Database migrations are reversible or have a rollback plan.
+- [ ] Database migrations are reversible or have a rollback plan; backups exist and a restore has been tested before release.
 
 **CLI or library**
 - [ ] `--help` and README reflect the change; consistent exit codes.

@@ -4,6 +4,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versio
 
 ## [Unreleased]
 ### Added
+- **SAST** and **Dependencies** CI jobs, required on `main`: Semgrep (`p/default`, any language) and OSV-Scanner (any lockfile), both pinned by image digest. `setup-repo.sh` now updates an existing "Protect main" ruleset, so older repos get the new checks.
+- Claude Code **sandbox** in `.claude/settings.json`: shell commands write only inside the project, reach only an allow-list of package and GitHub domains, and can't read SSH/AWS/gh credentials or the keychain; no escape hatch (`allowUnsandboxedCommands: false`).
+- `docs/THREAT_MODEL.md`, a *Security impact* section in every phase file, and a concrete security Definition of Done (server-side authorisation per object, password hashing, rate limits, CORS, security headers, cookies, uploads, least-privilege database, tested backups). `security-reviewer` checks changes against the threat model.
+- Global Claude Code settings in `SECURITY_GUIDE.md` extended: no editing its own settings, shell profiles, git config or SSH keys; no reading GPG, 1Password or browser data; bypass-permissions mode disabled; project MCP servers need approval.
 - *Owner approvals* in the phase file: `/new-phase` records each approval with its date and `/close-phase` checks owner-dependent criteria against it.
 - **Records** CI check (`scripts/check-records.sh`, 6 tests): PRs that change more than documentation need a worklog entry, and `docs/STATE.md` can't exceed 150 lines. Added to the required checks of `main`.
 - `.githooks/pre-commit`: Gitleaks scans staged changes before the commit exists.
@@ -44,6 +48,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versio
 - GitHub Actions bumped: `actions/checkout` v4.4.0 → v7.0.1 and `gitleaks/gitleaks-action` v2.3.9 → v3.0.0 (Node 20 is gone from GitHub runners; v3 only moves to Node 24). Pinned by SHA.
 
 ### Fixed
+- Hook and records tests depended on the current branch and on the system temp folder: they failed on `main` and inside the sandbox. They now run in throwaway repos under `$TMPDIR` and stop if `mktemp` fails.
+- Dependabot had no cooldown (flagged by the new SAST job): new versions now wait 7 days.
 - Guard: read-only commands that only mention `.claude/` (`... 2>/dev/null`, `git grep -- ':!.claude/skills'`) and reading `git config user.email` were blocked. Writes to protected paths are now checked per subcommand only for simple commands; anything with `cd`/`pushd`, loops, `find`/`xargs`, variables or command substitution stays strict. Also covers a bare `.claude` path, `dd of=`, `git checkout/restore --`, `patch`, `tar`, `unzip`, `rsync` and `git config --unset/--add`. 83 hook tests.
 - `.claude/settings.json` had `Write(...)` deny rules, which Claude Code ignores (only `Edit(...)` rules apply to file tools); removed.
 - `docs/RISKS.md` shipped an example risk marked High/OPEN, so every new project started with an open High risk; it is now a commented example.

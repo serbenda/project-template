@@ -9,6 +9,10 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
+    # Wait a week before proposing a newly published version: a compromised release is usually
+    # caught and pulled within days. Keep this block on every ecosystem added in phase P03.
+    cooldown:
+      default-days: 7
     commit-message:
       prefix: "ci"
     groups:

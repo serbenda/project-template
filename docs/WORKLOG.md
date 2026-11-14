@@ -16,6 +16,16 @@
 - **Pending:**
 -->
 
+## 2026-11-14 — Security hardening: SAST, dependency scanning, sandbox, threat model
+- **Phase / issue:** —
+- **What:** CI jobs SAST (Semgrep) and Dependencies (OSV-Scanner), required on `main`; Claude Code sandbox in the project settings; `docs/THREAT_MODEL.md`, *Security impact* per phase and a concrete security DoD; extended global settings, installed on the owner's Mac (backup `~/.claude/settings.json.bak.2026-11-14`).
+- **Why:** the owner asked for apps built with Claude to be as hard to hack as possible. The template protected the workflow (secrets, authorship, branches) but nothing checked the application code or its dependencies, and nothing forced thinking about threats before writing sensitive code.
+- **Rejected:** CodeQL (needs a build per language and is free only on public repos; Semgrep covers any language without a build); a global sandbox (would break folders that need other tools); allowing `dangerouslyDisableSandbox` (it would make the sandbox optional for the agent); scanning `.claude/skills` (third-party example code and a lower-bound `requirements.txt` gave false positives; excluded in both jobs).
+- **Files:** `.github/workflows/ci.yml`, `.github/dependabot.yml`, `.claude/settings.json`, `scripts/setup-repo.sh`, `scripts/test-guard.sh`, `scripts/test-check-records.sh`, `docs/THREAT_MODEL.md`, `docs/DEFINITION_OF_DONE.md`, `docs/phases/_template.md`, `docs/SECURITY_GUIDE.md`, `.claude/commands/new-phase.md`, `.claude/agents/security-reviewer.md`, `AGENTS.md`, `README.md`, `README.es.md`, `CHANGELOG.md`.
+- **Commits:** this entry's commit.
+- **Tested:** Semgrep and OSV-Scanner run locally from the pinned digests: Semgrep found a real issue in the template (Dependabot without cooldown, fixed) and flagged SQL and command injection and `debug=True` in a vulnerable sample; OSV flagged a vulnerable `requirements.txt` and passes with no lockfiles. Sandbox in a headless Claude session: PyPI reachable, `example.com` blocked, writing to `$HOME` blocked, writing in the project allowed, tests pass inside it. Global settings in a plain folder: reading `.env`, `printenv` and editing `~/.zshrc` blocked. `setup-repo.sh` ruleset create/update/refuse with a fake `gh`. Hook tests 85/85 also from a checkout on `main`.
+- **Pending:** see the SAST and Dependencies jobs run on GitHub; owner: run `./scripts/setup-repo.sh` again on project-template (and later on other repos) so their rulesets require the two new checks.
+
 ## 2026-11-14 — Fewer skills, global settings moved into the security guide
 - **Phase / issue:** —
 - **What:** removed `claude-api`, `skill-creator`, `doc-coauthoring` and the Anthropic third-party notices; `docs/claude-settings-global.json` moved into `docs/SECURITY_GUIDE.md` as a JSON block. 6 skills remain (~0.7 MB instead of 3.1 MB).

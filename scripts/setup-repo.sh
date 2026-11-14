@@ -93,14 +93,12 @@ gh api -X PATCH "repos/$REPO" --input - >/dev/null 2>&1 <<'JSON' || warn "secret
 JSON
 
 # 6. Protect main with a ruleset: PR required, green CI, no force-push or deletion
-#    Idempotent: if the ruleset already exists it is left as is. If GitHub refuses it
+#    Idempotent: if the ruleset already exists it is updated to this definition, so repos configured
+#    with an older template also get the new required checks. If GitHub refuses it
 #    (private repo on GitHub Free), the script goes on and warns at the end.
-ruleset_exists() { gh api "repos/$REPO/rulesets" --jq ".[] | select(.name == \"$1\") | .id" 2>/dev/null | grep -q .; }
-protected=1
-if ruleset_exists "Protect main"; then
-  echo "  ✓ 'Protect main' ruleset already exists"
-elif gh api -X POST "repos/$REPO/rulesets" --input - >/dev/null 2>&1 <<'JSON'
-{
+ruleset_id() { gh api "repos/$REPO/rulesets" --jq ".[] | select(.name == \"$1\") | .id" 2>/dev/null | head -1; }
+ruleset_exists() { [[ -n "$(ruleset_id "$1")" ]]; }
+protect_main_json='{
   "name": "Protect main",
   "target": "branch",
   "enforcement": "active",
@@ -121,13 +119,21 @@ elif gh api -X POST "repos/$REPO/rulesets" --input - >/dev/null 2>&1 <<'JSON'
         {"context": "Secrets"},
         {"context": "Hook"},
         {"context": "Authorship"},
-        {"context": "Records"}
+        {"context": "Records"},
+        {"context": "SAST"},
+        {"context": "Dependencies"}
       ]
     }}
   ]
-}
-JSON
-then
+}'
+protected=1
+if id="$(ruleset_id "Protect main")" && [[ -n "$id" ]]; then
+  if printf '%s' "$protect_main_json" | gh api -X PUT "repos/$REPO/rulesets/$id" --input - >/dev/null 2>&1; then
+    echo "  ✓ 'Protect main' ruleset updated (required checks: Secrets, Hook, Authorship, Records, SAST, Dependencies)"
+  else
+    protected=0
+  fi
+elif printf '%s' "$protect_main_json" | gh api -X POST "repos/$REPO/rulesets" --input - >/dev/null 2>&1; then
   echo "  ✓ main protected (PR, green CI, no force-push or deletion)"
 else
   protected=0

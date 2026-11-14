@@ -26,6 +26,12 @@
 1.
 2.
 
+## Security impact
+<!-- Does this phase add an entry point, handle input, accounts, personal data, money, files or a new dependency?
+     If so: which threats in docs/THREAT_MODEL.md it touches, the controls it adds and how they are tested.
+     If not: "None", with a one-line reason. -->
+-
+
 ## Risks and open questions
 <!-- What can go wrong or is still undecided. If it is a real risk, it also goes in RISKS.md. -->
 -

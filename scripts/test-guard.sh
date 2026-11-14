@@ -1,13 +1,21 @@
 #!/usr/bin/env bash
 # Tests for the .claude/hooks/guard.sh hook: each case states whether it must block (2) or allow (0).
 set -uo pipefail
-cd "$(dirname "$0")/.."
-hook=".claude/hooks/guard.sh"
+root="$(cd "$(dirname "$0")/.." && pwd)"
+hook="$root/.claude/hooks/guard.sh"
 failures=0
 
-check() {  # check <expected> <description> <json>
+# The hook looks at the current git branch, so the tests run it inside throwaway repos with a known
+# branch instead of depending on wherever this repo happens to be checked out.
+# $TMPDIR, not the system temp folder: the Claude Code sandbox only lets commands write there.
+tmp="$(mktemp -d "${TMPDIR:-/tmp}/test-guard.XXXXXX")" || { echo "✗ could not create a temp dir" >&2; exit 1; }
+trap 'rm -rf "$tmp"' EXIT
+for b in development main; do git init -q -b "$b" "$tmp/$b" || { echo "✗ git init failed" >&2; exit 1; }; done
+branch_dir="$tmp/development"
+
+check() {  # check <expected> <description> <json>   (runs on branch development; see on_main)
   local expected="$1" desc="$2" json="$3" actual
-  printf '%s' "$json" | bash "$hook" >/dev/null 2>&1
+  (cd "$branch_dir" && printf '%s' "$json" | bash "$hook" >/dev/null 2>&1)
   actual=$?
   if [[ "$actual" == "$expected" ]]; then
     echo "  ok    [$actual] $desc"
@@ -112,6 +120,12 @@ check 0 "process.env in a command"        "$(bash_json 'node -e "console.log(pro
 check 0 "git remote -v"                   "$(bash_json 'git remote -v')"
 check 0 "env with a variable"             "$(bash_json 'env NODE_ENV=test node --test')"
 check 0 "rm of one file"                  "$(bash_json 'rm -f dist/app.js')"
+
+echo "On branch main, must BLOCK:"
+branch_dir="$tmp/main"
+check 2 "commit while on main"            "$(bash_json 'git commit -m "fix: x"')"
+check 2 "plain push while on main"        "$(bash_json 'git push')"
+branch_dir="$tmp/development"
 
 echo
 if [[ $failures -eq 0 ]]; then echo "✓ All tests pass."; else echo "✗ $failures tests fail."; exit 1; fi

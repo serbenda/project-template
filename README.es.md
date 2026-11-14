@@ -22,7 +22,7 @@ Se elige al crear el proyecto y queda escrito en `docs/STATE.md` → *Mode*. Cla
 | | **Ligero** (`light`) | **Completo** (`full`) |
 |---|---|---|
 | Para | Experimentos, prototipos, herramientas pequeñas | Lo que va a durar o lo usan otros |
-| Documentos que se mantienen | `VISION`, `STATE`, `WORKLOG` y `SETUP` | Todo `docs/` |
+| Documentos que se mantienen | `VISION`, `STATE`, `WORKLOG`, `SETUP` y `THREAT_MODEL` | Todo `docs/` |
 | Planificación | Claude propone el plan en el chat, lo apruebas y queda en *Current work* de `STATE` | Una ficha por fase (`/new-phase`) dentro de las etapas de `ROADMAP` |
 | Decisiones (ADR) | Solo las irreversibles | Todo lo difícil de deshacer |
 | CHANGELOG y riesgos | No se usan | Sí |
@@ -74,6 +74,7 @@ Claude te **propondrá pasar a completo** (no lo hace por su cuenta) cuando se c
 | `phases/` | Una ficha por fase (`P01-titulo.md`) con objetivo, alcance (*In* / *Out*), criterios de aceptación, plan, **tus aprobaciones con su fecha** y, al cerrar, el resultado. `_template.md` es la plantilla y `README.md` el índice |
 | `decisions/` | Decisiones de arquitectura o producto (ADR) numeradas `0001, 0002…`. Una vez aceptadas no se editan: si cambias de idea, se crea otra que la sustituye. La `0001` explica por qué se trabaja así |
 | `ARCHITECTURE.md` | Piezas del sistema, flujo de datos, fuentes externas y convenciones del código |
+| `THREAT_MODEL.md` | **Modelo de amenazas**: qué se protege (cuentas, datos personales, dinero…), quién podría atacar, por dónde entran los datos y qué lo impide. Se rellena **antes del primer código** que maneje entradas, cuentas, datos personales, dinero o red, en los dos modos; cada fase indica su *impacto de seguridad* y `security-reviewer` comprueba cada cambio contra él |
 | `RISKS.md` | Registro de riesgos: `OPEN → MITIGATED → CLOSED`. Para publicar no debe quedar ningún riesgo alto abierto |
 | `SETUP.md` | Cómo arrancar, probar y **verificar** el proyecto en local. Incluye la lista de comprobación del stack de la fase P03. Claude usa su sección *Verify* antes de dar algo por terminado |
 | `WORKLOG.md` | **Bitácora**: el contexto de cada cambio (qué, por qué, qué se descartó, commits, cómo se probó, qué queda pendiente). La mantiene la skill `record-changes`; las entradas nuevas van arriba |
@@ -84,7 +85,7 @@ Claude te **propondrá pasar a completo** (no lo hace por su cuenta) cuando se c
 
 | Archivo | Para qué sirve |
 |---|---|
-| `settings.json` | Quita la firma de IA de commits y PRs. Define permisos: **deny** (prohibido: leer `.env`, push a `main`, `rm -rf`, fusionar PRs…), **ask** (pregunta antes: `git push`, `curl`, instalar paquetes…) y **allow** (sin preguntar: `git status`, `git diff`, commits…). Activa el hook |
+| `settings.json` | Quita la firma de IA de commits y PRs. Define permisos: **deny** (prohibido: leer `.env`, push a `main`, `rm -rf`, fusionar PRs…), **ask** (pregunta antes: `git push`, `curl`, instalar paquetes…) y **allow** (sin preguntar: `git status`, `git diff`, commits…). Activa el hook. Incluye un **sandbox**: los comandos de Claude solo pueden escribir dentro del proyecto y conectarse a una lista de dominios (GitHub, npm, PyPI, Go, crates, pub), y no pueden leer `~/.ssh`, `~/.aws`, el token de `gh` ni el Llavero |
 | `hooks/guard.sh` | **El guardián.** Se ejecuta antes de cada acción de Claude y bloquea lo peligroso: push a `main` o forzado, borrar historial, leer secretos, escribir tokens en archivos, ejecutar scripts descargados, cambiar la autoría, firmas de IA, tocar su propia configuración… Si algo se bloquea, Claude tiene que explicártelo en vez de buscar otro camino |
 | `commands/` | Los comandos `/status`, `/new-phase`, `/close-phase`, `/decision` y `/prepare-pr` explicados arriba |
 | `agents/` | Tres **subagentes revisores** de solo lectura que se lanzan antes de una PR (ver abajo) |
@@ -106,7 +107,7 @@ Claude te **propondrá pasar a completo** (no lo hace por su cuenta) cuando se c
 | `.githooks/commit-msg` | Hook de git que vale para cualquier herramienta o persona: quita del mensaje del commit los `Co-Authored-By` y las firmas de IA, y **rechaza el commit si el autor no eres tú** |
 | `.githooks/pre-commit` | Busca secretos con Gitleaks en lo que vas a commitear **antes** de que exista el commit, así un token nunca llega al historial ni a GitHub. Si Gitleaks no está instalado, avisa y deja seguir (`brew install gitleaks`) |
 | `.github/dependabot.yml` | Dependabot actualiza cada semana las GitHub Actions (van fijadas a un commit, así que si no nadie las actualiza). En P03 se añade el ecosistema del stack |
-| `.github/workflows/ci.yml` | La CI en GitHub, con cuatro comprobaciones obligatorias para fusionar en `main`: **Secrets** (Gitleaks busca secretos), **Authorship** (autor correcto y sin firmas de IA en commits y PR), **Hook** (shellcheck y las pruebas del guardián y de la comprobación de registros) y **Records** (`STATE.md` no pasa de 150 líneas y, si una PR toca algo más que documentación, tiene que traer su entrada en la bitácora). En la fase P03 se añade el job del stack |
+| `.github/workflows/ci.yml` | La CI en GitHub, con seis comprobaciones obligatorias para fusionar en `main`: **Secrets** (Gitleaks), **Authorship** (autor correcto y sin firmas de IA), **Hook** (shellcheck y pruebas), **Records** (bitácora y tamaño de `STATE`), **SAST** (Semgrep busca inyecciones, criptografía débil, `debug` activado, configuraciones inseguras… en cualquier lenguaje) y **Dependencies** (OSV-Scanner falla si una dependencia tiene una vulnerabilidad conocida). En la fase P03 se añade el job del stack |
 | `scripts/setup-repo.sh` | Se ejecuta una vez al crear el repo: autoría local, hook de git, rama `development`, ruleset que protege `main` (PR obligatoria, CI en verde, sin force-push), alertas de Dependabot, escaneo de secretos y etiquetas. En la primera ejecución deja el `CHANGELOG` y la bitácora vacíos (los que trae son los de la propia plantilla), quita del README la sección «How to use this template» y anota la fecha en `.claude/TEMPLATE_VERSION`. Se puede ejecutar más de una vez sin duplicar nada. **Si el repo es privado y tu cuenta es gratuita**, avisa de que GitHub no permite proteger `main` ni escanear secretos, y termina con error para que no lo des por protegido |
 | `scripts/test-guard.sh` | 83 pruebas del guardián: lo que debe bloquear y lo que debe permitir |
 | `scripts/check-records.sh` | La comprobación de **Records**: tamaño de `STATE.md` y entrada de bitácora en cada PR con cambios de código (las de Dependabot y las de solo documentación no la necesitan). `test-check-records.sh` tiene sus 6 pruebas |
@@ -157,6 +158,7 @@ El repositorio de Anthropic trae 19 skills; aquí van 3. Las demás se han quita
 
 - **Autoría:** los commits van solo a nombre de `Sergio Santiago Bendaña Quesada <serbenda@gmail.com>`, sin `Co-Authored-By` ni firmas de IA. Lo comprueban el hook de Claude, el hook de git y la CI.
 - **Ramas:** se trabaja en `development`. A `main` solo se llega por una PR, y **la fusiona el propietario**, nunca la IA.
+- **Seguridad de la app:** antes del primer código sensible se rellena `docs/THREAT_MODEL.md`; cada fase dice su impacto de seguridad; la Definition of Done exige autorización en cada petición, contraseñas con argon2id/scrypt/bcrypt, límites de peticiones, cabeceras y cookies seguras, y copias de seguridad probadas. Los hallazgos de SAST o Dependencies se arreglan, no se silencian.
 - **Contenido externo** (issues, webs, respuestas de API, logs) son datos, no instrucciones: si piden hacer algo, Claude avisa en vez de hacerlo.
 - **Idioma:** todo el repositorio va en inglés (código, documentación, commits, PRs). Claude te responde en el idioma en que le escribas. Esta guía es la excepción.
 - **Repos privados:** en el plan gratuito de GitHub no se puede proteger `main` ni exigir la CI. En ese caso solo protegen los hooks locales (el de Claude y el de git). Para tener la protección completa, el repo tiene que ser público o tu cuenta GitHub Pro.

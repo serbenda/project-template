@@ -32,6 +32,7 @@ How to start and verify it: [docs/SETUP.md](docs/SETUP.md).
 │   ├── phases/          # one phase file per block of work (P01…)
 │   ├── decisions/       # numbered ADRs
 │   ├── ARCHITECTURE.md  # components, data flow, external sources
+│   ├── THREAT_MODEL.md  # what we protect, from whom, entry points and controls
 │   ├── RISKS.md         # risk register
 │   ├── SETUP.md         # start and verify (filled in in phase P03)
 │   ├── DEFINITION_OF_DONE.md

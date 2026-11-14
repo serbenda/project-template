@@ -5,9 +5,10 @@ Security works in layers. If one fails, the next one stops the blow.
 ```
 Your GitHub account ─┬─ 2FA with security key/passkey, expiring tokens, reviewed apps
 Your Mac ────────────┼─ FileVault, global ~/.claude/settings.json, keys in the keychain
-The agent (Claude) ──┼─ .claude/settings.json (permissions) + .claude/hooks/guard.sh
-Local git ───────────┼─ .githooks/commit-msg (strips AI signatures, checks author)
-GitHub (server) ─────┴─ main ruleset, CI (Secrets, Authorship, Hook)
+The agent (Claude) ──┼─ .claude/settings.json (permissions + sandbox) + .claude/hooks/guard.sh
+The design ──────────┼─ docs/THREAT_MODEL.md + Security impact per phase + security-reviewer
+Local git ───────────┼─ .githooks/pre-commit (Gitleaks) + commit-msg (AI signatures, author)
+GitHub (server) ─────┴─ main ruleset, CI (Secrets, Authorship, Hook, Records, SAST, Dependencies)
 ```
 
 ## 1. What the template already does
@@ -17,12 +18,16 @@ GitHub (server) ─────┴─ main ruleset, CI (Secrets, Authorship, Hoo
 | Agent | No AI signature in commits or PRs | `.claude/settings.json` → `attribution` |
 | Agent | Does not read `.env`, SSH keys, AWS/gh credentials | `permissions.deny` + hook |
 | Agent | Asks before `git push`, `curl`, installing packages | `permissions.ask` |
+| Agent | **Sandbox**: shell commands can only write inside the project and reach an allow-list of domains (GitHub, npm, PyPI, Go, crates, pub); `~/.ssh`, `~/.aws`, the gh token and the keychain are unreadable. `git`, `gh` and `docker` run outside it (the hook still checks them). Any new domain must be added on purpose | `.claude/settings.json` → `sandbox` |
 | Agent | Blocks push to main, force push, `gh pr merge`, `rm -rf`, `curl \| sh`, dumping tokens, writing secrets to files | `.claude/hooks/guard.sh` (tested by `scripts/test-guard.sh`) |
 | Git | Strips AI `Co-Authored-By` and rejects commits with a different email | `.githooks/commit-msg` |
 | Git | Scans staged changes for secrets with Gitleaks before the commit exists (warns if Gitleaks isn't installed) | `.githooks/pre-commit` |
 | GitHub | `main` protected: PR required, green CI, no force-push or deletion. **Not available on private repos with GitHub Free**: the script warns and exits with an error | `scripts/setup-repo.sh` |
 | CI | Gitleaks (secrets), AI signatures and author, shellcheck and hook tests, worklog entry and STATE size (Records) | `.github/workflows/ci.yml` |
-| Dependencies | Dependabot updates the pinned GitHub Actions weekly | `.github/dependabot.yml` |
+| Dependencies | Dependabot updates the pinned GitHub Actions weekly, with a 7-day **cooldown** so a freshly compromised release isn't proposed | `.github/dependabot.yml` |
+| CI | **SAST**: Semgrep (`p/default`, any language) fails on injection, unsafe deserialisation, weak crypto, debug flags, insecure CI… | `ci.yml` → `sast` |
+| CI | **Dependencies**: OSV-Scanner fails if any lockfile has a dependency with a known vulnerability | `ci.yml` → `dependencies` |
+| Design | Threat model before the first sensitive code, *Security impact* per phase, security DoD per project type (authorisation per object, password hashing, rate limits, CORS, headers, cookies, uploads, backups) | `docs/THREAT_MODEL.md`, `docs/DEFINITION_OF_DONE.md` |
 | CI | Actions pinned to a **SHA** (not to a tag that can be moved) | all workflows |
 | CI | Minimal permissions (`contents: read`) and PR text passed via environment variables (no injection) | workflows |
 | GitHub | Dependabot alerts and private vulnerability reporting | `scripts/setup-repo.sh` |
@@ -53,7 +58,7 @@ Add the same key on GitHub as a **Signing key** (Settings → SSH and GPG keys) 
 - [ ] Secrets go in the **Keychain** or in a `.env` outside the repo, never in the code.
 
 ### Global Claude Code settings
-Copy it once to `~/.claude/settings.json` (or merge it into the file you have). It is the baseline for every folder you open Claude Code in; each project's `.claude/settings.json` and hook add the rest.
+Copy it once to `~/.claude/settings.json` (or merge it into the file you have). It is the baseline for every folder you open Claude Code in: no reading secrets, browser data or the keychain; no editing its own settings, your shell profile, git config or SSH keys; no bypass-permissions mode; project MCP servers need your approval. Each project's `.claude/settings.json` (with its sandbox) and hook add the rest. The sandbox is not enabled globally on purpose: it would also apply to folders that need other domains or tools.
 
 ```json
 {
@@ -87,7 +92,23 @@ Copy it once to `~/.claude/settings.json` (or merge it into the file you have). 
       "Bash(rm -rf *)",
       "Bash(sudo *)",
       "Bash(printenv*)",
-      "Bash(security find-*)"
+      "Bash(security find-*)",
+      "Edit(~/.claude/settings.json)",
+      "Edit(~/.claude/settings.local.json)",
+      "Edit(~/.zshrc)",
+      "Edit(~/.zprofile)",
+      "Edit(~/.bashrc)",
+      "Edit(~/.bash_profile)",
+      "Edit(~/.gitconfig)",
+      "Edit(~/.ssh/**)",
+      "Read(~/.gnupg/**)",
+      "Read(~/.config/op/**)",
+      "Read(~/Library/Application Support/Google/Chrome/**)",
+      "Read(~/Library/Cookies/**)",
+      "Read(~/Library/Safari/**)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean -f*)",
+      "Bash(chmod -R 777*)"
     ],
     "ask": [
       "Bash(git push *)",
@@ -97,8 +118,10 @@ Copy it once to `~/.claude/settings.json` (or merge it into the file you have). 
       "Bash(npx *)",
       "Bash(pip install *)",
       "Bash(brew install *)"
-    ]
-  }
+    ],
+    "disableBypassPermissionsMode": "disable"
+  },
+  "enableAllProjectMcpServers": false
 }
 ```
 
