@@ -143,7 +143,8 @@ flowchart TD
     B -->|"yes"| C["Claude quotes it and asks<br/>whether to supersede it"]
     B -->|"no"| D["docs/decisions/NNNN-title.md<br/>context, 2+ real options, pros and cons"]
     C -->|"supersede"| D
-    D --> E["Status proposed,<br/>with a recommendation"]
+    D --> CH["Challenge: 2 challengers<br/>attack the recommendation cold"]
+    CH --> E["Status proposed, with a recommendation<br/>and the challenge comparison"]
     E --> F{"You decide"}
     F -->|"accept"| G["Status accepted, indexed;<br/>the old one marked superseded"]
     F -->|"reject or change"| D

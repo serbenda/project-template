@@ -16,6 +16,16 @@
 - **Pending:**
 -->
 
+## 2026-11-14 — Challenge: independent second opinion on any decision
+- **Phase / issue:** —
+- **What:** `/challenge` command and read-only `challenger` subagent; `/decision` challenges every recommendation before showing it, ADRs gain a *Challenge* section, and AGENTS.md makes it a rule for any proposed decision and for whenever the owner says "challenge".
+- **Why:** the owner used a second AI to challenge Claude's proposals and wants the same without it. In the same conversation an agent tends to agree with its own reasoning, so the challenger gets only a brief of the proposal (never the reasoning), argues from an assigned lens, ideally on another model, and must give at least 3 real objections or say it found fewer. The owner asked for it to cover any decision, not only code.
+- **Rejected:** a single challenger (one lens repeats the agent's blind spots; two opposing lenses give a real comparison); asking the same session to "play devil's advocate" (it has seen and is anchored on its own reasoning); forcing a fixed number of objections (invites made-up ones); challenging every phase plan automatically (cost on every phase; plans are challenged on request).
+- **Files:** `.claude/agents/challenger.md`, `.claude/commands/challenge.md`, `.claude/commands/decision.md`, `docs/decisions/_template.md`, `AGENTS.md`, `CLAUDE.md`, `README.md`, `README.es.md`, `docs/WORKFLOWS.md`, `CHANGELOG.md`.
+- **Commits:** this entry's commit.
+- **Tested:** frontmatter of the new agent and command checked against the existing ones; `scripts/sync-from-template.sh` picks both files up through its `ls .claude/commands/*.md .claude/agents/*.md`; hook and records tests pass. Not yet run in a real Claude Code session; the edited Mermaid diagram (decisions) was not rendered.
+- **Pending:** owner: try `/challenge` on a real decision and see the diagram on GitHub.
+
 ## 2026-11-14 — Workflow diagrams, showcase README, Spanish guide
 - **Phase / issue:** —
 - **What:** 13 Mermaid diagrams in `docs/WORKFLOWS.md` (and translated in `README.es.md`), a showcase `README.md` with an SVG banner and badges, the project README skeleton moved to `docs/templates/README.project.md`, and `setup-repo.sh` swapping it in on the first run.

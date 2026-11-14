@@ -46,7 +46,8 @@ Claude te **propondrá pasar a completo** (no lo hace por su cuenta) cuando se c
 | Al abrir una sesión | `/status` | Claude lee el estado y te dice dónde estás y qué toca |
 | Empiezas algo nuevo | `/new-phase <qué>` | Completo: crea la ficha de la fase con objetivo, alcance, criterios y plan. Ligero: te propone el plan en el chat. En los dos casos **no escribe código hasta que lo apruebes** |
 | Mientras trabaja | (automático) | Tras cada cambio, la skill `record-changes` anota en la bitácora por qué se hizo, qué se descartó y cómo se probó. Si se le olvida, la CI (**Records**) no deja fusionar la PR |
-| Hay que elegir algo difícil de deshacer | `/decision <qué>` | Escribe un ADR con opciones, pros y contras y una recomendación; tú decides |
+| Hay que elegir algo difícil de deshacer | `/decision <qué>` | Escribe un ADR con opciones, pros y contras y una recomendación, **la somete a un challenge** y te enseña la comparativa; tú decides |
+| Quieres una segunda opinión de lo que sea | `/challenge <qué>` o decir "haz un challenge" | Dos `challenger` que no han visto cómo se llegó a la propuesta la atacan desde dos puntos de vista (coste, riesgos, quien lo mantiene…), si se puede con otro modelo. Te da una tabla: objeción, gravedad, alternativa y qué opina Claude de cada una, y una recomendación final. Vale para código, planes, ideas, textos o compras. Toda decisión que te proponga Claude pasa antes por aquí |
 | Termina la fase | `/close-phase` | Comprueba criterios y Definition of Done y actualiza el estado. En completo, además, rellena el resultado de la fase, la hoja de ruta y el CHANGELOG (una vez por fase, sin repetir la bitácora) |
 | Quieres llevarlo a `main` | `/prepare-pr` | Pasa la verificación y los tres revisores, y abre la PR `development → main`. **La fusionas tú** |
 
@@ -180,7 +181,8 @@ flowchart TD
     B -->|"sí"| C["Claude lo cita y te pregunta<br/>si quieres sustituirlo"]
     B -->|"no"| D["docs/decisions/NNNN-titulo.md<br/>contexto, 2 o más opciones reales, pros y contras"]
     C -->|"sustituir"| D
-    D --> E["Estado propuesta,<br/>con una recomendación"]
+    D --> CH["Challenge: 2 challengers atacan<br/>la recomendación sin ver el razonamiento"]
+    CH --> E["Estado propuesta, con una recomendación<br/>y la comparativa del challenge"]
     E --> F{"Tú decides"}
     F -->|"aceptar"| G["Estado aceptada, en el índice;<br/>la vieja queda como sustituida"]
     F -->|"rechazar o cambiar"| D
@@ -333,8 +335,8 @@ flowchart TD
 |---|---|
 | `settings.json` | Quita la firma de IA de commits y PRs. Define permisos: **deny** (prohibido: leer `.env`, push a `main`, `rm -rf`, fusionar PRs…), **ask** (pregunta antes: `git push`, `curl`, instalar paquetes…) y **allow** (sin preguntar: `git status`, `git diff`, commits…). Activa el hook. Incluye un **sandbox**: los comandos de Claude solo pueden escribir dentro del proyecto y conectarse a una lista de dominios (GitHub, npm, PyPI, Go, crates, pub), y no pueden leer `~/.ssh`, `~/.aws`, el token de `gh` ni el Llavero |
 | `hooks/guard.sh` | **El guardián.** Se ejecuta antes de cada acción de Claude y bloquea lo peligroso: push a `main` o forzado, borrar historial, leer secretos, escribir tokens en archivos, ejecutar scripts descargados, cambiar la autoría, firmas de IA, tocar su propia configuración… Si algo se bloquea, Claude tiene que explicártelo en vez de buscar otro camino |
-| `commands/` | Los comandos `/status`, `/new-phase`, `/close-phase`, `/decision` y `/prepare-pr` explicados arriba |
-| `agents/` | Tres **subagentes revisores** de solo lectura que se lanzan antes de una PR (ver abajo) |
+| `commands/` | Los comandos `/status`, `/new-phase`, `/close-phase`, `/decision`, `/challenge` y `/prepare-pr` explicados arriba |
+| `agents/` | Tres **subagentes revisores** de solo lectura que se lanzan antes de una PR y el `challenger` de las segundas opiniones (ver abajo) |
 | `skills/` | Las 6 skills (ver abajo). `UPSTREAM.md` dice de dónde sale cada una, en qué commit está fijada y cómo actualizarla |
 | `launch.json` | Servidor local para la vista previa de Claude Code. Vacío hasta la fase P03. Es el **único archivo de `.claude/` que Claude puede editar**; el resto (permisos, hook, comandos, subagentes, skills) solo lo cambias tú |
 
@@ -345,6 +347,7 @@ flowchart TD
 | `security-reviewer` | Secretos, inyecciones (SQL, shell, rutas, HTML), datos externos sin validar, autenticación, permisos de los workflows y dependencias nuevas | Hallazgos por gravedad: Critical, High, Medium, Low |
 | `dod-reviewer` | Que se cumpla la Definition of Done: commits bien escritos y sin firmas de IA, bitácora, README y CHANGELOG al día | **READY FOR PR** o **MISSING** |
 | `architecture-reviewer` | Que el cambio respete la visión (*What NOT to do*), las decisiones aceptadas, la arquitectura y el alcance de la fase | **CONSISTENT** o **REVIEW** |
+| `challenger` | No revisa la PR: da la **segunda opinión** de `/challenge` y `/decision`. Recibe solo un resumen de la propuesta, nunca el razonamiento, y la ataca desde un punto de vista. Mínimo 3 objeciones reales (sin inventarlas), cada una con gravedad, alternativa y qué le haría cambiar de idea | **GO**, **GO WITH CHANGES** o **RETHINK** |
 
 ### `.githooks/`, `.github/` y `scripts/`
 
