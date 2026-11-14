@@ -16,6 +16,16 @@
 - **Pending:**
 -->
 
+## 2026-11-14 — Fewer skills, global settings moved into the security guide
+- **Phase / issue:** —
+- **What:** removed `claude-api`, `skill-creator`, `doc-coauthoring` and the Anthropic third-party notices; `docs/claude-settings-global.json` moved into `docs/SECURITY_GUIDE.md` as a JSON block. 6 skills remain (~0.7 MB instead of 3.1 MB).
+- **Why:** `claude-api` and `skill-creator` already ship with Claude Code and the account, and a pinned `claude-api` inside the repo takes precedence and goes stale (models, prices); `doc-coauthoring` competed with the template's own method for VISION, phase files and ADRs; the notices only covered components of skills removed earlier; the global settings are installed once per Mac, not copied into every project.
+- **Rejected:** removing `repo-security-posture` (the only way to check later that the repo protection still holds), `README.es.md`, `RISKS`/`ARCHITECTURE`/`ROADMAP` (light mode already ignores them) and `SECURITY.md` (needed as soon as a repo goes public).
+- **Files:** `.claude/skills/{claude-api,skill-creator,doc-coauthoring}/`, `.claude/skills/ANTHROPIC_THIRD_PARTY_NOTICES.md`, `docs/claude-settings-global.json` (removed); `.claude/skills/UPSTREAM.md`, `docs/SECURITY_GUIDE.md`, `AGENTS.md`, `CLAUDE.md`, `README.es.md`, `CHANGELOG.md`.
+- **Commits:** this entry's commit.
+- **Tested:** the JSON block in the guide parses; no remaining skill references imageio, FFmpeg, Pillow or font files; no references left to the removed files; links checked; hook and records tests pass.
+- **Pending:** owner: copy the block to `~/.claude/settings.json` if not done yet.
+
 ## 2026-11-14 — setup-repo.sh is safe to run on the template itself
 - **Phase / issue:** —
 - **What:** `setup-repo.sh` skips the placeholder replacement and the project mode when the repo is `project-template` (the history reset already skipped it).

@@ -36,6 +36,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versio
 - Claude template for any kind of development, no longer a website: `index.html`, `css/`, `js/`, GitHub Pages publishing and the `web-perf` skill are removed (still available as a global skill). `make test` and `make lint` detect the stack (npm, Python, Flutter, Go, Rust); `make dev`, `.claude/launch.json`, the CI setup and CodeQL's language are defined in phase P03. Definition of Done, rules and docs free of web assumptions.
 - No license: `LICENSE` (MIT) is removed and the README states "all rights reserved". If a project goes public and reuse should be allowed, a license is chosen through an ADR.
 
+### Removed
+- Skills `claude-api`, `skill-creator` and `doc-coauthoring` (the first two ship with Claude Code and the account, and a pinned `claude-api` would go stale; `doc-coauthoring` overlapped with the template's own docs method), and `ANTHROPIC_THIRD_PARTY_NOTICES.md`, which no remaining skill needs.
+- `docs/claude-settings-global.json`: its content is now a block in `docs/SECURITY_GUIDE.md` → *Global Claude Code settings*, since it is installed once per Mac, not per project.
+
 ### Security
 - GitHub Actions bumped: `actions/checkout` v4.4.0 → v7.0.1 and `gitleaks/gitleaks-action` v2.3.9 → v3.0.0 (Node 20 is gone from GitHub runners; v3 only moves to Node 24). Pinned by SHA.
 

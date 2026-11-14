@@ -56,7 +56,7 @@ You remember nothing between sessions: the project's memory lives in `docs/` (se
 Skills live in `.claude/skills/`. Load them when the task fits:
 - `security-audit/`: security review and audit (Cloudflare, MIT). Use it for any security question or review. The **full audit** runs only if the owner explicitly asks for it, and its artifacts go outside the repo. Before opening a PR that touches authentication, external data, workflows or dependencies, do a review in guidance mode.
 - `record-changes/`: worklog after every change, and CHANGELOG when closing a phase in full mode. Always use it when finishing a change, without being asked.
-- Anthropic skills: `mcp-builder` (MCP servers), `claude-api` (Claude API and SDKs), `skill-creator` (new skills and their evals), `webapp-testing` (Playwright), `frontend-design` (UI design) and `doc-coauthoring` (specs and proposals). Load them when the task fits. Skills that ship scripts are never run on files of unknown origin.
+- Anthropic skills: `mcp-builder` (MCP servers), `webapp-testing` (Playwright) and `frontend-design` (UI design). Load them when the task fits. For the Claude API, creating skills or Office/PDF files, use the ones that ship with Claude Code and the owner's account. Skills that ship scripts are never run on files of unknown origin.
 - `repo-security-posture/`: review of the repo's GitHub configuration. Read-only, it does not change settings; the owner applies the fixes.
 - `record-changes` is our own and can be improved. Third-party skills are not modified; see `.claude/skills/UPSTREAM.md`.
 

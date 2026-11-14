@@ -11,7 +11,7 @@ Una plantilla de repositorio para **empezar cualquier proyecto nuevo trabajando 
 2. **Una forma de trabajar.** Comandos como `/status`, `/new-phase` o `/prepare-pr` que llevan el trabajo por fases pequeñas, con el plan aprobado antes de escribir código.
 3. **Barreras de seguridad.** Un hook que impide a Claude hacer cosas peligrosas, un hook de git que quita firmas de IA de los commits, una CI que lo comprueba en GitHub y un script que protege la rama `main`.
 
-Además incluye 9 **skills**: conocimiento especializado que Claude carga cuando la tarea lo pide (bitácora, seguridad, servidores MCP, API de Claude, pruebas web, diseño de interfaces, documentación). Solo van las útiles para desarrollar software: cada skill ocupa contexto en todas las sesiones y compite por activarse.
+Además incluye 6 **skills**: conocimiento especializado que Claude carga cuando la tarea lo pide (bitácora, seguridad, servidores MCP, pruebas web, diseño de interfaces). Solo van las útiles para desarrollar software: cada skill ocupa contexto en todas las sesiones y compite por activarse.
 
 Y tiene **dos modos**, para no cargar de papeleo un experimento ni dejar sin control un proyecto serio (ver abajo).
 
@@ -78,8 +78,7 @@ Claude te **propondrá pasar a completo** (no lo hace por su cuenta) cuando se c
 | `SETUP.md` | Cómo arrancar, probar y **verificar** el proyecto en local. Incluye la lista de comprobación del stack de la fase P03. Claude usa su sección *Verify* antes de dar algo por terminado |
 | `WORKLOG.md` | **Bitácora**: el contexto de cada cambio (qué, por qué, qué se descartó, commits, cómo se probó, qué queda pendiente). La mantiene la skill `record-changes`; las entradas nuevas van arriba |
 | `DEFINITION_OF_DONE.md` | Qué tiene que cumplir un cambio para darlo por **hecho**: código, pruebas, seguridad, documentación e integración, más bloques según el tipo de proyecto (web/móvil, API, CLI) |
-| `SECURITY_GUIDE.md` | Las capas de seguridad de la plantilla y la lista de lo que tienes que hacer tú una vez: 2FA, tokens, firmar commits, FileVault… |
-| `claude-settings-global.json` | Ejemplo de `~/.claude/settings.json` para aplicar la misma protección a **todos** tus proyectos, también a los que no salen de esta plantilla |
+| `SECURITY_GUIDE.md` | Las capas de seguridad de la plantilla y la lista de lo que tienes que hacer tú una vez: 2FA, tokens, firmar commits, FileVault… Incluye el bloque para tu `~/.claude/settings.json`, que aplica la misma protección a **todos** tus proyectos, también a los que no salen de esta plantilla |
 
 ### `.claude/`: configuración de Claude Code
 
@@ -89,7 +88,7 @@ Claude te **propondrá pasar a completo** (no lo hace por su cuenta) cuando se c
 | `hooks/guard.sh` | **El guardián.** Se ejecuta antes de cada acción de Claude y bloquea lo peligroso: push a `main` o forzado, borrar historial, leer secretos, escribir tokens en archivos, ejecutar scripts descargados, cambiar la autoría, firmas de IA, tocar su propia configuración… Si algo se bloquea, Claude tiene que explicártelo en vez de buscar otro camino |
 | `commands/` | Los comandos `/status`, `/new-phase`, `/close-phase`, `/decision` y `/prepare-pr` explicados arriba |
 | `agents/` | Tres **subagentes revisores** de solo lectura que se lanzan antes de una PR (ver abajo) |
-| `skills/` | Las 9 skills (ver abajo). `UPSTREAM.md` dice de dónde sale cada una, en qué commit está fijada y cómo actualizarla |
+| `skills/` | Las 6 skills (ver abajo). `UPSTREAM.md` dice de dónde sale cada una, en qué commit está fijada y cómo actualizarla |
 | `launch.json` | Servidor local para la vista previa de Claude Code. Vacío hasta la fase P03. Es el **único archivo de `.claude/` que Claude puede editar**; el resto (permisos, hook, comandos, subagentes, skills) solo lo cambias tú |
 
 #### Subagentes revisores
@@ -130,33 +129,27 @@ Una skill es una carpeta con un `SKILL.md` que explica a Claude cómo hacer algo
 | `security-audit` | Cloudflare | Revisión de seguridad de código, APIs, servicios y librerías. En **modo guía** responde preguntas o revisa un cambio concreto. La **auditoría completa** (reconocimiento, búsqueda por clases de ataque, validación adversarial e informe) solo se lanza si la pides explícitamente, y guarda los resultados fuera del repo |
 | `repo-security-posture` | superagent-ai | Revisa la configuración del repo en GitHub: protección de ramas, CODEOWNERS, Actions, publicación, colaboradores y dependencias. Solo lee; te da una lista de tareas ordenada por gravedad |
 
-### Documentos
-
-| Skill | Para qué sirve |
-|---|---|
-| `doc-coauthoring` | Flujo guiado para escribir documentación a medias con Claude: propuestas, especificaciones técnicas, documentos de decisión |
-
 ### Desarrollo
 
 | Skill | Para qué sirve |
 |---|---|
 | `mcp-builder` | Guía para crear **servidores MCP** de calidad (Python con FastMCP o TypeScript), que conectan a Claude con APIs o servicios externos, incluidas sus evaluaciones |
-| `claude-api` | Referencia de la API de Claude y sus SDK (modelos, precios, streaming, herramientas, caché, agentes). Se activa sola cuando el código usa Anthropic |
-| `skill-creator` | Crear skills nuevas, mejorar las existentes y medir si funcionan con evaluaciones y benchmarks |
 | `webapp-testing` | Probar aplicaciones web locales con Playwright: verificar la interfaz, depurar, sacar capturas y leer los logs del navegador |
 | `frontend-design` | Criterio de diseño para interfaces nuevas o rediseños: dirección estética y tipografía, sin que parezca una plantilla genérica |
 
 ### Las que no van y por qué
 
-El repositorio de Anthropic trae 19 skills; aquí van 6. Las demás se han quitado a propósito, y se pueden recuperar de [anthropics/skills](https://github.com/anthropics/skills) si un proyecto las necesita:
-- `docx`, `xlsx`, `pptx` y `pdf`: ya vienen con tu cuenta de Claude (`anthropic-skills:`).
+El repositorio de Anthropic trae 19 skills; aquí van 3. Las demás se han quitado a propósito, y se pueden recuperar de [anthropics/skills](https://github.com/anthropics/skills) si un proyecto las necesita:
+- `docx`, `xlsx`, `pptx`, `pdf` y `skill-creator`: ya vienen con tu cuenta de Claude (`anthropic-skills:`).
+- `claude-api`: viene dentro de Claude Code y se actualiza con él. Una copia fija aquí se quedaría vieja y, dentro del proyecto, tendría prioridad.
+- `doc-coauthoring`: se solapa con el método de la plantilla para escribir la visión, las fichas de fase y las decisiones.
 - `canvas-design`, `algorithmic-art`, `theme-factory`, `slack-gif-creator` y `web-artifacts-builder`: son de diseño gráfico o de artifacts de claude.ai, no de proyectos de software.
 - `brand-guidelines`, `internal-comms`, `academy-guide` y `discernment-nudge`: pensadas para uso interno de Anthropic o sus cursos.
 
 ### Avisos sobre las skills
 
-- `webapp-testing` y `skill-creator` **traen scripts** que se ejecutan al usarlas. Revísalos la primera vez y no los uses con archivos de origen desconocido.
-- `skill-creator` y `claude-api` también vienen con tu cuenta de Claude; dentro del proyecto manda la copia del repo. Para Word, Excel, PowerPoint y PDF usa las de tu cuenta (`anthropic-skills:docx`, `xlsx`, `pptx`, `pdf`).
+- `webapp-testing` y `mcp-builder` **traen scripts** que se ejecutan al usarlas. Revísalos la primera vez y no los uses con archivos de origen desconocido.
+- Para la API de Claude, crear skills o archivos de Word, Excel, PowerPoint y PDF, usa las que traen Claude Code y tu cuenta (`anthropic-skills:`).
 - Las skills de terceros **no se editan**. Para actualizarlas se sustituye la carpeta entera por la versión nueva, se revisa el diff y se actualiza `UPSTREAM.md`.
 - Cada skill añade su descripción al contexto de cada sesión. Si un proyecto no necesita alguna, puedes borrar su carpeta.
 
