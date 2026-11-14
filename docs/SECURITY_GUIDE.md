@@ -49,8 +49,58 @@ Add the same key on GitHub as a **Signing key** (Settings → SSH and GPG keys) 
 ### Your Mac
 - [ ] `brew install gitleaks`, so `.githooks/pre-commit` can stop a secret before it is committed.
 - [ ] **FileVault** enabled and a quick screen lock.
-- [ ] Copy `docs/claude-settings-global.json` to `~/.claude/settings.json`: it applies the protection **to all your projects**, including those not created from the template. If you already have that file, merge the keys by hand.
+- [ ] Copy the block in [Global Claude Code settings](#global-claude-code-settings) to `~/.claude/settings.json`: it applies the protection **to all your projects**, including those not created from the template. If you already have that file, merge the keys by hand.
 - [ ] Secrets go in the **Keychain** or in a `.env` outside the repo, never in the code.
+
+### Global Claude Code settings
+Copy it once to `~/.claude/settings.json` (or merge it into the file you have). It is the baseline for every folder you open Claude Code in; each project's `.claude/settings.json` and hook add the rest.
+
+```json
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
+  "includeCoAuthoredBy": false,
+  "permissions": {
+    "deny": [
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Read(**/secrets/**)",
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Read(~/.config/gh/**)",
+      "Read(~/.config/gcloud/**)",
+      "Read(~/.kube/**)",
+      "Read(~/.docker/config.json)",
+      "Read(~/.netrc)",
+      "Read(~/.npmrc)",
+      "Read(~/Library/Keychains/**)",
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(gh pr merge *)",
+      "Bash(gh repo delete *)",
+      "Bash(gh secret *)",
+      "Bash(rm -rf *)",
+      "Bash(sudo *)",
+      "Bash(printenv*)",
+      "Bash(security find-*)"
+    ],
+    "ask": [
+      "Bash(git push *)",
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Bash(npm install *)",
+      "Bash(npx *)",
+      "Bash(pip install *)",
+      "Bash(brew install *)"
+    ]
+  }
+}
+```
 
 ### MCP servers and connectors
 - Only install MCP servers from sources you know, and pin them to a version.

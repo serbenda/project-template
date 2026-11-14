@@ -8,11 +8,8 @@ Copies **pinned to a commit**, reviewed before being added. They are not edited 
 |---|---|---|---|---|
 | `security-audit` | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill) | `c1c8a8c1471069fb0e188eeaff69b8e8db6564a8` | MIT (see `security-audit/LICENSE`) | 2026-11-10 |
 | `repo-security-posture` | [superagent-ai/skills](https://github.com/superagent-ai/skills) → `skills/repo-security-posture` | `0da315b873ed141025fa601ed6e0ebe0c878d5af` | MIT (see `repo-security-posture/LICENSE`) | 2026-11-11 |
-| `claude-api` | [anthropics/skills](https://github.com/anthropics/skills) → `skills/claude-api` | `2c5958e` | Apache-2.0 (see `claude-api/LICENSE.txt`) | 2026-11-13 |
-| `doc-coauthoring` | [anthropics/skills](https://github.com/anthropics/skills) → `skills/doc-coauthoring` | `2c5958e` | no license file at the source | 2026-11-13 |
 | `frontend-design` | [anthropics/skills](https://github.com/anthropics/skills) → `skills/frontend-design` | `2c5958e` | Apache-2.0 (see `frontend-design/LICENSE.txt`) | 2026-11-13 |
 | `mcp-builder` | [anthropics/skills](https://github.com/anthropics/skills) → `skills/mcp-builder` | `2c5958e` | Apache-2.0 (see `mcp-builder/LICENSE.txt`) | 2026-11-13 |
-| `skill-creator` | [anthropics/skills](https://github.com/anthropics/skills) → `skills/skill-creator` | `2c5958e` | Apache-2.0 (see `skill-creator/LICENSE.txt`) | 2026-11-13 |
 | `webapp-testing` | [anthropics/skills](https://github.com/anthropics/skills) → `skills/webapp-testing` | `2c5958e` | Apache-2.0 (see `webapp-testing/LICENSE.txt`) | 2026-11-13 |
 
 ## security-audit
@@ -46,9 +43,8 @@ For `repo-security-posture` the process is the same, copying `skills/<name>` fro
 
 ## Anthropic skills
 
-6 of the 19 skills from [anthropics/skills](https://github.com/anthropics/skills) (commit `2c5958e`): the ones useful for building software. Third-party notices from the source repo are in `ANTHROPIC_THIRD_PARTY_NOTICES.md`.
+3 of the 19 skills from [anthropics/skills](https://github.com/anthropics/skills) (commit `2c5958e`): the ones useful for building software that don't already ship with Claude. None of them bundles the third-party components listed in the source repo's `THIRD_PARTY_NOTICES.md` (fonts, Pillow, imageio, FFmpeg), so that file is not copied.
 
-- Left out on purpose: `docx`, `pdf`, `pptx` and `xlsx` (they ship with the owner's account as `anthropic-skills:`); `brand-guidelines`, `internal-comms`, `academy-guide` and `discernment-nudge` (Anthropic-internal or course material); `canvas-design`, `algorithmic-art`, `theme-factory`, `slack-gif-creator` and `web-artifacts-builder` (design and claude.ai artifacts, not software projects). Every skill adds its description to every session and competes to trigger, so only what a project usually needs is kept. Add any of them back from the source repo if a project needs it.
-- `skill-creator` and `claude-api` also ship with your account (`anthropic-skills:`) or with Claude Code. Inside this repo, the project copies take precedence.
-- `webapp-testing` and `skill-creator` include scripts (Python) that run when the skill is used: review them before first use and don't run them on files of unknown origin.
+- Left out on purpose: `docx`, `pdf`, `pptx`, `xlsx` and `skill-creator` (they ship with the owner's account as `anthropic-skills:`); `claude-api` (built into Claude Code and updated with it, while a pinned copy here would go stale and take precedence inside the repo); `doc-coauthoring` (overlaps with the template's own way of writing VISION, phase files and ADRs); `brand-guidelines`, `internal-comms`, `academy-guide` and `discernment-nudge` (Anthropic-internal or course material); `canvas-design`, `algorithmic-art`, `theme-factory`, `slack-gif-creator` and `web-artifacts-builder` (design and claude.ai artifacts, not software projects). Every skill adds its description to every session and competes to trigger, so only what a project usually needs is kept. Add any of them back from the source repo if a project needs it.
+- `webapp-testing` and `mcp-builder` include Python scripts that run when the skill is used: review them before first use and don't run them on files of unknown origin.
 - To update: `git clone --depth 1 https://github.com/anthropics/skills /tmp/as`, replace the folders, review the diff and update this table.

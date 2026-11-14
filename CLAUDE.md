@@ -8,7 +8,7 @@ This repository's rules live in AGENTS.md and apply to any agent. They are impor
 
 - **Project mode:** read *Mode* in `docs/STATE.md` first; light and full use different amounts of process (`AGENTS.md` → Project mode).
 - **Project configuration:** `.claude/settings.json` disables attribution in commits and PRs, defines permissions (deny / ask / allow) and enables the `.claude/hooks/guard.sh` hook. Do not modify them: changes are made by the owner.
-- **Skills:** `.claude/skills/` (`security-audit`, `repo-security-posture`, 6 Anthropic skills for software work and our own `record-changes`, which writes `docs/WORKLOG.md` after every change and CHANGELOG when closing a phase). Global skills in `~/.claude/skills` are also available. They are pinned to a commit; see `.claude/skills/UPSTREAM.md`.
+- **Skills:** `.claude/skills/` (`security-audit`, `repo-security-posture`, 3 Anthropic skills for software work and our own `record-changes`, which writes `docs/WORKLOG.md` after every change and CHANGELOG when closing a phase). Global skills in `~/.claude/skills` are also available. They are pinned to a commit; see `.claude/skills/UPSTREAM.md`.
 - **Subagents:** `security-reviewer`, `dod-reviewer` and `architecture-reviewer` in `.claude/agents/`. Run them before opening a PR. They are read-only.
 - **Commands** (`.claude/commands/`):
   - `/status`: at the start of every session. Summarizes STATE and says what's next.
