@@ -16,6 +16,16 @@
 - **Pending:**
 -->
 
+## 2026-11-14 — setup-repo.sh is safe to run on the template itself
+- **Phase / issue:** —
+- **What:** `setup-repo.sh` skips the placeholder replacement and the project mode when the repo is `project-template` (the history reset already skipped it).
+- **Why:** about to run it on the template to protect its `main`: step 2 would have replaced every `PROJECT_NAME` placeholder with "project-template".
+- **Rejected:** applying the ruleset by hand with `gh api` (the script is the single source of truth for repo settings).
+- **Files:** `scripts/setup-repo.sh`.
+- **Commits:** this entry's commit.
+- **Tested:** with a fake `gh`: on `serbenda/demo` it still replaces the placeholder and resets the history; on `serbenda/project-template` it changes no file.
+- **Pending:** —
+
 ## 2026-11-14 — Light mode tested; GitHub Actions bumped
 - **Phase / issue:** —
 - **What:** light mode run end to end in a real Claude Code session; `actions/checkout` → v7.0.1 and `gitleaks-action` → v3.0.0 in `ci.yml`, superseding Dependabot PR #4 (opened against the old Spanish `ci.yml`, it no longer applies).

@@ -47,16 +47,20 @@ MD
   echo "  ✓ Fresh CHANGELOG and WORKLOG for this project (the template's own history was removed)"
 fi
 
-# 2. Replace the project name placeholder (not inside third-party skills, whose scripts use their own
-#    PROJECT_NAME variable, nor in the Spanish guide, which explains the placeholder)
-grep -rl --exclude-dir=.git --exclude-dir=skills --exclude=setup-repo.sh --exclude=README.es.md "PROJECT_NAME" . | xargs -r sed -i.bak "s/PROJECT_NAME/$NAME/g"
-find . -name '*.bak' -not -path './.git/*' -delete
+# Steps 2 and 2b only make sense in a new project: in the template itself they would overwrite the
+# PROJECT_NAME placeholders and the default mode.
+if [[ "$NAME" != "project-template" ]]; then
+  # 2. Replace the project name placeholder (not inside third-party skills, whose scripts use their own
+  #    PROJECT_NAME variable, nor in the Spanish guide, which explains the placeholder)
+  grep -rl --exclude-dir=.git --exclude-dir=skills --exclude=setup-repo.sh --exclude=README.es.md "PROJECT_NAME" . | xargs -r sed -i.bak "s/PROJECT_NAME/$NAME/g"
+  find . -name '*.bak' -not -path './.git/*' -delete
 
-# 2b. Project mode: MODE=light ./scripts/setup-repo.sh for experiments and small tools (default: full).
-#     See AGENTS.md → Project mode.
-if [[ "${MODE:-full}" == "light" ]]; then
-  sed -i.bak 's/^- \*\*Mode:\*\* full/- **Mode:** light/' docs/STATE.md && rm -f docs/STATE.md.bak
-  echo "  ✓ Light mode: VISION, STATE, WORKLOG and SETUP; no phases, roadmap, CHANGELOG or risks"
+  # 2b. Project mode: MODE=light ./scripts/setup-repo.sh for experiments and small tools (default: full).
+  #     See AGENTS.md → Project mode.
+  if [[ "${MODE:-full}" == "light" ]]; then
+    sed -i.bak 's/^- \*\*Mode:\*\* full/- **Mode:** light/' docs/STATE.md && rm -f docs/STATE.md.bak
+    echo "  ✓ Light mode: VISION, STATE, WORKLOG and SETUP; no phases, roadmap, CHANGELOG or risks"
+  fi
 fi
 
 # 3. development branch
