@@ -16,6 +16,16 @@
 - **Pending:**
 -->
 
+## 2026-11-14 — Light mode tested; GitHub Actions bumped
+- **Phase / issue:** —
+- **What:** light mode run end to end in a real Claude Code session; `actions/checkout` → v7.0.1 and `gitleaks-action` → v3.0.0 in `ci.yml`, superseding Dependabot PR #4 (opened against the old Spanish `ci.yml`, it no longer applies).
+- **Why:** light mode was the only untested part; gitleaks-action v2 runs on Node 20, which GitHub has removed from its runners.
+- **Rejected:** merging PR #4 as is (conflicts with the current `ci.yml`); staying on the old versions.
+- **Files:** `.github/workflows/ci.yml`, `CHANGELOG.md`.
+- **Commits:** this entry's commit.
+- **Tested:** light mode in `template-smoke-test` (branch `light-test`): `/new-phase` stopped a request that went against VISION and wrote no phase file; after approval Claude recorded the plan under *Current work*, wrote ADR 0002, `greet.py` and 6 tests, filled in SETUP; `/close-phase` moved it to *Recently done* with no CHANGELOG. `greet.py` and its tests checked by hand. Actions: release notes read (no input changes; checkout's credential change doesn't apply, `persist-credentials: false`), tags resolved to the pinned SHAs. CI on GitHub not seen yet (not pushed).
+- **Pending:** owner: merge `development → main`, mark project-template as a template repository and protect its `main`, delete the smoke repo.
+
 ## 2026-11-13 — Claude commands tested end to end; fixes from the test
 - **Phase / issue:** —
 - **What:** ran Claude Code headless (`claude -p`) in `serbenda/template-smoke-test` through `/status` → `/new-phase` → approval → implementation → `/close-phase` → reviewers → `/prepare-pr`, and fixed what it found in the template: guard false positives (and the bypasses the first fix opened), ineffective `Write(...)` deny rules, the example High risk in RISKS, the README template section on setup, and a place to record owner approvals.

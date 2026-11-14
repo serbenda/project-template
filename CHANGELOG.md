@@ -36,6 +36,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versio
 - Claude template for any kind of development, no longer a website: `index.html`, `css/`, `js/`, GitHub Pages publishing and the `web-perf` skill are removed (still available as a global skill). `make test` and `make lint` detect the stack (npm, Python, Flutter, Go, Rust); `make dev`, `.claude/launch.json`, the CI setup and CodeQL's language are defined in phase P03. Definition of Done, rules and docs free of web assumptions.
 - No license: `LICENSE` (MIT) is removed and the README states "all rights reserved". If a project goes public and reuse should be allowed, a license is chosen through an ADR.
 
+### Security
+- GitHub Actions bumped: `actions/checkout` v4.4.0 → v7.0.1 and `gitleaks/gitleaks-action` v2.3.9 → v3.0.0 (Node 20 is gone from GitHub runners; v3 only moves to Node 24). Pinned by SHA.
+
 ### Fixed
 - Guard: read-only commands that only mention `.claude/` (`... 2>/dev/null`, `git grep -- ':!.claude/skills'`) and reading `git config user.email` were blocked. Writes to protected paths are now checked per subcommand only for simple commands; anything with `cd`/`pushd`, loops, `find`/`xargs`, variables or command substitution stays strict. Also covers a bare `.claude` path, `dd of=`, `git checkout/restore --`, `patch`, `tar`, `unzip`, `rsync` and `git config --unset/--add`. 83 hook tests.
 - `.claude/settings.json` had `Write(...)` deny rules, which Claude Code ignores (only `Edit(...)` rules apply to file tools); removed.
