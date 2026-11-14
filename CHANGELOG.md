@@ -4,6 +4,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versio
 
 ## [Unreleased]
 ### Added
+- `/challenge` and the read-only `challenger` subagent: an independent second opinion on any decision, plan, idea or text. Two challengers get only a brief (never the agent's reasoning), attack it from two lenses, ideally on another model, and the owner gets a side-by-side comparison with the agent's view. Every proposed decision is challenged first; ADRs gain a *Challenge* section.
 - `docs/WORKFLOWS.md`: every way of using the template as 13 Mermaid diagrams (what to do, new project, modes, sessions, full and light work, decisions, from a change to `main`, security layers, blocks, release, syncing old projects, updating skills); the same diagrams in Spanish in `README.es.md`.
 - A showcase `README.md` for the template, with banner and badges. New projects start from `docs/templates/README.project.md`, which `setup-repo.sh` moves into place on the first run (removing the banner).
 - **SAST** and **Dependencies** CI jobs, required on `main`: Semgrep (`p/default`, any language) and OSV-Scanner (any lockfile), both pinned by image digest. `setup-repo.sh` now updates an existing "Protect main" ruleset, so older repos get the new checks.

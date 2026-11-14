@@ -38,6 +38,13 @@ You remember nothing between sessions: the project's memory lives in `docs/` (se
 - Changes reach `main` only through a `development → main` PR that **the owner merges**. The agent may open the PR, but never merge it.
 - Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/en/): `feat:`, `fix:`, `docs:`, `chore:`, `refactor:`, `test:`, `ci:`.
 
+## Challenge (second opinion)
+An agent tends to agree with its own work, so decisions get an independent second opinion before the owner sees them.
+- **Every decision you propose** (an ADR, the stack, or any choice between real options the owner has to approve, in either mode) goes through a challenge first: a reviewer that receives only a brief of the proposal, never your reasoning, attacks it from a given lens. Show the owner your recommendation **and** the comparison.
+- **When the owner says "challenge"** (or "haz un challenge") about anything, code or not (a plan, an idea, a text, a purchase), run it on that.
+- In Claude Code this is `/challenge` and the `challenger` subagent. Other agents: a fresh session, ideally with another model, given only the brief.
+- Answer each objection honestly (agree, partly, disagree with a reason). Never invent objections, and never dismiss them all by reflex. The owner decides.
+
 ## Before calling something done
 - Meet [`docs/DEFINITION_OF_DONE.md`](docs/DEFINITION_OF_DONE.md).
 - In the PR, tick the DoD; anything that does not apply is marked with the reason.

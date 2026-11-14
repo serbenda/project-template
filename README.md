@@ -57,7 +57,8 @@ Then open Claude Code in the folder:
 
 ```text
 /status                    where are we and what's next
-/decision project stack    pick the language and tools (ADR)
+/decision project stack    pick the language and tools (ADR, challenged)
+/challenge <anything>      independent second opinion + comparison
 /new-phase <what>          plan → your approval → code
 /close-phase               criteria + Definition of Done + state updated
 /prepare-pr                3 reviewers + PR development → main (you merge)
@@ -133,8 +134,8 @@ Every action is pinned to a commit SHA and every scanner image to a digest. Deta
 ├── .claude/
 │   ├── settings.json        permissions + sandbox
 │   ├── hooks/guard.sh       the guard
-│   ├── commands/            /status /new-phase /close-phase /decision /prepare-pr
-│   ├── agents/              security · DoD · architecture reviewers
+│   ├── commands/            /status /new-phase /close-phase /decision /challenge /prepare-pr
+│   ├── agents/              security · DoD · architecture reviewers · challenger
 │   └── skills/              6 skills, pinned (UPSTREAM.md)
 ├── .githooks/               pre-commit (Gitleaks) · commit-msg (author, AI signatures)
 ├── .github/                 CI (6 jobs) · Dependabot with cooldown
