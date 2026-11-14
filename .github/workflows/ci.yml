@@ -7,7 +7,7 @@ on:
   push:
     branches: [development]
 
-# Permisos mínimos por defecto
+# Minimal permissions by default
 permissions:
   contents: read
 
@@ -16,94 +16,106 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  secretos:
-    name: Secretos
+  secrets:
+    name: Secrets
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: read   # gitleaks lista los commits de la PR
+      pull-requests: read   # gitleaks lists the PR's commits
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7  # v2.3.9
+      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e  # v3.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  autoria:
-    name: Autoría
+  authorship:
+    name: Authorship
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
 
-      # Los textos de la PR van por variables de entorno, nunca interpolados en el script (evita inyección)
-      - name: Sin firmas de IA y autor correcto
+      # PR texts go through environment variables, never interpolated into the script (prevents injection)
+      - name: No AI signatures and correct author
         env:
-          PR_TITULO: ${{ github.event.pull_request.title }}
-          PR_CUERPO: ${{ github.event.pull_request.body }}
-          PR_AUTOR: ${{ github.event.pull_request.user.login }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
           BASE: ${{ github.event.pull_request.base.sha }}
           HEAD: ${{ github.event.pull_request.head.sha }}
         run: |
-          patron='co-authored-by:|generated (with|by) \[?(claude|cursor|copilot|codex)|claude-session:|noreply@anthropic|claude\.ai/code|claude\.com/claude-code|🤖'
-          fallo=0
-          if printf '%s\n%s' "$PR_TITULO" "$PR_CUERPO" | grep -Eiq "$patron"; then
-            echo "::error::El título o la descripción de la PR contiene firmas de IA."; fallo=1
+          pattern='co-authored-by:|generated (with|by) \[?(claude|cursor|copilot|codex)|claude-session:|noreply@anthropic|claude\.ai/code|claude\.com/claude-code|🤖'
+          failed=0
+          if printf '%s\n%s' "$PR_TITLE" "$PR_BODY" | grep -Eiq "$pattern"; then
+            echo "::error::The PR title or description contains AI signatures."; failed=1
           fi
-          if [ "$PR_AUTOR" = "dependabot[bot]" ]; then
-            echo "PR de Dependabot: no se comprueba el autor de los commits."; exit $fallo
+          if [ "$PR_AUTHOR" = "dependabot[bot]" ]; then
+            echo "Dependabot PR: commit authors are not checked."; exit $failed
           fi
           while IFS='|' read -r sha email committer; do
+            # Dependabot commits already merged into development (committed by GitHub)
+            if [ "$email" = "49699333+dependabot[bot]@users.noreply.github.com" ] && [ "$committer" = "noreply@github.com" ]; then
+              echo "Dependabot commit $sha: accepted."
+              if git log -1 --format=%B "$sha" | grep -Eiq "$pattern"; then
+                echo "::error::Commit $sha contains AI signatures in the message."; failed=1
+              fi
+              continue
+            fi
             if [ "$email" != "serbenda@gmail.com" ]; then
-              echo "::error::Commit $sha con autor '$email' (debe ser serbenda@gmail.com)."; fallo=1
+              echo "::error::Commit $sha has author '$email' (must be serbenda@gmail.com)."; failed=1
             fi
-            # noreply@github.com: commits hechos desde la web de GitHub
+            # noreply@github.com: commits made from the GitHub web UI
             if [ "$committer" != "serbenda@gmail.com" ] && [ "$committer" != "noreply@github.com" ]; then
-              echo "::error::Commit $sha con committer '$committer'."; fallo=1
+              echo "::error::Commit $sha has committer '$committer'."; failed=1
             fi
-            if git log -1 --format=%B "$sha" | grep -Eiq "$patron"; then
-              echo "::error::Commit $sha contiene firmas de IA en el mensaje."; fallo=1
+            if git log -1 --format=%B "$sha" | grep -Eiq "$pattern"; then
+              echo "::error::Commit $sha contains AI signatures in the message."; failed=1
             fi
           done < <(git log --no-merges --format='%h|%ae|%ce' "$BASE..$HEAD")
-          [ $fallo -eq 0 ] && echo "✓ Autoría correcta y sin firmas de IA."
-          exit $fallo
+          [ $failed -eq 0 ] && echo "✓ Correct authorship and no AI signatures."
+          exit $failed
 
-  calidad:
-    name: Calidad
+  hook:
+    name: Hook
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
 
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
-        with:
-          node-version: "lts/*"
-
-      - name: Formato (.editorconfig)
-        run: npx --yes editorconfig-checker@6.2.0 -disable-indent-size -exclude 'LICENSE|\.git/|\.claude/skills/'
-
-      - name: HTML válido
-        run: |
-          if find . -name '*.html' -not -path './node_modules/*' | grep -q .; then
-            npx --yes htmlhint@1.9.2 "**/*.html" --ignore "node_modules/**"
-          else
-            echo "No hay HTML todavía."
-          fi
-
-      - name: Scripts de shell
+      - name: Shell scripts
         run: shellcheck --severity=error scripts/*.sh .claude/hooks/*.sh .githooks/*
 
-      - name: Pruebas del hook de seguridad
-        run: bash scripts/test-guardia.sh
+      - name: Security hook tests
+        run: bash scripts/test-guard.sh
 
-      - name: Enlaces internos rotos
-        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8  # v2.9.0
+      - name: Records check tests
+        run: bash scripts/test-check-records.sh
+
+  records:
+    name: Records
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
-          args: --offline --no-progress --include-fragments --exclude-path .claude/skills './**/*.html' './**/*.md'
-          fail: true
+          fetch-depth: 0
+          persist-credentials: false
+
+      # STATE size always; on PRs, also "code changes need a worklog entry".
+      # The SHAs go through environment variables, never interpolated into the script.
+      - name: STATE size and worklog entry
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ -n "$BASE" ]; then bash scripts/check-records.sh "$BASE" "$HEAD"
+          else bash scripts/check-records.sh; fi
+
+  # When the stack is chosen (phase P03, see the stack checklist in docs/SETUP.md), add a job here with the project's tests and lint,
+  # the same commands as "Verify" in docs/SETUP.md.

@@ -1,45 +1,54 @@
-# Skills de terceros
+# Third-party skills
 
-Copias **fijadas a un commit**, revisadas antes de incorporarlas. No se editan a mano: para actualizar, se sustituye la carpeta entera por la versión nueva, se revisa el diff en una PR y se actualiza esta tabla.
+> `record-changes/` is this template's **own** skill: it has no external origin and can be edited.
 
-| Skill | Origen | Commit | Licencia | Revisada |
+Copies **pinned to a commit**, reviewed before being added. They are not edited by hand: to update, replace the whole folder with the new version, review the diff in a PR and update this table.
+
+| Skill | Origin | Commit | License | Reviewed |
 |---|---|---|---|---|
-| `security-audit` | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill) | `c1c8a8c1471069fb0e188eeaff69b8e8db6564a8` | MIT (ver `security-audit/LICENSE`) | 2026-11-10 |
-| `web-perf` | [cloudflare/skills](https://github.com/cloudflare/skills) → `skills/web-perf` | `cbf893b954222276bf1af57e5f23379231e0efb9` | Apache-2.0 (ver `web-perf/LICENSE`) | 2026-11-11 |
-| `repo-security-posture` | [superagent-ai/skills](https://github.com/superagent-ai/skills) → `skills/repo-security-posture` | `0da315b873ed141025fa601ed6e0ebe0c878d5af` | MIT (ver `repo-security-posture/LICENSE`) | 2026-11-11 |
+| `security-audit` | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill) | `c1c8a8c1471069fb0e188eeaff69b8e8db6564a8` | MIT (see `security-audit/LICENSE`) | 2026-11-10 |
+| `repo-security-posture` | [superagent-ai/skills](https://github.com/superagent-ai/skills) → `skills/repo-security-posture` | `0da315b873ed141025fa601ed6e0ebe0c878d5af` | MIT (see `repo-security-posture/LICENSE`) | 2026-11-11 |
+| `claude-api` | [anthropics/skills](https://github.com/anthropics/skills) → `skills/claude-api` | `2c5958e` | Apache-2.0 (see `claude-api/LICENSE.txt`) | 2026-11-13 |
+| `doc-coauthoring` | [anthropics/skills](https://github.com/anthropics/skills) → `skills/doc-coauthoring` | `2c5958e` | no license file at the source | 2026-11-13 |
+| `frontend-design` | [anthropics/skills](https://github.com/anthropics/skills) → `skills/frontend-design` | `2c5958e` | Apache-2.0 (see `frontend-design/LICENSE.txt`) | 2026-11-13 |
+| `mcp-builder` | [anthropics/skills](https://github.com/anthropics/skills) → `skills/mcp-builder` | `2c5958e` | Apache-2.0 (see `mcp-builder/LICENSE.txt`) | 2026-11-13 |
+| `skill-creator` | [anthropics/skills](https://github.com/anthropics/skills) → `skills/skill-creator` | `2c5958e` | Apache-2.0 (see `skill-creator/LICENSE.txt`) | 2026-11-13 |
+| `webapp-testing` | [anthropics/skills](https://github.com/anthropics/skills) → `skills/webapp-testing` | `2c5958e` | Apache-2.0 (see `webapp-testing/LICENSE.txt`) | 2026-11-13 |
 
 ## security-audit
 
-Auditoría de seguridad defensiva en seis fases: reconocimiento, búsqueda, validación adversarial, salida estructurada, verificación independiente e informe.
+Defensive security audit in six phases: reconnaissance, hunting, adversarial validation, structured output, independent verification and report.
 
-- **Modo guía** (por defecto): preguntas o revisiones puntuales. No crea archivos.
-- **Modo auditoría completa**: solo si se pide explícitamente, por ejemplo: *«haz una auditoría de seguridad completa de este repo»*.
-- Los resultados se guardan **fuera del repo** (`~/security-audit-skill/<repo>/run-N`). Si alguna vez se guardan dentro, la carpeta tiene que estar en `.gitignore`.
-- Para validar los hallazgos hace falta Node.js:
+- **Guidance mode** (default): questions or targeted reviews. Creates no files.
+- **Full audit mode**: only when explicitly requested, for example: *"run a full security audit of this repo"*.
+- Results are saved **outside the repo** (`~/security-audit-skill/<repo>/run-N`). If they are ever saved inside, the folder must be in `.gitignore`.
+- Validating the findings requires Node.js:
   `node .claude/skills/security-audit/validate-findings.cjs <findings.json>`
-
-## web-perf
-
-Auditoría de rendimiento web: Core Web Vitals, Lighthouse, análisis de red, accesibilidad y código.
-
-- Para medir trazas reales necesita el servidor MCP de Chrome DevTools. Instálalo con una **versión fija** (`chrome-devtools-mcp@X.Y.Z`), no con `@latest` como sugiere la skill. Sin él, hace un análisis del código y de la red y dice qué no ha podido medir.
-- Su archivo `references/skill-feedback.md` sirve para abrir issues **públicas** en `cloudflare/skills`. Solo se usa si el propietario lo pide y tras aprobar el texto exacto.
 
 ## repo-security-posture
 
-Revisa la configuración del repo en GitHub: protección de ramas, CODEOWNERS, Actions, releases, accesos y dependencias. Entrega una lista de tareas ordenadas por gravedad.
+Reviews the repo's GitHub configuration: branch protection, CODEOWNERS, Actions, releases, access and dependencies. Delivers a task list ordered by severity.
 
-- Revisado: `scripts/collect.py` solo hace peticiones **de lectura** a `api.github.com` y `raw.githubusercontent.com`, no cambia ningún ajuste y oculta los tokens que encuentra en los archivos.
-- Uso: `GITHUB_TOKEN=<token de solo lectura> python3 .claude/skills/repo-security-posture/scripts/collect.py serbenda/<repo> --output /tmp/audit.json`
-- Usa el token con menos permisos posible (fine-grained, solo lectura, solo ese repo). Complementa a `scripts/setup-repo.sh`: el script aplica la protección y esta skill comprueba que sigue en pie.
+- Reviewed: `scripts/collect.py` only makes **read** requests to `api.github.com` and `raw.githubusercontent.com`, changes no settings and masks any tokens it finds in files.
+- Usage: `GITHUB_TOKEN=<read-only token> python3 .claude/skills/repo-security-posture/scripts/collect.py serbenda/<repo> --output /tmp/audit.json`
+- Use the token with the fewest permissions possible (fine-grained, read-only, that repo only). It complements `scripts/setup-repo.sh`: the script applies the protection and this skill checks it is still in place.
 
-## Actualizar `security-audit`
+## Updating `security-audit`
 ```bash
 git clone --depth 1 https://github.com/cloudflare/security-audit-skill /tmp/sas
 rm -rf .claude/skills/security-audit
 cp -a /tmp/sas/skills/security-audit .claude/skills/
 cp /tmp/sas/LICENSE .claude/skills/security-audit/
-git -C /tmp/sas rev-parse HEAD   # anota el commit en la tabla
+git -C /tmp/sas rev-parse HEAD   # record the commit in the table
 ```
 
-Para `web-perf` y `repo-security-posture` el proceso es el mismo, copiando `skills/<nombre>` del repo de origen y su `LICENSE`.
+For `repo-security-posture` the process is the same, copying `skills/<name>` from the source repo and its `LICENSE`.
+
+## Anthropic skills
+
+6 of the 19 skills from [anthropics/skills](https://github.com/anthropics/skills) (commit `2c5958e`): the ones useful for building software. Third-party notices from the source repo are in `ANTHROPIC_THIRD_PARTY_NOTICES.md`.
+
+- Left out on purpose: `docx`, `pdf`, `pptx` and `xlsx` (they ship with the owner's account as `anthropic-skills:`); `brand-guidelines`, `internal-comms`, `academy-guide` and `discernment-nudge` (Anthropic-internal or course material); `canvas-design`, `algorithmic-art`, `theme-factory`, `slack-gif-creator` and `web-artifacts-builder` (design and claude.ai artifacts, not software projects). Every skill adds its description to every session and competes to trigger, so only what a project usually needs is kept. Add any of them back from the source repo if a project needs it.
+- `skill-creator` and `claude-api` also ship with your account (`anthropic-skills:`) or with Claude Code. Inside this repo, the project copies take precedence.
+- `webapp-testing` and `skill-creator` include scripts (Python) that run when the skill is used: review them before first use and don't run them on files of unknown origin.
+- To update: `git clone --depth 1 https://github.com/anthropics/skills /tmp/as`, replace the folders, review the diff and update this table.

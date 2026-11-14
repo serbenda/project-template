@@ -33,10 +33,13 @@
       "Read(./.env.local)",
       "Read(./.env.production)",
       "Read(./.env.development)",
-      "Edit(./.claude/**)",
-      "Write(./.claude/**)",
+      "Edit(./.claude/settings.json)",
+      "Edit(./.claude/settings.local.json)",
+      "Edit(./.claude/hooks/**)",
+      "Edit(./.claude/agents/**)",
+      "Edit(./.claude/commands/**)",
+      "Edit(./.claude/skills/**)",
       "Edit(./.githooks/**)",
-      "Write(./.githooks/**)",
       "Bash(git push --all*)",
       "Bash(git push --mirror*)",
       "Bash(git commit --no-verify*)",
@@ -72,7 +75,7 @@
       "Bash(git switch development)",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(python3 -m http.server --bind 127.0.0.1 *)"
+      "Bash(bash scripts/test-guard.sh)"
     ]
   },
   "hooks": {
@@ -82,7 +85,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/guardia.sh",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/guard.sh",
             "timeout": 10
           }
         ]

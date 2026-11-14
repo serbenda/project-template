@@ -1,34 +1,77 @@
 #!/usr/bin/env bash
-# Configura un repo recién creado desde la plantilla.
-# Requiere: gh autenticado (gh auth login) con permisos de admin sobre el repo.
-# Uso: ./scripts/setup-repo.sh            (detecta el repo del directorio actual)
-#      ./scripts/setup-repo.sh owner/repo
+# Sets up a repo freshly created from the template.
+# Requires: gh authenticated (gh auth login) with admin permissions on the repo.
+# Usage: ./scripts/setup-repo.sh            (detects the repo of the current directory)
+#        ./scripts/setup-repo.sh owner/repo
 set -euo pipefail
 
 REPO="${1:-$(gh repo view --json nameWithOwner -q .nameWithOwner)}"
-NOMBRE="${REPO#*/}"
-echo "→ Configurando $REPO"
+NAME="${REPO#*/}"
+echo "→ Configuring $REPO"
 
-# 1. Autoría local de los commits
+# Private repos on GitHub Free don't enforce rulesets or required checks (they need GitHub Pro or Team)
+# and have no secret scanning. Warn before starting, so nothing looks protected when it isn't.
+PRIVATE="$(gh api "repos/$REPO" --jq .private)"
+PLAN="$(gh api "repos/$REPO" --jq '.owner.type' 2>/dev/null)"
+if [[ "$PLAN" == "User" ]]; then PLAN="$(gh api user --jq '.plan.name // "unknown"' 2>/dev/null || echo unknown)"; fi
+if [[ "$PRIVATE" == "true" && "$PLAN" == "free" ]]; then
+  echo "  ⚠ $REPO is PRIVATE on GitHub Free: main can't be protected (no rulesets, no required checks)" >&2
+  echo "    and secret scanning is off. The agent hook and the git hook still work locally." >&2
+  echo "    To protect main: make the repo public or upgrade to GitHub Pro." >&2
+fi
+
+# 1. Local commit authorship
 git config user.name  "Sergio Santiago Bendaña Quesada"
 git config user.email "serbenda@gmail.com"
-# Hook de git que quita firmas de IA de los commits y comprueba el autor
+# Git hook that strips AI signatures from commits and checks the author
 git config core.hooksPath .githooks
 chmod +x .githooks/* .claude/hooks/*.sh scripts/*.sh
 
-# 2. Sustituye el marcador del nombre del proyecto
-grep -rl --exclude-dir=.git --exclude=setup-repo.sh "NOMBRE_DEL_PROYECTO" . | xargs -r sed -i.bak "s/NOMBRE_DEL_PROYECTO/$NOMBRE/g"
-find . -name '*.bak' -not -path './.git/*' -delete
+# 1b. Start the project's own history: the CHANGELOG and WORKLOG that come with the template describe
+#     the template, not this project. Only on the first run (no .claude/TEMPLATE_VERSION yet) and
+#     never in the template repo itself.
+if [[ "$NAME" != "project-template" && ! -f .claude/TEMPLATE_VERSION ]]; then
+  awk '{ print } /^-->$/ { exit }' docs/WORKLOG.md > docs/WORKLOG.md.new && mv docs/WORKLOG.md.new docs/WORKLOG.md
+  cat > CHANGELOG.md <<'MD'
+# Changelog
 
-# 3. Rama development
+Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioned with [SemVer](https://semver.org/).
+
+## [Unreleased]
+MD
+  echo "created from serbenda/project-template on $(date +%F)" > .claude/TEMPLATE_VERSION
+  # The README's "How to use this template" section is for the template only: drop it (and the rule above it).
+  awk '/^<details>/ { skip = 1 } !skip { print } /^<\/details>/ { skip = 0 }' README.md \
+    | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}' | sed -e '${/^---$/d;}' | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}' > README.md.new
+  mv README.md.new README.md
+  echo "  ✓ Fresh CHANGELOG and WORKLOG for this project (the template's own history was removed)"
+fi
+
+# Steps 2 and 2b only make sense in a new project: in the template itself they would overwrite the
+# PROJECT_NAME placeholders and the default mode.
+if [[ "$NAME" != "project-template" ]]; then
+  # 2. Replace the project name placeholder (not inside third-party skills, whose scripts use their own
+  #    PROJECT_NAME variable, nor in the Spanish guide, which explains the placeholder)
+  grep -rl --exclude-dir=.git --exclude-dir=skills --exclude=setup-repo.sh --exclude=README.es.md "PROJECT_NAME" . | xargs -r sed -i.bak "s/PROJECT_NAME/$NAME/g"
+  find . -name '*.bak' -not -path './.git/*' -delete
+
+  # 2b. Project mode: MODE=light ./scripts/setup-repo.sh for experiments and small tools (default: full).
+  #     See AGENTS.md → Project mode.
+  if [[ "${MODE:-full}" == "light" ]]; then
+    sed -i.bak 's/^- \*\*Mode:\*\* full/- **Mode:** light/' docs/STATE.md && rm -f docs/STATE.md.bak
+    echo "  ✓ Light mode: VISION, STATE, WORKLOG and SETUP; no phases, roadmap, CHANGELOG or risks"
+  fi
+fi
+
+# 3. development branch
 if ! git ls-remote --exit-code --heads origin development >/dev/null 2>&1; then
   git push origin "HEAD:refs/heads/development"
 fi
 git fetch origin development
 git switch development 2>/dev/null || git switch -c development --track origin/development
 
-# 4. Ajustes del repo
-#    delete_branch_on_merge=false: si no, GitHub borraría development al fusionar la PR a main.
+# 4. Repo settings
+#    delete_branch_on_merge=false: otherwise GitHub would delete development when merging the PR to main.
 gh api -X PATCH "repos/$REPO" \
   -F delete_branch_on_merge=false \
   -F allow_merge_commit=true \
@@ -36,23 +79,29 @@ gh api -X PATCH "repos/$REPO" \
   -F allow_rebase_merge=false \
   -F has_wiki=false >/dev/null
 
-# 5. Seguridad: alertas de Dependabot, avisos privados de vulnerabilidades,
-#    escaneo de secretos y protección en push (gratis en repos públicos)
-aviso() { echo "  ⚠ No se pudo activar: $1 (revísalo a mano en Settings → Security)" >&2; }
-gh api -X PUT "repos/$REPO/vulnerability-alerts" >/dev/null 2>&1 || aviso "alertas de Dependabot"
-gh api -X PUT "repos/$REPO/automated-security-fixes" >/dev/null 2>&1 || aviso "correcciones automáticas de Dependabot"
-gh api -X PUT "repos/$REPO/private-vulnerability-reporting" >/dev/null 2>&1 || aviso "avisos privados de vulnerabilidades"
-gh api -X PATCH "repos/$REPO" --input - >/dev/null 2>&1 <<'JSON' || aviso "escaneo de secretos y protección en push (en repos privados requiere GitHub Advanced Security)"
+# 5. Security: Dependabot alerts, private vulnerability reporting,
+#    secret scanning and push protection (free on public repos)
+warn() { echo "  ⚠ Could not enable: $1 (check it by hand in Settings → Security)" >&2; }
+gh api -X PUT "repos/$REPO/vulnerability-alerts" >/dev/null 2>&1 || warn "Dependabot alerts"
+gh api -X PUT "repos/$REPO/automated-security-fixes" >/dev/null 2>&1 || warn "Dependabot automated security fixes"
+gh api -X PUT "repos/$REPO/private-vulnerability-reporting" >/dev/null 2>&1 || warn "private vulnerability reporting"
+gh api -X PATCH "repos/$REPO" --input - >/dev/null 2>&1 <<'JSON' || warn "secret scanning and push protection (private repos require GitHub Advanced Security)"
 {"security_and_analysis": {
   "secret_scanning": {"status": "enabled"},
   "secret_scanning_push_protection": {"status": "enabled"}
 }}
 JSON
 
-# 6. Protección de main con un ruleset: PR obligatoria, CI en verde, sin force-push ni borrado
-gh api -X POST "repos/$REPO/rulesets" --input - >/dev/null <<'JSON'
+# 6. Protect main with a ruleset: PR required, green CI, no force-push or deletion
+#    Idempotent: if the ruleset already exists it is left as is. If GitHub refuses it
+#    (private repo on GitHub Free), the script goes on and warns at the end.
+ruleset_exists() { gh api "repos/$REPO/rulesets" --jq ".[] | select(.name == \"$1\") | .id" 2>/dev/null | grep -q .; }
+protected=1
+if ruleset_exists "Protect main"; then
+  echo "  ✓ 'Protect main' ruleset already exists"
+elif gh api -X POST "repos/$REPO/rulesets" --input - >/dev/null 2>&1 <<'JSON'
 {
-  "name": "Proteger main",
+  "name": "Protect main",
   "target": "branch",
   "enforcement": "active",
   "conditions": {"ref_name": {"include": ["~DEFAULT_BRANCH"], "exclude": []}},
@@ -69,34 +118,49 @@ gh api -X POST "repos/$REPO/rulesets" --input - >/dev/null <<'JSON'
     {"type": "required_status_checks", "parameters": {
       "strict_required_status_checks_policy": false,
       "required_status_checks": [
-        {"context": "Secretos"},
-        {"context": "Calidad"},
-        {"context": "Autoría"}
+        {"context": "Secrets"},
+        {"context": "Hook"},
+        {"context": "Authorship"},
+        {"context": "Records"}
       ]
     }}
   ]
 }
 JSON
+then
+  echo "  ✓ main protected (PR, green CI, no force-push or deletion)"
+else
+  protected=0
+fi
 
-# 6b. Opcional: exigir commits firmados (FIRMAS=1 ./scripts/setup-repo.sh). Configura antes tu clave de firma:
-#     docs/SEGURIDAD.md → "Firmar commits"
-if [[ "${FIRMAS:-0}" == "1" ]]; then
-  gh api -X POST "repos/$REPO/rulesets" --input - >/dev/null <<'JSON'
-{"name": "Commits firmados", "target": "branch", "enforcement": "active",
+# 6b. Optional: require signed commits (SIGNED_COMMITS=1 ./scripts/setup-repo.sh). Set up your signing key first:
+#     docs/SECURITY_GUIDE.md → "Signing commits"
+if [[ "${SIGNED_COMMITS:-0}" == "1" ]]; then
+  if ruleset_exists "Signed commits"; then
+    echo "  ✓ 'Signed commits' ruleset already exists"
+  elif gh api -X POST "repos/$REPO/rulesets" --input - >/dev/null 2>&1 <<'JSON'
+{"name": "Signed commits", "target": "branch", "enforcement": "active",
  "conditions": {"ref_name": {"include": ["~DEFAULT_BRANCH", "refs/heads/development"], "exclude": []}},
  "rules": [{"type": "required_signatures"}]}
 JSON
-  echo "  ✓ Commits firmados obligatorios en main y development"
+  then
+    echo "  ✓ Signed commits required on main and development"
+  else
+    warn "signed-commits ruleset"
+  fi
 fi
 
-# 7. GitHub Pages publicado desde Actions
-gh api -X POST "repos/$REPO/pages" -f build_type=workflow >/dev/null 2>&1 \
-  || gh api -X PUT "repos/$REPO/pages" -f build_type=workflow >/dev/null
-
-# 8. Etiquetas básicas
-for etiqueta in "bug:d73a4a" "enhancement:a2eeef" "docs:0075ca" "security:b60205" "dependencies:0366d6"; do
-  gh label create "${etiqueta%%:*}" --color "${etiqueta##*:}" --repo "$REPO" --force >/dev/null
+# 7. Basic labels
+for label in "bug:d73a4a" "enhancement:a2eeef" "docs:0075ca" "security:b60205" "dependencies:0366d6"; do
+  gh label create "${label%%:*}" --color "${label##*:}" --repo "$REPO" --force >/dev/null
 done
 
-echo "✓ Listo. Trabaja en 'development' y abre PR a 'main'."
-echo "  Revisa los cambios del marcador con: git status"
+if (( protected == 0 )); then
+  echo "" >&2
+  echo "⚠ main is NOT protected: GitHub refused the ruleset (private repo on GitHub Free?)." >&2
+  echo "  The rest is configured. Make the repo public or upgrade to GitHub Pro, then run this script again." >&2
+  exit 1
+fi
+
+echo "✓ Done. Work on 'development' and open a PR to 'main'."
+echo "  Review the placeholder changes with: git status"

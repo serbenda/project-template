@@ -1,13 +1,21 @@
 # CLAUDE.md
 
-Las normas de este repositorio están en AGENTS.md y valen para cualquier agente. Se importan aquí:
+This repository's rules live in AGENTS.md and apply to any agent. They are imported here:
 
 @AGENTS.md
 
-## Específico de Claude Code
+## Specific to Claude Code
 
-- **Configuración del proyecto:** `.claude/settings.json` desactiva la firma en commits y PRs, define permisos (deny / ask / allow) y activa el hook `.claude/hooks/guardia.sh`. No los modifiques: los cambios los hace el propietario.
-- **Skills:** `.claude/skills/` (`security-audit`, `web-perf`, `repo-security-posture`). Están fijadas a un commit; ver `.claude/skills/UPSTREAM.md`.
-- **Subagentes:** `.claude/agents/revisor-seguridad.md` y `.claude/agents/revisor-dod.md`. Lánzalos antes de abrir una PR. Son de solo lectura.
-- **Comando:** `/preparar-pr` repasa la Definition of Done, lanza los revisores y abre la PR `development → main` sin firmas.
-- Si un hook bloquea una acción, **no intentes rodearlo** con otro comando: explica al propietario qué querías hacer y por qué.
+- **Project mode:** read *Mode* in `docs/STATE.md` first; light and full use different amounts of process (`AGENTS.md` → Project mode).
+- **Project configuration:** `.claude/settings.json` disables attribution in commits and PRs, defines permissions (deny / ask / allow) and enables the `.claude/hooks/guard.sh` hook. Do not modify them: changes are made by the owner.
+- **Skills:** `.claude/skills/` (`security-audit`, `repo-security-posture`, 6 Anthropic skills for software work and our own `record-changes`, which writes `docs/WORKLOG.md` after every change and CHANGELOG when closing a phase). Global skills in `~/.claude/skills` are also available. They are pinned to a commit; see `.claude/skills/UPSTREAM.md`.
+- **Subagents:** `security-reviewer`, `dod-reviewer` and `architecture-reviewer` in `.claude/agents/`. Run them before opening a PR. They are read-only.
+- **Commands** (`.claude/commands/`):
+  - `/status`: at the start of every session. Summarizes STATE and says what's next.
+  - `/new-phase <what>`: creates the phase file and proposes the plan. Writes no code until it is approved.
+  - `/close-phase`: checks criteria and DoD, fills in the result and updates STATE, ROADMAP and CHANGELOG.
+  - `/decision <what>`: records an ADR in `docs/decisions/`.
+  - `/prepare-pr`: verification, reviewers and a `development → main` PR without attribution.
+- **Preview:** `.claude/launch.json` is empty. If the project has a local server, add it in phase P03: it is the only file in `.claude/` you may edit.
+- For tasks spanning more than one phase or with design doubts, use plan mode before touching code.
+- If a hook blocks an action, **do not try to work around it** with another command: explain to the owner what you were trying to do and why.

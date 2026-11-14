@@ -1,22 +1,22 @@
-# Política de seguridad
+# Security policy
 
-## Informar de una vulnerabilidad
+## Reporting a vulnerability
 
-Por favor, **no abras una issue pública**. Usa el aviso privado de GitHub:
-**Security → Report a vulnerability** en este repositorio.
+Please **do not open a public issue**. Use GitHub's private reporting:
+**Security → Report a vulnerability** in this repository.
 
-Incluye una descripción del problema, los pasos para reproducirlo y su posible impacto. Responderé lo antes posible.
+Include a description of the problem, steps to reproduce it and its possible impact. I will reply as soon as possible.
 
-## Versiones con soporte
+## Supported versions
 
-Solo la última versión publicada en `main` (la web en GitHub Pages).
+Only the latest version published on `main`.
 
-## Medidas del repositorio
+## Repository measures
 
-Detalle completo en [docs/SEGURIDAD.md](docs/SEGURIDAD.md).
+Full details in [docs/SECURITY_GUIDE.md](docs/SECURITY_GUIDE.md).
 
 
-- `main` protegida: sin pushes directos, PR obligatoria y CI en verde.
-- Escaneo de secretos (Gitleaks) y análisis estático (CodeQL) en cada PR.
-- Dependabot mantiene actualizadas las GitHub Actions.
-- Permisos mínimos (`contents: read`) por defecto en los workflows.
+- `main` protected: no direct pushes, PR required and CI green.
+- Secret scanning (Gitleaks) and authorship check on every PR.
+- Security hook for AI agents, tested in CI.
+- Minimal permissions (`contents: read`) by default in workflows.
