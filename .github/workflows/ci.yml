@@ -98,6 +98,41 @@ jobs:
       - name: Records check tests
         run: bash scripts/test-check-records.sh
 
+  sast:
+    name: SAST
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Semgrep works for any language: injection, unsafe deserialisation, weak crypto, debug flags,
+      # insecure CI and Dependabot settings… Fails on any finding. Third-party skills are excluded.
+      # Image pinned by digest (semgrep 1.183.0). A false positive is silenced in the code with
+      # `# nosemgrep: <rule-id>` and the reason, never by removing this job.
+      - name: Static analysis (Semgrep)
+        run: >
+          docker run --rm -v "$PWD:/src:ro" -w /src
+          semgrep/semgrep@sha256:2e45517a85e13a9cca14a2a00df6bb48affd66b8ebfae1b0991cd57578362fb0
+          semgrep scan --config p/default --error --metrics=off --exclude .claude/skills .
+
+  dependencies:
+    name: Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      # OSV-Scanner reads the lockfiles and manifests of any ecosystem (npm, pip, go, cargo, pub…)
+      # and fails if a dependency has a known vulnerability. Passes while there are none yet.
+      # Image pinned by digest (osv-scanner v2.7.0).
+      - name: Known vulnerabilities (OSV-Scanner)
+        run: >
+          docker run --rm -v "$PWD:/src:ro"
+          ghcr.io/google/osv-scanner@sha256:4f3b7e2c64b9d38a5febc5a7e4a3dfef1d1362f726dea7a2ef4762b46469fcd0
+          scan source --recursive --allow-no-lockfiles --x-exclude "g:**/.claude/skills/**" /src
+
   records:
     name: Records
     runs-on: ubuntu-latest

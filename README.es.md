@@ -1,7 +1,7 @@
 # Guía de la plantilla (en castellano)
 
 > Esta plantilla está escrita en inglés. Esta guía explica en castellano **qué hay en ella, para qué sirve cada pieza y cómo se trabaja**.
-> El README técnico está en [README.md](README.md). Si creas un proyecto desde la plantilla, puedes conservar o borrar esta guía.
+> La portada en inglés está en [README.md](README.md) y todos los flujos dibujados, más abajo y en [docs/WORKFLOWS.md](docs/WORKFLOWS.md). Si creas un proyecto desde la plantilla, puedes conservar o borrar esta guía.
 
 ## Qué es
 
@@ -9,7 +9,7 @@ Una plantilla de repositorio para **empezar cualquier proyecto nuevo trabajando 
 
 1. **Memoria del proyecto para la IA.** Claude no recuerda nada entre sesiones. La plantilla le da unos documentos en `docs/` (visión, estado, hoja de ruta, fases, decisiones, bitácora) que lee al empezar y actualiza al terminar.
 2. **Una forma de trabajar.** Comandos como `/status`, `/new-phase` o `/prepare-pr` que llevan el trabajo por fases pequeñas, con el plan aprobado antes de escribir código.
-3. **Barreras de seguridad.** Un hook que impide a Claude hacer cosas peligrosas, un hook de git que quita firmas de IA de los commits, una CI que lo comprueba en GitHub y un script que protege la rama `main`.
+3. **Seguridad por capas.** Desde tu Mac hasta GitHub: permisos, un guardián que impide a Claude hacer cosas peligrosas, un *sandbox*, un modelo de amenazas antes del código sensible, hooks de git (secretos y autoría) y seis comprobaciones obligatorias en la CI, incluidos análisis estático (Semgrep) y de dependencias vulnerables (OSV-Scanner).
 
 Además incluye 6 **skills**: conocimiento especializado que Claude carga cuando la tarea lo pide (bitácora, seguridad, servidores MCP, pruebas web, diseño de interfaces). Solo van las útiles para desarrollar software: cada skill ocupa contexto en todas las sesiones y compite por activarse.
 
@@ -22,7 +22,7 @@ Se elige al crear el proyecto y queda escrito en `docs/STATE.md` → *Mode*. Cla
 | | **Ligero** (`light`) | **Completo** (`full`) |
 |---|---|---|
 | Para | Experimentos, prototipos, herramientas pequeñas | Lo que va a durar o lo usan otros |
-| Documentos que se mantienen | `VISION`, `STATE`, `WORKLOG` y `SETUP` | Todo `docs/` |
+| Documentos que se mantienen | `VISION`, `STATE`, `WORKLOG`, `SETUP` y `THREAT_MODEL` | Todo `docs/` |
 | Planificación | Claude propone el plan en el chat, lo apruebas y queda en *Current work* de `STATE` | Una ficha por fase (`/new-phase`) dentro de las etapas de `ROADMAP` |
 | Decisiones (ADR) | Solo las irreversibles | Todo lo difícil de deshacer |
 | CHANGELOG y riesgos | No se usan | Sí |
@@ -50,13 +50,257 @@ Claude te **propondrá pasar a completo** (no lo hace por su cuenta) cuando se c
 | Termina la fase | `/close-phase` | Comprueba criterios y Definition of Done y actualiza el estado. En completo, además, rellena el resultado de la fase, la hoja de ruta y el CHANGELOG (una vez por fase, sin repetir la bitácora) |
 | Quieres llevarlo a `main` | `/prepare-pr` | Pasa la verificación y los tres revisores, y abre la PR `development → main`. **La fusionas tú** |
 
+## Flujos de trabajo (diagramas)
+
+Todas las formas de usar la plantilla, dibujadas. Empieza por el primero: te manda al flujo que toca según lo que quieras hacer. La versión en inglés, que es la que mantiene Claude, está en [docs/WORKFLOWS.md](docs/WORKFLOWS.md).
+
+### 1. ¿Qué quieres hacer?
+
+```mermaid
+flowchart TD
+    A{"¿Qué quieres hacer?"} -->|"Empezar algo nuevo"| B["Empezar un proyecto · 2"]
+    A -->|"Trabajar en un proyecto"| C["Sesión de trabajo · 4"]
+    A -->|"Elegir algo difícil de deshacer<br/>stack, base de datos, auth, hosting"| D["Decisión · 7"]
+    A -->|"Llevar mis cambios a main"| E["Del cambio a main · 8"]
+    A -->|"Publicar una versión"| F["Antes de publicar · 11"]
+    A -->|"Un proyecto hecho con una<br/>versión antigua de la plantilla"| G["Ponerlo al día · 12"]
+    A -->|"Claude o la CI me han bloqueado"| H["Cuando algo se bloquea · 10"]
+    C --> M{"Mode en docs/STATE.md"}
+    M -->|"full"| P["Fase, modo completo · 5"]
+    M -->|"light"| L["Trabajo, modo ligero · 6"]
+```
+
+### 2. Empezar un proyecto nuevo
+
+```mermaid
+flowchart TD
+    A["GitHub: Use this template<br/>Create a new repository"] --> B["git clone y cd"]
+    B --> C{"¿Experimento o herramienta pequeña?"}
+    C -->|"sí"| D["MODE=light ./scripts/setup-repo.sh"]
+    C -->|"no"| E["./scripts/setup-repo.sh"]
+    D --> F
+    E --> F["setup-repo.sh:<br/>autoría y hooks de git, rama development,<br/>regla de main con 6 checks obligatorios,<br/>alertas de Dependabot, etiquetas,<br/>CHANGELOG y bitácora vacíos, README del proyecto"]
+    F --> G{"¿Repo privado en GitHub Free?"}
+    G -->|"sí"| H["Avisa y sale con error: main no se puede proteger.<br/>Hazlo público o usa GitHub Pro"]
+    G -->|"no"| I["Escribe docs/VISION.md<br/>(o díctasela a Claude y revísala)"]
+    I --> J["/decision project stack"]
+    J --> K["Rellena docs/THREAT_MODEL.md<br/>antes del primer código sensible"]
+    K --> L["/new-phase entorno local<br/>= lista del stack de P03"]
+    L --> N["SETUP Verify, launch.json, job de CI del stack,<br/>ecosistema de Dependabot, .gitignore"]
+    N --> O["Tú: añade el job del stack<br/>a los checks obligatorios de main"]
+    O --> P["Día a día: flujo 4"]
+```
+
+### 3. Modo ligero o completo
+
+```mermaid
+flowchart TD
+    A{"¿Se cumple alguna?"} --> B["Lo usa alguien más"]
+    A --> C["Está desplegado"]
+    A --> D["Datos personales o dinero"]
+    A --> E["Más de un mes de trabajo"]
+    A --> F["Colabora otra persona"]
+    B & C & D & E & F --> G["modo completo"]
+    A -->|"ninguna"| H["modo ligero"]
+    H --> I["Mantiene VISION, STATE, WORKLOG,<br/>SETUP y THREAT_MODEL"]
+    G --> J["Además ROADMAP, fichas de fase, ADR,<br/>RISKS, ARCHITECTURE y CHANGELOG"]
+    H -. "/status propone cambiar<br/>en cuanto se cumpla una" .-> G
+```
+
+### 4. Una sesión de trabajo con Claude
+
+```mermaid
+flowchart TD
+    A["Abres Claude Code en el repo"] --> B["/status"]
+    B --> C["Claude lee STATE, la bitácora<br/>y, en modo completo, ROADMAP y la fase"]
+    C --> D{"¿Y ahora qué?"}
+    D -->|"Funcionalidad o bloque nuevo"| E["/new-phase qué"]
+    D -->|"Algo difícil de deshacer"| F["/decision qué"]
+    D -->|"Arreglo pequeño dentro del plan"| G["Claude lo cambia, pasa Verify,<br/>record-changes escribe la bitácora, commit"]
+    D -->|"El trabajo está terminado"| H["/close-phase"]
+    D -->|"Listo para main"| I["/prepare-pr"]
+    E --> J{"¿Choca con VISION<br/>qué NO hacer o con un ADR?"}
+    J -->|"sí"| K["Claude se para y lo cita.<br/>Tú decides: descartarlo o cambiar VISION/ADR"]
+    J -->|"no"| L["Plan, tu aprobación y luego código"]
+```
+
+### 5. Una fase, en modo completo
+
+```mermaid
+sequenceDiagram
+    actor O as Tú
+    participant C as Claude
+    participant R as Revisores
+    participant G as CI de GitHub
+    O->>C: /new-phase qué
+    C->>C: lee VISION, STATE, ROADMAP, ARCHITECTURE, THREAT_MODEL, ADR
+    C->>C: docs/phases/PNN-titulo.md con objetivo, In/Out,<br/>criterios, plan e impacto de seguridad
+    C-->>O: resumen del plan y preguntas
+    O->>C: aprobación y respuestas
+    C->>C: anota la aprobación con fecha en la ficha
+    loop cada cambio
+        C->>C: código + pruebas, Verify, entrada en la bitácora
+        C->>C: commit (pre-commit Gitleaks, commit-msg)
+    end
+    O->>C: /close-phase
+    C->>C: Verify, cada criterio y tus aprobaciones
+    C->>R: dod-reviewer
+    R-->>C: LISTO o FALTA
+    C->>C: resultado, STATE, ROADMAP, CHANGELOG una vez, RISKS
+    O->>C: /prepare-pr
+    C->>R: revisores de DoD, seguridad y arquitectura
+    R-->>C: veredictos y hallazgos
+    C-->>O: título y texto de la PR
+    O->>C: confirmas
+    C->>G: push de development, abre la PR
+    G-->>O: 6 checks
+    O->>G: fusionas
+```
+
+### 6. Un trabajo, en modo ligero
+
+```mermaid
+flowchart TD
+    A["/new-phase qué"] --> B["Claude revisa VISION y el código"]
+    B --> C["Plan en el chat: objetivo, qué queda fuera,<br/>cómo sabremos que funciona, impacto de seguridad"]
+    C --> D{"Tu aprobación"}
+    D -->|"cambios"| C
+    D -->|"aprobado"| E["Plan anotado en<br/>Current work de STATE"]
+    E --> F["Código + pruebas, Verify, bitácora, commits"]
+    F --> G["/close-phase"]
+    G --> H["Verify, plan cumplido,<br/>pasa a Recently done, Next actualizado"]
+    H --> I["Sin ficha de fase ni CHANGELOG"]
+```
+
+### 7. Una decisión difícil de deshacer
+
+```mermaid
+flowchart TD
+    A["/decision qué"] --> B{"¿Ya la cubre<br/>un ADR aceptado?"}
+    B -->|"sí"| C["Claude lo cita y te pregunta<br/>si quieres sustituirlo"]
+    B -->|"no"| D["docs/decisions/NNNN-titulo.md<br/>contexto, 2 o más opciones reales, pros y contras"]
+    C -->|"sustituir"| D
+    D --> E["Estado propuesta,<br/>con una recomendación"]
+    E --> F{"Tú decides"}
+    F -->|"aceptar"| G["Estado aceptada, en el índice;<br/>la vieja queda como sustituida"]
+    F -->|"rechazar o cambiar"| D
+    G --> H["ARCHITECTURE al día<br/>si cambian piezas o flujos"]
+```
+
+### 8. Del cambio a `main`
+
+```mermaid
+flowchart LR
+    A["Cambio en development"] --> B["git commit"]
+    B --> C{"pre-commit:<br/>Gitleaks"}
+    C -->|"hay un secreto"| X1["Commit rechazado"]
+    C -->|"limpio"| D{"commit-msg:<br/>firma de IA, autor"}
+    D -->|"autor incorrecto"| X2["Commit rechazado"]
+    D -->|"bien"| E["git push<br/>(Claude pregunta antes)"]
+    E --> F["CI: Secrets, Hook, Records,<br/>SAST, Dependencies"]
+    F --> G["/prepare-pr<br/>3 revisores"]
+    G --> H["PR development a main<br/>+ check Authorship"]
+    H --> I{"¿6 checks en verde?"}
+    I -->|"no"| X3["La regla bloquea la fusión"]
+    I -->|"sí"| J["Fusionas tú"]
+```
+
+### 9. Seguridad: dónde actúa cada control
+
+```mermaid
+flowchart TB
+    subgraph MAC["Tu Mac: ~/.claude/settings.json"]
+        M1["No leer secretos, datos del navegador ni el Llavero<br/>No editar su configuración, tu shell ni git<br/>Sin modo saltarse permisos, MCP con tu aprobación"]
+    end
+    subgraph AGENT["Claude en el proyecto"]
+        A1["permisos deny / ask / allow"]
+        A2["hook guard.sh: 85 pruebas"]
+        A3["Sandbox: solo escribe en el proyecto,<br/>dominios permitidos, sin credenciales"]
+    end
+    subgraph DESIGN["Antes y durante el código"]
+        D1["THREAT_MODEL.md"]
+        D2["Impacto de seguridad por fase"]
+        D3["DoD de seguridad por tipo de proyecto"]
+        D4["security-reviewer"]
+    end
+    subgraph GIT["git en local"]
+        G1["pre-commit: Gitleaks"]
+        G2["commit-msg: firma de IA, autor"]
+    end
+    subgraph GH["GitHub"]
+        H1["CI: Secrets, Authorship, Hook,<br/>Records, SAST, Dependencies"]
+        H2["Regla: PR + 6 checks en verde,<br/>sin force-push ni borrado"]
+        H3["Dependabot con 7 días de espera"]
+    end
+    MAC --> AGENT --> DESIGN --> GIT --> GH
+```
+
+### 10. Cuando algo se bloquea
+
+```mermaid
+flowchart TD
+    A{"¿Qué ha bloqueado?"} -->|"guard.sh o una regla deny"| B["Claude se para y explica qué quería hacer.<br/>Nunca busca otro camino"]
+    B --> B1{"¿Era legítimo?"}
+    B1 -->|"no"| B2["Bien: el control ha funcionado"]
+    B1 -->|"sí"| B3["Lo haces tú, o cambias la regla<br/>en .claude/ (solo tú)"]
+    A -->|"Sandbox: dominio o ruta"| C["Añade el dominio a sandbox.network.allowedDomains<br/>solo si hace falta, a propósito"]
+    A -->|"Hallazgo de SAST"| D["Arregla el código.<br/>Falso positivo: nosemgrep + motivo + tu aprobación"]
+    A -->|"Hallazgo de Dependencies"| E["Actualiza la dependencia a la versión corregida"]
+    A -->|"Records"| F["Añade la entrada de bitácora o recorta STATE"]
+    A -->|"Authorship"| G["Quita la firma de IA o corrige el autor"]
+    A -->|"Un revisor: FALTA o REVISAR"| H["Arregla lo que lista y vuelve a /prepare-pr"]
+```
+
+### 11. Antes de publicar
+
+```mermaid
+flowchart TD
+    A["Etapa S3: publicar"] --> B{"¿Riesgos altos abiertos<br/>en RISKS.md?"}
+    B -->|"sí"| X["Todavía no: mitígalos"]
+    B -->|"no"| C["Auditoría completa con security-audit<br/>(solo cuando la pides tú)"]
+    C --> D{"¿Hallazgos confirmados abiertos?"}
+    D -->|"sí"| X
+    D -->|"no"| E["repo-security-posture:<br/>sin Critical ni High"]
+    E --> F["Hay copias de seguridad y se ha probado restaurar"]
+    F --> G["CHANGELOG: Unreleased a x.y.z,<br/>etiqueta y release en GitHub"]
+```
+
+### 12. Poner al día un proyecto existente
+
+```mermaid
+flowchart TD
+    A["En el repo de la plantilla"] --> B["scripts/sync-from-template.sh ../proyecto"]
+    B --> C["Informe: archivos de la plantilla NEW / CHANGED,<br/>archivos para fusionar a mano,<br/>archivos viejos en castellano"]
+    C --> D{"¿Aplicar?"}
+    D -->|"no"| E["No cambia nada"]
+    D -->|"sí"| F["Proyecto en development o en una rama,<br/>sin cambios sin guardar"]
+    F --> G["sync-from-template.sh ../proyecto --apply"]
+    G --> H["Archivos de la plantilla sustituidos,<br/>.claude/TEMPLATE_VERSION anotado"]
+    H --> I["Fusiona settings.json, ci.yml, AGENTS.md…<br/>a mano, con --diff"]
+    I --> J["./scripts/setup-repo.sh en el proyecto<br/>para actualizar la regla de main"]
+    J --> K["Pruebas, entrada de bitácora, commit, PR"]
+```
+
+### 13. Actualizar una skill de terceros
+
+```mermaid
+flowchart TD
+    A["Nueva versión en el origen"] --> B["git clone --depth 1 del repo de origen"]
+    B --> C["Sustituye la carpeta entera de la skill;<br/>nunca se edita a mano"]
+    C --> D["Revisa el diff:<br/>scripts nuevos, llamadas de red, instrucciones"]
+    D --> E{"¿Algo sospechoso?"}
+    E -->|"sí"| F["Descarta la actualización"]
+    E -->|"no"| G["Actualiza commit y fecha en UPSTREAM.md"]
+    G --> H["Entrada de bitácora, PR"]
+```
+
 ## Estructura, archivo por archivo
 
 ### Raíz
 
 | Archivo | Para qué sirve |
 |---|---|
-| `README.md` | Portada del proyecto: qué es, cómo usarlo, estructura. Se rellena al crear el proyecto (`PROJECT_NAME` lo sustituye el script) |
+| `README.md` | En la plantilla, su portada: banner, badges, diagramas y resumen de la seguridad. En un proyecto nuevo, `setup-repo.sh` la sustituye por `docs/templates/README.project.md`, el esqueleto del README del proyecto, con su nombre ya puesto |
 | `README.es.md` | Esta guía |
 | `AGENTS.md` | **Las normas para cualquier agente de IA**: cómo se organiza el trabajo, autoría, ramas, seguridad, skills e idioma. Vale para Claude, Copilot, Cursor… |
 | `CLAUDE.md` | Lo que lee Claude Code al empezar. Importa `AGENTS.md` y añade lo propio de Claude: comandos, subagentes, skills y vista previa |
@@ -74,6 +318,9 @@ Claude te **propondrá pasar a completo** (no lo hace por su cuenta) cuando se c
 | `phases/` | Una ficha por fase (`P01-titulo.md`) con objetivo, alcance (*In* / *Out*), criterios de aceptación, plan, **tus aprobaciones con su fecha** y, al cerrar, el resultado. `_template.md` es la plantilla y `README.md` el índice |
 | `decisions/` | Decisiones de arquitectura o producto (ADR) numeradas `0001, 0002…`. Una vez aceptadas no se editan: si cambias de idea, se crea otra que la sustituye. La `0001` explica por qué se trabaja así |
 | `ARCHITECTURE.md` | Piezas del sistema, flujo de datos, fuentes externas y convenciones del código |
+| `WORKFLOWS.md` | Todos los flujos de trabajo dibujados con Mermaid, en inglés (los mismos que hay en esta guía) |
+| `templates/README.project.md` | El README con el que empieza cada proyecto. Solo existe en la plantilla: `setup-repo.sh` lo mueve a la raíz |
+| `THREAT_MODEL.md` | **Modelo de amenazas**: qué se protege (cuentas, datos personales, dinero…), quién podría atacar, por dónde entran los datos y qué lo impide. Se rellena **antes del primer código** que maneje entradas, cuentas, datos personales, dinero o red, en los dos modos; cada fase indica su *impacto de seguridad* y `security-reviewer` comprueba cada cambio contra él |
 | `RISKS.md` | Registro de riesgos: `OPEN → MITIGATED → CLOSED`. Para publicar no debe quedar ningún riesgo alto abierto |
 | `SETUP.md` | Cómo arrancar, probar y **verificar** el proyecto en local. Incluye la lista de comprobación del stack de la fase P03. Claude usa su sección *Verify* antes de dar algo por terminado |
 | `WORKLOG.md` | **Bitácora**: el contexto de cada cambio (qué, por qué, qué se descartó, commits, cómo se probó, qué queda pendiente). La mantiene la skill `record-changes`; las entradas nuevas van arriba |
@@ -84,7 +331,7 @@ Claude te **propondrá pasar a completo** (no lo hace por su cuenta) cuando se c
 
 | Archivo | Para qué sirve |
 |---|---|
-| `settings.json` | Quita la firma de IA de commits y PRs. Define permisos: **deny** (prohibido: leer `.env`, push a `main`, `rm -rf`, fusionar PRs…), **ask** (pregunta antes: `git push`, `curl`, instalar paquetes…) y **allow** (sin preguntar: `git status`, `git diff`, commits…). Activa el hook |
+| `settings.json` | Quita la firma de IA de commits y PRs. Define permisos: **deny** (prohibido: leer `.env`, push a `main`, `rm -rf`, fusionar PRs…), **ask** (pregunta antes: `git push`, `curl`, instalar paquetes…) y **allow** (sin preguntar: `git status`, `git diff`, commits…). Activa el hook. Incluye un **sandbox**: los comandos de Claude solo pueden escribir dentro del proyecto y conectarse a una lista de dominios (GitHub, npm, PyPI, Go, crates, pub), y no pueden leer `~/.ssh`, `~/.aws`, el token de `gh` ni el Llavero |
 | `hooks/guard.sh` | **El guardián.** Se ejecuta antes de cada acción de Claude y bloquea lo peligroso: push a `main` o forzado, borrar historial, leer secretos, escribir tokens en archivos, ejecutar scripts descargados, cambiar la autoría, firmas de IA, tocar su propia configuración… Si algo se bloquea, Claude tiene que explicártelo en vez de buscar otro camino |
 | `commands/` | Los comandos `/status`, `/new-phase`, `/close-phase`, `/decision` y `/prepare-pr` explicados arriba |
 | `agents/` | Tres **subagentes revisores** de solo lectura que se lanzan antes de una PR (ver abajo) |
@@ -103,10 +350,11 @@ Claude te **propondrá pasar a completo** (no lo hace por su cuenta) cuando se c
 
 | Archivo | Para qué sirve |
 |---|---|
+| `.github/assets/banner.svg` | El banner de la portada de la plantilla. `setup-repo.sh` lo borra en los proyectos nuevos |
 | `.githooks/commit-msg` | Hook de git que vale para cualquier herramienta o persona: quita del mensaje del commit los `Co-Authored-By` y las firmas de IA, y **rechaza el commit si el autor no eres tú** |
 | `.githooks/pre-commit` | Busca secretos con Gitleaks en lo que vas a commitear **antes** de que exista el commit, así un token nunca llega al historial ni a GitHub. Si Gitleaks no está instalado, avisa y deja seguir (`brew install gitleaks`) |
 | `.github/dependabot.yml` | Dependabot actualiza cada semana las GitHub Actions (van fijadas a un commit, así que si no nadie las actualiza). En P03 se añade el ecosistema del stack |
-| `.github/workflows/ci.yml` | La CI en GitHub, con cuatro comprobaciones obligatorias para fusionar en `main`: **Secrets** (Gitleaks busca secretos), **Authorship** (autor correcto y sin firmas de IA en commits y PR), **Hook** (shellcheck y las pruebas del guardián y de la comprobación de registros) y **Records** (`STATE.md` no pasa de 150 líneas y, si una PR toca algo más que documentación, tiene que traer su entrada en la bitácora). En la fase P03 se añade el job del stack |
+| `.github/workflows/ci.yml` | La CI en GitHub, con seis comprobaciones obligatorias para fusionar en `main`: **Secrets** (Gitleaks), **Authorship** (autor correcto y sin firmas de IA), **Hook** (shellcheck y pruebas), **Records** (bitácora y tamaño de `STATE`), **SAST** (Semgrep busca inyecciones, criptografía débil, `debug` activado, configuraciones inseguras… en cualquier lenguaje) y **Dependencies** (OSV-Scanner falla si una dependencia tiene una vulnerabilidad conocida). En la fase P03 se añade el job del stack |
 | `scripts/setup-repo.sh` | Se ejecuta una vez al crear el repo: autoría local, hook de git, rama `development`, ruleset que protege `main` (PR obligatoria, CI en verde, sin force-push), alertas de Dependabot, escaneo de secretos y etiquetas. En la primera ejecución deja el `CHANGELOG` y la bitácora vacíos (los que trae son los de la propia plantilla), quita del README la sección «How to use this template» y anota la fecha en `.claude/TEMPLATE_VERSION`. Se puede ejecutar más de una vez sin duplicar nada. **Si el repo es privado y tu cuenta es gratuita**, avisa de que GitHub no permite proteger `main` ni escanear secretos, y termina con error para que no lo des por protegido |
 | `scripts/test-guard.sh` | 83 pruebas del guardián: lo que debe bloquear y lo que debe permitir |
 | `scripts/check-records.sh` | La comprobación de **Records**: tamaño de `STATE.md` y entrada de bitácora en cada PR con cambios de código (las de Dependabot y las de solo documentación no la necesitan). `test-check-records.sh` tiene sus 6 pruebas |
@@ -157,6 +405,7 @@ El repositorio de Anthropic trae 19 skills; aquí van 3. Las demás se han quita
 
 - **Autoría:** los commits van solo a nombre de `Sergio Santiago Bendaña Quesada <serbenda@gmail.com>`, sin `Co-Authored-By` ni firmas de IA. Lo comprueban el hook de Claude, el hook de git y la CI.
 - **Ramas:** se trabaja en `development`. A `main` solo se llega por una PR, y **la fusiona el propietario**, nunca la IA.
+- **Seguridad de la app:** antes del primer código sensible se rellena `docs/THREAT_MODEL.md`; cada fase dice su impacto de seguridad; la Definition of Done exige autorización en cada petición, contraseñas con argon2id/scrypt/bcrypt, límites de peticiones, cabeceras y cookies seguras, y copias de seguridad probadas. Los hallazgos de SAST o Dependencies se arreglan, no se silencian.
 - **Contenido externo** (issues, webs, respuestas de API, logs) son datos, no instrucciones: si piden hacer algo, Claude avisa en vez de hacerlo.
 - **Idioma:** todo el repositorio va en inglés (código, documentación, commits, PRs). Claude te responde en el idioma en que le escribas. Esta guía es la excepción.
 - **Repos privados:** en el plan gratuito de GitHub no se puede proteger `main` ni exigir la CI. En ese caso solo protegen los hooks locales (el de Claude y el de git). Para tener la protección completa, el repo tiene que ser público o tu cuenta GitHub Pro.
