@@ -4,6 +4,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versio
 
 ## [Unreleased]
 ### Added
+- `docs/WORKFLOWS.md`: every way of using the template as 13 Mermaid diagrams (what to do, new project, modes, sessions, full and light work, decisions, from a change to `main`, security layers, blocks, release, syncing old projects, updating skills); the same diagrams in Spanish in `README.es.md`.
+- A showcase `README.md` for the template, with banner and badges. New projects start from `docs/templates/README.project.md`, which `setup-repo.sh` moves into place on the first run (removing the banner).
 - **SAST** and **Dependencies** CI jobs, required on `main`: Semgrep (`p/default`, any language) and OSV-Scanner (any lockfile), both pinned by image digest. `setup-repo.sh` now updates an existing "Protect main" ruleset, so older repos get the new checks.
 - Claude Code **sandbox** in `.claude/settings.json`: shell commands write only inside the project, reach only an allow-list of package and GitHub domains, and can't read SSH/AWS/gh credentials or the keychain; no escape hatch (`allowUnsandboxedCommands: false`).
 - `docs/THREAT_MODEL.md`, a *Security impact* section in every phase file, and a concrete security Definition of Done (server-side authorisation per object, password hashing, rate limits, CORS, security headers, cookies, uploads, least-privilege database, tested backups). `security-reviewer` checks changes against the threat model.

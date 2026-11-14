@@ -1,87 +1,172 @@
-# PROJECT_NAME
+<p align="center">
+  <img src=".github/assets/banner.svg" alt="project-template: a Claude Code template for any new project" width="100%">
+</p>
 
-> One sentence explaining what it is and who it is for.
+<p align="center">
+  <a href="https://github.com/serbenda/project-template/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/serbenda/project-template/actions/workflows/ci.yml/badge.svg?branch=main"></a>
+  <img alt="Claude Code ready" src="https://img.shields.io/badge/Claude%20Code-ready-D97757?logo=anthropic&logoColor=white">
+  <img alt="Modes" src="https://img.shields.io/badge/modes-light%20%7C%20full-6E56CF">
+  <img alt="Any stack" src="https://img.shields.io/badge/stack-any-2EA44F">
+  <br>
+  <img alt="SAST" src="https://img.shields.io/badge/SAST-Semgrep-4C2EBF?logo=semgrep&logoColor=white">
+  <img alt="Dependencies" src="https://img.shields.io/badge/dependencies-OSV--Scanner-4285F4?logo=google&logoColor=white">
+  <img alt="Secrets" src="https://img.shields.io/badge/secrets-Gitleaks-CC2E2E">
+  <img alt="Sandbox" src="https://img.shields.io/badge/agent-sandboxed-0E7C86">
+  <img alt="Guard hook tests" src="https://img.shields.io/badge/guard%20hook-85%20tests-2EA44F">
+  <br>
+  <img alt="Docs" src="https://img.shields.io/badge/docs-English%20%C2%B7%20gu%C3%ADa%20en%20espa%C3%B1ol-555">
+  <img alt="License" src="https://img.shields.io/badge/license-all%20rights%20reserved-lightgrey">
+</p>
 
-🇪🇸 Guía de la plantilla en castellano: [README.es.md](README.es.md)
+<p align="center">
+  <b>Start any new project with Claude Code, with a memory it can read, a method it has to follow<br>and security that doesn't depend on anyone remembering.</b>
+</p>
 
-## What it does
-- Main feature 1
-- Main feature 2
-
-## Data sources
-| Source | What it provides | License |
-|---|---|---|
-| _E.g.: OpenStreetMap_ | _Map data_ | _ODbL, attribution required_ |
-
-## Running locally
-```bash
-git clone https://github.com/serbenda/PROJECT_NAME.git
-cd PROJECT_NAME
-git switch development
-```
-How to start and verify it: [docs/SETUP.md](docs/SETUP.md).
-
-## Structure
-```
-.
-├── docs/
-│   ├── VISION.md        # what it is, who it is for and what NOT to do
-│   ├── STATE.md         # living state (≤150 lines): the first thing the agent reads
-│   ├── WORKLOG.md       # context of every change: what, why, commits, pending
-│   ├── ROADMAP.md       # stages S0… with exit criteria
-│   ├── phases/          # one phase file per block of work (P01…)
-│   ├── decisions/       # numbered ADRs
-│   ├── ARCHITECTURE.md  # components, data flow, external sources
-│   ├── THREAT_MODEL.md  # what we protect, from whom, entry points and controls
-│   ├── RISKS.md         # risk register
-│   ├── SETUP.md         # start and verify (filled in in phase P03)
-│   ├── DEFINITION_OF_DONE.md
-│   └── SECURITY_GUIDE.md
-├── scripts/       # setup-repo.sh, sync-from-template.sh, check-records.sh and tests
-├── .claude/       # permissions, hook, skills, subagents, commands and launch.json
-├── .github/       # CI: secrets, authorship and hook tests
-├── .githooks/     # git hooks: secrets scan before commit, AI attribution and author check
-├── CHANGELOG.md   # visible changes, Keep a Changelog format
-├── README.es.md   # Spanish guide to the template: every file and skill explained
-├── AGENTS.md      # rules for any AI agent
-└── CLAUDE.md      # imports AGENTS.md and adds what is specific to Claude Code
-```
-
-## How to work with Claude
-
-```
-/status                      at the start of every session
-/new-phase <what>            phase file + plan → you approve → Claude implements on development
-(automatic)                  record-changes skill: WORKLOG after every change
-/close-phase                 criteria + DoD + updates STATE, ROADMAP and CHANGELOG (once per phase)
-/prepare-pr                  reviewers + development → main PR (you merge it)
-/decision <what>             when something hard to undo has to be chosen
-```
-
-## Contributing
-Read [AGENTS.md](AGENTS.md) and the [Definition of Done](docs/DEFINITION_OF_DONE.md).
-
-## License
-No license: © Sergio Santiago Bendaña Quesada. All rights reserved.
-The code may be viewed, but not copied, modified or redistributed without the author's written permission.
+<p align="center">
+  <a href="#-quick-start">Quick start</a> ·
+  <a href="#-how-it-works">How it works</a> ·
+  <a href="docs/WORKFLOWS.md">All workflows</a> ·
+  <a href="#%EF%B8%8F-security">Security</a> ·
+  <a href="#-whats-inside">What's inside</a> ·
+  <a href="README.es.md">🇪🇸 Guía en castellano</a>
+</p>
 
 ---
 
-<details>
-<summary>📦 How to use this template (delete this section in the new project)</summary>
+## ✨ Why
 
-1. On GitHub: **Use this template → Create a new repository**.
-2. Clone the new repo and run:
-   ```bash
-   ./scripts/setup-repo.sh
-   ```
-   It creates the `development` branch, protects `main` and enables security alerts and the git hook.
-   With signed commits: `SIGNED_COMMITS=1 ./scripts/setup-repo.sh`. For an experiment or small tool: `MODE=light ./scripts/setup-repo.sh` (see `AGENTS.md` → Project mode).
-3. Replace `PROJECT_NAME` in this README (the script already replaces it everywhere else).
-4. Write [docs/VISION.md](docs/VISION.md) (or dictate it to Claude and review it).
-5. With Claude: `/decision project stack`, then `/new-phase` for the first phase of Stage S0.
-6. In phase P03, Claude works through the *Stack checklist* in `docs/SETUP.md`: run and verify commands, `.claude/launch.json`, CI job, Dependabot, static analysis and `.gitignore`.
-7. Delete this section.
-8. Once on your Mac: follow [docs/SECURITY_GUIDE.md](docs/SECURITY_GUIDE.md) → "What you have to do yourself".
+AI agents forget everything between sessions, expand the scope on their own and will happily commit a secret or an injection if nothing stops them. This template fixes the three problems at once:
 
-</details>
+| | Problem | What the template does |
+|---|---|---|
+| 🧠 | **No memory** | `docs/` is the project's memory: vision, state, plan, decisions and a worklog with the *why* of every change. Claude reads it at the start of every session. |
+| 🧭 | **No method** | Work goes in small phases. The plan is approved before any code, the scope is fixed, and closing a phase checks its criteria and the Definition of Done. |
+| 🛡️ | **No brakes** | Six layers, from your Mac to GitHub: permissions, a guard hook, a sandbox, a threat model, git hooks and six required CI checks. |
+
+## 🚀 Quick start
+
+```bash
+# 1. GitHub → "Use this template" → create the repo, then:
+git clone https://github.com/serbenda/<your-project>.git && cd <your-project>
+
+# 2. Configure it (protects main, git hooks, empty history). For an experiment: MODE=light
+./scripts/setup-repo.sh
+```
+
+Then open Claude Code in the folder:
+
+```text
+/status                    where are we and what's next
+/decision project stack    pick the language and tools (ADR)
+/new-phase <what>          plan → your approval → code
+/close-phase               criteria + Definition of Done + state updated
+/prepare-pr                3 reviewers + PR development → main (you merge)
+```
+
+Once per Mac, follow [What you have to do](docs/SECURITY_GUIDE.md#2-what-you-have-to-do-once): 2FA, `brew install gitleaks` and the global Claude settings.
+
+## 🔄 How it works
+
+```mermaid
+flowchart LR
+    A["/status"] --> B["/new-phase"]
+    B --> C{"You approve<br/>the plan?"}
+    C -->|"no"| B
+    C -->|"yes"| D["Code + tests<br/>WORKLOG entry"]
+    D --> E["/close-phase"]
+    E --> F["/prepare-pr<br/>3 reviewers"]
+    F --> G{"6 CI checks<br/>green?"}
+    G -->|"no"| D
+    G -->|"yes"| H["You merge<br/>into main"]
+```
+
+**Two modes**, chosen at setup and switchable later:
+
+| | 🪶 Light | 🏗️ Full |
+|---|---|---|
+| For | Experiments, prototypes, small tools | Anything that lasts or that others use |
+| Planning | Plan in chat, recorded in `STATE.md` | A phase file per block of work, inside stages |
+| Docs kept | VISION, STATE, WORKLOG, SETUP, THREAT_MODEL | All of `docs/` |
+| Branches, hooks, CI, sandbox | Same | Same |
+
+Claude proposes switching to full as soon as someone else uses the project, it is deployed, it handles personal data or money, it lasts more than a month or someone else contributes.
+
+👉 **Every flow as a diagram** (new project, sessions, phases, decisions, PRs, blocks, releases, syncing old projects): [docs/WORKFLOWS.md](docs/WORKFLOWS.md)
+
+## 🛡️ Security
+
+```mermaid
+flowchart LR
+    M["💻 Your Mac<br/>global settings"] --> A["🤖 Claude<br/>permissions · guard hook · sandbox"]
+    A --> D["📐 Design<br/>threat model · security DoD"]
+    D --> G["🔐 git<br/>Gitleaks · author check"]
+    G --> C["☁️ GitHub<br/>6 required checks · ruleset"]
+```
+
+| Layer | What it stops |
+|---|---|
+| **Global settings** | Reading `.env`, SSH/AWS keys, the gh token, browser data or the keychain; editing its own settings, your shell or git config; bypass-permissions mode |
+| **Guard hook** (85 tests) | Push to `main`, force push, rewriting history, `rm -rf`, `curl \| sh`, AI signatures, touching its own guardrails, changing the git identity |
+| **Sandbox** | Shell commands write only inside the project and reach only GitHub and package registries |
+| **Threat model + DoD** | Sensitive code without a threat model; missing authorisation, weak password hashing, no rate limits, open CORS, missing security headers, untested backups |
+| **Git hooks** | A secret in a commit (before it exists), a commit with another author |
+| **CI on every PR** | `Secrets` · `Authorship` · `Hook` · `Records` · `SAST` (Semgrep, any language) · `Dependencies` (OSV-Scanner, any lockfile) |
+| **Ruleset** | Merging into `main` without a PR and six green checks |
+
+Every action is pinned to a commit SHA and every scanner image to a digest. Details: [docs/SECURITY_GUIDE.md](docs/SECURITY_GUIDE.md).
+
+## 📦 What's inside
+
+```text
+.
+├── docs/
+│   ├── VISION.md            what it is, for whom, and what NOT to do
+│   ├── STATE.md             living state (≤150 lines), read first every session
+│   ├── WORKLOG.md           the why of every change
+│   ├── ROADMAP.md           stages S0… with exit criteria
+│   ├── phases/              one file per phase (P01…)
+│   ├── decisions/           numbered ADRs
+│   ├── THREAT_MODEL.md      what we protect, from whom, and the controls
+│   ├── ARCHITECTURE.md · RISKS.md · SETUP.md · DEFINITION_OF_DONE.md · SECURITY_GUIDE.md
+│   ├── WORKFLOWS.md         every flow, as diagrams
+│   └── templates/           the README new projects start with
+├── .claude/
+│   ├── settings.json        permissions + sandbox
+│   ├── hooks/guard.sh       the guard
+│   ├── commands/            /status /new-phase /close-phase /decision /prepare-pr
+│   ├── agents/              security · DoD · architecture reviewers
+│   └── skills/              6 skills, pinned (UPSTREAM.md)
+├── .githooks/               pre-commit (Gitleaks) · commit-msg (author, AI signatures)
+├── .github/                 CI (6 jobs) · Dependabot with cooldown
+├── scripts/                 setup-repo · sync-from-template · check-records · tests
+├── AGENTS.md                rules for any AI agent
+├── CLAUDE.md                Claude Code specifics, imports AGENTS.md
+└── README.es.md             full guide in Spanish
+```
+
+**Skills:** `record-changes` (own: the worklog), `security-audit` (Cloudflare), `repo-security-posture` (superagent-ai), `mcp-builder`, `webapp-testing` and `frontend-design` (Anthropic).
+
+## 🔁 Keeping projects up to date
+
+Projects created from an older version get the improvements with one command, run from this repo:
+
+```bash
+scripts/sync-from-template.sh ../my-project          # report only
+scripts/sync-from-template.sh ../my-project --apply  # replace the template-owned files
+```
+
+It never touches `main`, never overwrites what each project adapts (permissions, CI jobs, rules) and records the version in `.claude/TEMPLATE_VERSION`.
+
+## 🧪 How it was tested
+
+- CI green on every push; guard hook (85 cases) and records check (6 cases) run on macOS bash 3.2 and Linux.
+- End to end on GitHub in a throwaway repo: direct push to `main` rejected, a PR without a worklog entry blocked, a PR with an AI signature blocked, all checks green with a proper PR.
+- Real Claude Code sessions in both modes: `/status`, `/new-phase` (it stopped a feature that contradicted the vision), `/close-phase` (it stopped on a missing owner approval), `/prepare-pr` with the three reviewers. The security reviewer found a guard regression that was fixed before release.
+- Sandbox: package registries reachable, other sites and writes outside the project blocked.
+- Semgrep and OSV-Scanner run on the template itself: both clean.
+
+The full history, with the reasons, is in [docs/WORKLOG.md](docs/WORKLOG.md).
+
+## 📄 License
+
+No license: © Sergio Santiago Bendaña Quesada. All rights reserved. The code may be viewed, but not copied, modified or redistributed without the author's written permission.

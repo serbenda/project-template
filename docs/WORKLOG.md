@@ -16,6 +16,16 @@
 - **Pending:**
 -->
 
+## 2026-11-14 — Workflow diagrams, showcase README, Spanish guide
+- **Phase / issue:** —
+- **What:** 13 Mermaid diagrams in `docs/WORKFLOWS.md` (and translated in `README.es.md`), a showcase `README.md` with an SVG banner and badges, the project README skeleton moved to `docs/templates/README.project.md`, and `setup-repo.sh` swapping it in on the first run.
+- **Why:** the owner wanted every option of the template documented as flows, a README that presents the template well, and the Spanish guide up to date. A template banner would be wrong in the projects created from it, so the showcase and the project README are now separate files.
+- **Rejected:** keeping one README with a template section to delete by hand (the old approach, error-prone); diagrams only in English (the owner reads the Spanish guide).
+- **Files:** `README.md`, `README.es.md`, `docs/WORKFLOWS.md`, `docs/templates/README.project.md`, `.github/assets/banner.svg`, `scripts/setup-repo.sh`, `CHANGELOG.md`.
+- **Commits:** this entry's commit.
+- **Tested:** all 28 diagrams parsed and rendered with Mermaid 11.4.1 in the browser; that found labels starting with "2." rendered as "Unsupported markdown: list", fixed. Banner checked in the browser at full width. `setup-repo.sh` with a fake `gh`: a new project gets the skeleton README with its name and no banner; the template itself is left unchanged.
+- **Pending:** see the diagrams and badges on GitHub after the push.
+
 ## 2026-11-14 — Security hardening: SAST, dependency scanning, sandbox, threat model
 - **Phase / issue:** —
 - **What:** CI jobs SAST (Semgrep) and Dependencies (OSV-Scanner), required on `main`; Claude Code sandbox in the project settings; `docs/THREAT_MODEL.md`, *Security impact* per phase and a concrete security DoD; extended global settings, installed on the owner's Mac (backup `~/.claude/settings.json.bak.2026-11-14`).
