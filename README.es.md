@@ -22,21 +22,21 @@ Se elige al crear el proyecto y queda escrito en `docs/STATE.md` → *Mode*. Cla
 | | **Ligero** (`light`) | **Completo** (`full`) |
 |---|---|---|
 | Para | Experimentos, prototipos, herramientas pequeñas | Lo que va a durar o lo usan otros |
-| Documentos que se mantienen | `VISION`, `STATE`, `WORKLOG`, `SETUP` y `THREAT_MODEL` | Todo `docs/` |
+| Documentos que se mantienen | `VISION`, `STATE`, `WORKLOG`, `SETUP` y `THREAT_MODEL` (al configurarlo se borran `ROADMAP`, `RISKS` y `phases/`) | Todo `docs/` |
 | Planificación | Claude propone el plan en el chat, lo apruebas y queda en *Current work* de `STATE` | Una ficha por fase (`/new-phase`) dentro de las etapas de `ROADMAP` |
 | Decisiones (ADR) | Solo las irreversibles | Todo lo difícil de deshacer |
 | CHANGELOG y riesgos | No se usan | Sí |
 | Ramas, PR, hooks y CI | Igual | Igual |
 
-Claude te **propondrá pasar a completo** (no lo hace por su cuenta) cuando se cumpla algo de esto: lo usa alguien más, se despliega, maneja datos personales o dinero, lleva más de un mes, o colabora otra persona. Pasar es poner *Mode: full* y crear `ROADMAP` y la primera fase con lo que ya dicen `STATE` y `WORKLOG`.
+Claude te **propondrá pasar a completo** (no lo hace por su cuenta) cuando se cumpla algo de esto: lo usa alguien más, se despliega, maneja datos personales o dinero, lleva más de un mes, o colabora otra persona. Pasar es poner *Mode: full*, traer de la plantilla `docs/ROADMAP.md`, `docs/RISKS.md` y `docs/phases/` (el modo ligero los borra) y rellenar `ROADMAP` y la primera fase con lo que ya dicen `STATE` y `WORKLOG`.
 
 ## Cómo se empieza un proyecto
 
 1. En GitHub: **Use this template → Create a new repository**.
-2. Clona el repo y ejecuta `./scripts/setup-repo.sh`. Configura tu autoría, crea la rama `development`, protege `main` y activa las alertas de seguridad. Con commits firmados: `SIGNED_COMMITS=1 ./scripts/setup-repo.sh`. En modo ligero: `MODE=light ./scripts/setup-repo.sh` (por defecto, completo).
+2. Clona el repo y ejecuta `./scripts/setup-repo.sh`. Configura tu autoría, crea la rama `development`, protege `main` y activa las alertas de seguridad. Con commits firmados: `SIGNED_COMMITS=1 ./scripts/setup-repo.sh`. En modo ligero: `MODE=light ./scripts/setup-repo.sh` (por defecto, completo). Si el agente va a tener **cuenta propia de GitHub** (recomendado en modo completo): `AGENT_BOT=<su usuario> ./scripts/setup-repo.sh`, y sigue *Agent identity* en `docs/SECURITY_GUIDE.md`. Las opciones se pueden combinar.
 3. Escribe `docs/VISION.md` (o díctasela a Claude y revísala).
 4. En Claude Code: `/decision project stack` para elegir lenguaje y herramientas.
-5. `/new-phase` para la primera fase (en modo ligero, el primer plan). En modo completo, la fase P03 sigue la **lista de comprobación del stack** de `docs/SETUP.md`: comandos para arrancar y verificar, `.claude/launch.json`, job de CI con pruebas y lint, Dependabot, análisis estático (CodeQL si el repo es público, Semgrep si es privado) y `.gitignore`. Al terminar, añades tú el nombre del job nuevo a los checks obligatorios de `main`.
+5. `/new-phase` para la primera fase (en modo ligero, el primer plan). En modo completo, la fase P03 sigue la **lista de comprobación del stack** de `docs/SETUP.md`: comandos para arrancar y verificar, `.claude/launch.json`, job de CI con pruebas y lint, Dependabot, CodeQL opcional si el repo es público (Semgrep ya corre siempre en el job SAST) y `.gitignore`. Al terminar, añades tú el nombre del job nuevo a los checks obligatorios de `main`.
 6. Una sola vez en tu Mac: sigue `docs/SECURITY_GUIDE.md` → *What you have to do yourself*.
 
 ## El día a día con Claude
@@ -49,7 +49,7 @@ Claude te **propondrá pasar a completo** (no lo hace por su cuenta) cuando se c
 | Hay que elegir algo difícil de deshacer | `/decision <qué>` | Escribe un ADR con opciones, pros y contras y una recomendación, **la somete a un challenge** y te enseña la comparativa; tú decides |
 | Quieres una segunda opinión de lo que sea | `/challenge <qué>` o decir "haz un challenge" | Dos `challenger` que no han visto cómo se llegó a la propuesta la atacan desde dos puntos de vista (coste, riesgos, quien lo mantiene…), si se puede con otro modelo. Te da una tabla: objeción, gravedad, alternativa y qué opina Claude de cada una, y una recomendación final. Vale para código, planes, ideas, textos o compras. Toda decisión que te proponga Claude pasa antes por aquí |
 | Termina la fase | `/close-phase` | Comprueba criterios y Definition of Done y actualiza el estado. En completo, además, rellena el resultado de la fase, la hoja de ruta y el CHANGELOG (una vez por fase, sin repetir la bitácora) |
-| Quieres llevarlo a `main` | `/prepare-pr` | Pasa la verificación y los tres revisores, y abre la PR `development → main`. **La fusionas tú** |
+| Quieres llevarlo a `main` | `/prepare-pr` | Va **después** de `/close-phase`: comprueba que las fases están cerradas y que `development` ya tiene todo lo de `main`, pasa la verificación y los tres revisores, y abre la PR `development → main` rellenando la plantilla de PR. **La fusionas tú**; lo que solo se puede comprobar después (que lo desplegado funciona, cerrar la issue, actualizar `development`) es la sección 7 de la DoD, y `/status` te lo recuerda |
 
 ## Flujos de trabajo (diagramas)
 
@@ -149,13 +149,17 @@ sequenceDiagram
     R-->>C: LISTO o FALTA
     C->>C: resultado, STATE, ROADMAP, CHANGELOG una vez, RISKS
     O->>C: /prepare-pr
+    C->>C: ¿fases cerradas? ¿development tiene todo main?
     C->>R: revisores de DoD, seguridad y arquitectura
     R-->>C: veredictos y hallazgos
-    C-->>O: título y texto de la PR
+    C-->>O: texto de la PR, desde la plantilla
     O->>C: confirmas
     C->>G: push de development, abre la PR
     G-->>O: 6 checks
     O->>G: fusionas
+    O->>O: tras fusionar: sección 7 de la DoD
+    O->>C: /status
+    C->>C: trae origin/main a development
 ```
 
 ### 6. Un trabajo, en modo ligero
@@ -216,7 +220,7 @@ flowchart TB
     end
     subgraph AGENT["Claude en el proyecto"]
         A1["permisos deny / ask / allow"]
-        A2["hook guard.sh: 107 pruebas"]
+        A2["hook guard.sh y sus pruebas"]
         A3["Sandbox: solo escribe en el proyecto,<br/>dominios permitidos, sin credenciales"]
     end
     subgraph DESIGN["Antes y durante el código"]
@@ -279,7 +283,7 @@ flowchart TD
     F --> G["sync-from-template.sh ../proyecto --apply"]
     G --> H["Archivos de la plantilla sustituidos,<br/>.claude/TEMPLATE_VERSION anotado"]
     H --> I["Fusiona settings.json, ci.yml, AGENTS.md…<br/>a mano, con --diff"]
-    I --> J["./scripts/setup-repo.sh en el proyecto<br/>para actualizar la regla de main"]
+    I --> J["./scripts/setup-repo.sh en el proyecto,<br/>con las mismas variables,<br/>para actualizar las reglas"]
     J --> K["Pruebas, entrada de bitácora, commit, PR"]
 ```
 
@@ -326,7 +330,8 @@ flowchart TD
 | `RISKS.md` | Registro de riesgos: `OPEN → MITIGATED → CLOSED`. Para publicar no debe quedar ningún riesgo alto abierto |
 | `SETUP.md` | Cómo arrancar, probar y **verificar** el proyecto en local. Incluye la lista de comprobación del stack de la fase P03. Claude usa su sección *Verify* antes de dar algo por terminado |
 | `WORKLOG.md` | **Bitácora**: el contexto de cada cambio (qué, por qué, qué se descartó, commits, cómo se probó, qué queda pendiente). La mantiene la skill `record-changes`; las entradas nuevas van arriba |
-| `DEFINITION_OF_DONE.md` | Qué tiene que cumplir un cambio para darlo por **hecho**: código, pruebas, seguridad, documentación e integración, más bloques según el tipo de proyecto (web/móvil, API, CLI) |
+| `DEFINITION_OF_DONE.md` | Qué tiene que cumplir un cambio para darlo por **hecho**: código, pruebas, seguridad, documentación e integración, más bloques según el tipo de proyecto (web/móvil, API, CLI). Las secciones 1 a 6 se comprueban antes de la PR; la 7 (lo desplegado funciona, issue cerrada, `development` al día) es tuya después de fusionar |
+| `.github/pull_request_template.md` | La plantilla de cada PR: qué cambia, por qué, cómo se probó, los veredictos de los tres revisores, el impacto de seguridad y la DoD marcada. `/prepare-pr` la rellena |
 | `SECURITY_GUIDE.md` | Las capas de seguridad de la plantilla y la lista de lo que tienes que hacer tú una vez: 2FA, tokens, firmar commits, FileVault… Incluye el bloque para tu `~/.claude/settings.json`, que aplica la misma protección a **todos** tus proyectos, también a los que no salen de esta plantilla |
 
 ### `.claude/`: configuración de Claude Code
@@ -355,13 +360,19 @@ flowchart TD
 |---|---|
 | `.github/assets/banner.svg` | El banner de la portada de la plantilla. `setup-repo.sh` lo borra en los proyectos nuevos |
 | `.githooks/commit-msg` | Hook de git que vale para cualquier herramienta o persona: quita del mensaje del commit los `Co-Authored-By` y las firmas de IA, y **rechaza el commit si el autor no eres tú** |
-| `.githooks/pre-commit` | Busca secretos con Gitleaks en lo que vas a commitear **antes** de que exista el commit, así un token nunca llega al historial ni a GitHub. Si Gitleaks no está instalado, avisa y deja seguir (`brew install gitleaks`) |
-| `.github/dependabot.yml` | Dependabot actualiza cada semana las GitHub Actions (van fijadas a un commit, así que si no nadie las actualiza). En P03 se añade el ecosistema del stack |
+| `.githooks/pre-commit` (y `pre-merge-commit`, `pre-applypatch`, que lo reutilizan para fusiones automáticas y parches) | Antes de que exista cada commit: **rechaza cualquier commit que toque los archivos protegidos** (configuración de Claude, hooks, CI, scripts de control), se haya preparado como se haya preparado; solo tú los commiteas, con `GUARDRAILS_OWNER_CHANGE=1`, que el guardián prohíbe a Claude. Y pasa Gitleaks: si encuentra un secreto, o si Gitleaks **no está instalado**, rechaza el commit |
+| `.githooks/pre-push` | Antes de cada push, lo escriba quien lo escriba: **rechaza cualquier push a `main` o `master` y cualquier push forzado** (que haría perder commits en el remoto). Es la red que no depende de cómo se escribió el comando |
+| `.github/dependabot.yml` | Dependabot actualiza cada semana las GitHub Actions (van fijadas a un commit, así que si no nadie las actualiza) las imágenes de Semgrep y OSV-Scanner y la del contenedor de desarrollo, siempre con una semana de espera. En P03 se añade el ecosistema del stack |
+| `.github/CODEOWNERS` | Quién tiene que aprobar los cambios: tú, en todo y en las protecciones en particular. GitHub solo lo exige si el agente tiene cuenta propia (`AGENT_BOT`): entonces cada PR que abre necesita tu aprobación y no puede aprobarla él (fusionarla sí, una vez que la apruebas: tu aprobación es la barrera) |
+| `.github/workflows/devcontainer.yml` | Construye el devcontainer en cada PR que lo cambie, para que un pin roto se vea antes de usarlo |
+| `.devcontainer/` | Opcional, recomendado en modo completo: Claude Code dentro de un contenedor que solo ve el proyecto (ni tu carpeta personal, ni las claves SSH, ni el Llavero). Imagen fijada por digest, Gitleaks con checksum y Claude Code en una versión de hace al menos una semana |
+| `.github/scanners/` | Un `Dockerfile` por escáner con la imagen fijada por versión y digest. No se construye: la CI lee la línea `FROM` y Dependabot la actualiza como cualquier dependencia |
 | `.github/workflows/ci.yml` | La CI en GitHub, con seis comprobaciones obligatorias para fusionar en `main`: **Secrets** (Gitleaks), **Authorship** (autor correcto y sin firmas de IA), **Hook** (shellcheck y pruebas), **Records** (bitácora y tamaño de `STATE`), **SAST** (Semgrep busca inyecciones, criptografía débil, `debug` activado, configuraciones inseguras… en cualquier lenguaje) y **Dependencies** (OSV-Scanner falla si una dependencia tiene una vulnerabilidad conocida). En la fase P03 se añade el job del stack |
-| `scripts/setup-repo.sh` | Se ejecuta una vez al crear el repo: autoría local, hook de git, rama `development`, ruleset que protege `main` (PR obligatoria, CI en verde, sin force-push), alertas de Dependabot, escaneo de secretos y etiquetas. En la primera ejecución deja el `CHANGELOG` y la bitácora vacíos (los que trae son los de la propia plantilla), quita del README la sección «How to use this template» y anota la fecha en `.claude/TEMPLATE_VERSION`. Se puede ejecutar más de una vez sin duplicar nada. **Si el repo es privado y tu cuenta es gratuita**, avisa de que GitHub no permite proteger `main` ni escanear secretos, y termina con error para que no lo des por protegido |
-| `scripts/test-guard.sh` | 83 pruebas del guardián: lo que debe bloquear y lo que debe permitir |
-| `scripts/check-records.sh` | La comprobación de **Records**: tamaño de `STATE.md` y entrada de bitácora en cada PR con cambios de código (las de Dependabot y las de solo documentación no la necesitan). `test-check-records.sh` tiene sus 6 pruebas |
-| `scripts/sync-from-template.sh` | Lleva las mejoras de la plantilla a un **proyecto que ya existe**. Se ejecuta desde la plantilla: `scripts/sync-from-template.sh ../faro`. Sin opciones solo informa; `--diff` enseña los cambios y `--apply` sustituye los archivos que son de la plantilla (hook, comandos, subagentes, scripts, hooks de git). Lo que cada proyecto adapta (permisos, CI, `AGENTS.md`…) nunca lo copia: te dice qué difiere para que lo fusiones tú. Detecta los archivos con nombre en castellano de la versión vieja. No aplica en `main` ni con cambios sin guardar |
+| `scripts/setup-repo.sh` | Se ejecuta una vez al crear el repo: autoría local, hook de git, rama `development`, rulesets que protegen `main` (PR obligatoria, los seis checks de GitHub Actions, sin force-push), `development` (sin force-push ni borrado) y las etiquetas (solo los administradores), alertas de Dependabot, avisos privados de vulnerabilidades, escaneo de secretos y etiquetas de issues. Antes de cambiar nada comprueba que tienes permisos de administrador y que la rama por defecto es `main`. En la primera ejecución deja el `CHANGELOG` y la bitácora vacíos (los que trae son los de la propia plantilla), sustituye el README por el esqueleto del proyecto (`docs/templates/README.project.md`) y anota la fecha en `.claude/TEMPLATE_VERSION`. Con `AGENT_BOT=<usuario>` da a esa cuenta permiso de escritura (nada más) y hace que cada PR a `main` necesite tu aprobación como propietario del código; `CODEOWNERS` pasa a nombrar al dueño del repo. Se puede ejecutar más de una vez sin duplicar nada, con las mismas variables: sin `AGENT_BOT` se niega a quitar tu revisión (salvo `REMOVE_OWNER_REVIEW=1`). Si algo de lo que pediste no se pudo configurar, termina con error y lo lista. Lo que cambia toca archivos protegidos, así que lo commiteas tú: `git add -A && GUARDRAILS_OWNER_CHANGE=1 git commit -m "chore: set up from the template"`. **Si el repo es privado y tu cuenta es gratuita**, avisa de que GitHub no permite proteger `main` ni escanear secretos, y termina con error para que no lo des por protegido |
+| `scripts/test-guard.sh` | Las pruebas del guardián: lo que debe bloquear (incluidos los trucos que encontró Codex) y lo que debe permitir. `test-githooks.sh` prueba los hooks de git y `test-check-records.sh` la comprobación de la bitácora |
+| `scripts/check-records.sh` | La comprobación de **Records**: que exista `STATE.md` y no pase de 150 líneas, y que cada PR con cambios que no sean solo documentación añada una **entrada de bitácora de verdad** (título con fecha, *Why* y *Tested* rellenos). Los `.md` de `.claude/` cuentan como código, porque cambian cómo trabaja el agente. Solo se libran las PR que GitHub dice que abrió Dependabot. Si no puede leer el historial, falla. `test-check-records.sh` tiene sus pruebas |
+| `scripts/sync-from-template.sh` | Lleva las mejoras de la plantilla a un **proyecto que ya existe**. Se ejecuta desde la plantilla: `scripts/sync-from-template.sh ../faro`. Sin opciones solo informa; `--diff` enseña los cambios y `--apply` sustituye los archivos que son de la plantilla (hook, comandos, subagentes, scripts, hooks de git). Lo que cada proyecto adapta (permisos, CI, `AGENTS.md`…) nunca lo copia: te dice qué difiere para que lo fusiones tú. Detecta los archivos con nombre en castellano de la versión vieja. No aplica en `main`, ni con cambios sin guardar en el proyecto o **en la plantilla** (solo copia lo que ya tiene commit), ni si hay un enlace simbólico en el camino (no puede escribir fuera del proyecto). Los archivos que copia son protecciones: el commit lo haces tú con `GUARDRAILS_OWNER_CHANGE=1` |
+| `scripts/test-scripts.sh` | Prueba `setup-repo.sh` y `sync-from-template.sh` de verdad, en copias de la plantilla y con un `gh` falso que apunta las llamadas a GitHub en vez de hacerlas: proyecto nuevo, segunda ejecución, modo ligero, repo privado gratuito, la propia plantilla, y que el `sync` no aplique en `main`, con cambios sin guardar o a través de enlaces simbólicos |
 
 ## Las skills
 

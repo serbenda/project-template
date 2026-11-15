@@ -23,9 +23,12 @@ git config core.hooksPath .githooks
 If the project has a local server, also define it in `.claude/launch.json` for the Claude Code preview.
 
 ## Verify
-Same as CI. Must pass before anything is considered done:
+Same as CI's Hook job (plus the stack's own job). Must pass before anything is considered done:
 ```bash
-bash scripts/test-guard.sh   # security hook
+shellcheck --severity=error scripts/*.sh .claude/hooks/*.sh .githooks/*
+bash scripts/test-guard.sh           # the Claude guard hook
+bash scripts/test-check-records.sh   # the worklog and STATE check
+bash scripts/test-githooks.sh        # the git hooks (needs gitleaks)
 # + stack tests and lint, e.g.: npm test && npm run lint
 ```
 
@@ -36,7 +39,7 @@ The template ships no stack-specific tooling. Phase P03 is not done until every 
 - [ ] **`.claude/launch.json`** defines the local server, if there is one (Claude may edit this file; the rest of `.claude/` is owner-only).
 - [ ] **CI job** (owner applies it: `.github/` is protected from the agent; Claude writes the exact job in the phase file and you paste it) in `.github/workflows/ci.yml` running the same tests and lint as `Verify`, with actions pinned to a full commit SHA and `permissions: contents: read`.
 - [ ] **Dependabot** (owner applies it, same as the CI job): add the stack's ecosystem (`npm`, `pip`, `gomod`, `cargo`, `pub`…) to `.github/dependabot.yml`, next to the `github-actions` entry the template already has.
-- [ ] **Static analysis**: a CodeQL workflow for the project's language if the repo is public (code scanning is free only on public repos); if it is private, a Semgrep step in the CI job instead.
+- [ ] **Static analysis**: Semgrep already runs on every repo (the SAST job). Optionally, a CodeQL workflow for the project's language if the repo is public (code scanning is free only on public repos).
 - [ ] **`.gitignore`** extended with the stack's build output, caches and virtual environments.
 - [ ] **Environment variables** documented in the section below; real values only in `.env`.
 - [ ] **Definition of Done**: delete the project-type blocks in `docs/DEFINITION_OF_DONE.md` that don't apply.

@@ -1,0 +1,23 @@
+{
+  "name": "${localWorkspaceFolderBasename}",
+  "build": { "dockerfile": "Dockerfile" },
+  "remoteUser": "vscode",
+  // Lets /status (and you) tell that the agent is running inside the container.
+  "containerEnv": { "CLAUDE_DEVCONTAINER": "1" },
+  // With an agent account (docs/SECURITY_GUIDE.md → Agent identity): its token, read from your Mac's
+  // environment when the container starts, so gh and git push act as the agent, not as you.
+  // SSH_AUTH_SOCK empty: the agent can't use your SSH agent (VS Code forwards it by default).
+  "remoteEnv": { "GH_TOKEN": "${localEnv:CLAUDE_AGENT_GH_TOKEN}", "SSH_AUTH_SOCK": "" },
+  // No Docker socket and no home folder: only the project is mounted. Claude Code's own settings and login
+  // live in a volume of their own, so they survive rebuilds without touching your Mac's ~/.claude.
+  // VS Code still forwards your git credentials and copies ~/.gitconfig by default: see docs/SECURITY_GUIDE.md → Dev container.
+  "mounts": [
+    "source=claude-code-config-${devcontainerId},target=/home/vscode/.claude,type=volume"
+  ],
+  "runArgs": ["--security-opt=no-new-privileges"],
+  // The git hooks, as setup-repo.sh sets them on the Mac (the identity comes from the repo's own git config).
+  "postCreateCommand": "git config --global --add safe.directory \"${containerWorkspaceFolder}\" && git config core.hooksPath .githooks",
+  "customizations": {
+    "vscode": { "extensions": ["anthropic.claude-code"] }
+  }
+}

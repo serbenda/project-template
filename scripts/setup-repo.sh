@@ -3,17 +3,61 @@
 # Requires: gh authenticated (gh auth login) with admin permissions on the repo.
 # Usage: ./scripts/setup-repo.sh            (detects the repo of the current directory)
 #        ./scripts/setup-repo.sh owner/repo
+# Options (environment variables):
+#   MODE=light            light mode (default: full). See AGENTS.md → Project mode.
+#   SIGNED_COMMITS=1      require signed commits on main and development.
+#   AGENT_BOT=<login>     the agent has a GitHub account of its own: it gets write access, and every PR into
+#                         main needs the owner's approval as code owner. See docs/SECURITY_GUIDE.md → Agent identity.
+#                         Pass it again on every run: a run without it would drop the owner's review, so the
+#                         script refuses unless REMOVE_OWNER_REVIEW=1 (after removing the agent's access).
+# Fails (exit 1) when anything you asked for couldn't be set; re-running it is safe.
 set -euo pipefail
 
 REPO="${1:-$(gh repo view --json nameWithOwner -q .nameWithOwner)}"
+# Checked before anything changes: the name goes into sed and API paths.
+if [[ ! "$REPO" =~ ^[A-Za-z0-9-]+/[A-Za-z0-9._-]+$ ]]; then
+  echo "The repository must be owner/name (letters, digits, '-', '.', '_'): '$REPO'" >&2; exit 2
+fi
 NAME="${REPO#*/}"
+OWNER="${REPO%%/*}"
+AGENT_BOT="${AGENT_BOT:-}"
+lower() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]'; }   # GitHub logins are case-insensitive
+if [[ -n "$AGENT_BOT" && ! "$AGENT_BOT" =~ ^[A-Za-z0-9]([A-Za-z0-9-]{0,38})$ ]]; then
+  echo "AGENT_BOT must be a GitHub login (letters, digits and hyphens): '$AGENT_BOT'" >&2; exit 2
+fi
+if [[ -n "$AGENT_BOT" && "$(lower "$AGENT_BOT")" == "$(lower "$OWNER")" ]]; then
+  echo "AGENT_BOT must be a different account from the owner ($OWNER): that is the whole point." >&2; exit 2
+fi
 echo "→ Configuring $REPO"
+
+# Admin rights and the default branch, before anything changes: without admin the settings and rulesets
+# would fail halfway, and the git hooks, sync and docs assume main.
+if [[ "$(gh api "repos/$REPO" --jq .permissions.admin)" != "true" ]]; then
+  echo "You need admin rights on $REPO (gh auth status; a fine-grained token needs Administration: write)." >&2; exit 2
+fi
+if [[ "$(gh api "repos/$REPO" --jq .default_branch)" != "main" ]]; then
+  echo "$REPO's default branch must be main (Settings → General → Default branch): the hooks and sync assume it." >&2; exit 2
+fi
+ruleset_id() {
+  gh api --paginate "repos/$REPO/rulesets?includes_parents=false" --jq ".[] | select(.name == \"$1\") | .id" 2>/dev/null | head -1
+}
+# A run without AGENT_BOT would turn the owner's review off on main: refused when it is on now.
+if [[ -z "$AGENT_BOT" && "${REMOVE_OWNER_REVIEW:-0}" != "1" ]] && id="$(ruleset_id "Protect main")" && [[ -n "$id" ]] &&
+   [[ "$(gh api "repos/$REPO/rulesets/$id" --jq '[.rules[] | select(.type == "pull_request") | .parameters.require_code_owner_review] | first' 2>/dev/null)" == "true" ]]; then
+  echo "main requires the owner's review now (an agent account): run again with AGENT_BOT=<its login>." >&2
+  echo "  To drop it on purpose, remove the agent's access first, then REMOVE_OWNER_REVIEW=1 ./scripts/setup-repo.sh" >&2
+  exit 2
+fi
 
 # Private repos on GitHub Free don't enforce rulesets or required checks (they need GitHub Pro or Team)
 # and have no secret scanning. Warn before starting, so nothing looks protected when it isn't.
 PRIVATE="$(gh api "repos/$REPO" --jq .private)"
 PLAN="$(gh api "repos/$REPO" --jq '.owner.type' 2>/dev/null)"
-if [[ "$PLAN" == "User" ]]; then PLAN="$(gh api user --jq '.plan.name // "unknown"' 2>/dev/null || echo unknown)"; fi
+if [[ "$PLAN" == "User" ]]; then PLAN="$(gh api user --jq '.plan.name // "unknown"' 2>/dev/null || echo unknown)"
+else PLAN="$(gh api "orgs/$OWNER" --jq '.plan.name // "unknown"' 2>/dev/null || echo unknown)"; fi
+if [[ "$PRIVATE" == "true" && "$PLAN" == "unknown" ]]; then
+  echo "  ⚠ $REPO is private and its plan can't be read: on GitHub Free main can't be protected." >&2
+fi
 if [[ "$PRIVATE" == "true" && "$PLAN" == "free" ]]; then
   echo "  ⚠ $REPO is PRIVATE on GitHub Free: main can't be protected (no rulesets, no required checks)" >&2
   echo "    and secret scanning is off. The agent hook and the git hook still work locally." >&2
@@ -52,16 +96,38 @@ fi
 if [[ "$NAME" != "project-template" ]]; then
   # 2. Replace the project name placeholder (not inside third-party skills, whose scripts use their own
   #    PROJECT_NAME variable, nor in the Spanish guide, which explains the placeholder)
-  grep -rl --exclude-dir=.git --exclude-dir=skills --exclude=setup-repo.sh --exclude=README.es.md "PROJECT_NAME" . | xargs -r sed -i.bak "s/PROJECT_NAME/$NAME/g"
+  #    "|| true": on a second run nothing is left to replace, and grep finding nothing is not an error.
+  #    NUL-separated: a file name with spaces stays one name. $NAME was checked above (no sed metacharacters).
+  { grep -rl --null --exclude-dir=.git --exclude-dir=skills --exclude=setup-repo.sh --exclude="test-*.sh" --exclude=README.es.md "PROJECT_NAME" . || true; } |
+    xargs -0 -r sed -i.bak "s/PROJECT_NAME/$NAME/g"
   find . -name '*.bak' -not -path './.git/*' -delete
+  # CODEOWNERS names the template's owner; in a new project the code owner is you, the person running this
+  # (for an organisation's repo the org itself can't be a code owner, so it is never used).
+  ME="$(gh api user --jq .login)"
+  if [[ -n "$AGENT_BOT" && "$(lower "$AGENT_BOT")" == "$(lower "$ME")" ]]; then
+    echo "AGENT_BOT must be a different account from yours ($ME): run this as the owner, not as the agent." >&2; exit 2
+  fi
+  [[ -f .github/CODEOWNERS ]] && sed -i.bak "s/ @serbenda$/ @$ME/" .github/CODEOWNERS && rm -f .github/CODEOWNERS.bak
 
   # 2b. Project mode: MODE=light ./scripts/setup-repo.sh for experiments and small tools (default: full).
   #     See AGENTS.md → Project mode.
+  #     Light mode doesn't use the roadmap, phases or risk register, so they go: fewer files for the agent to
+  #     read or keep up to date. Switching to full later brings them back from the template (AGENTS.md).
   if [[ "${MODE:-full}" == "light" ]]; then
     sed -i.bak 's/^- \*\*Mode:\*\* full/- **Mode:** light/' docs/STATE.md && rm -f docs/STATE.md.bak
-    echo "  ✓ Light mode: VISION, STATE, WORKLOG and SETUP; no phases, roadmap, CHANGELOG or risks"
+    rm -rf docs/ROADMAP.md docs/RISKS.md docs/phases
+    echo "  ✓ Light mode: VISION, STATE, WORKLOG and SETUP; ROADMAP, RISKS and phases removed"
   fi
 fi
+
+# 2c. Gitleaks: the pre-commit hook refuses every commit if it is missing (a secrets check that silently
+#     doesn't run is worse than none). Warn now instead of at the first commit.
+command -v gitleaks >/dev/null 2>&1 ||
+  echo "  ⚠ gitleaks is not installed: commits will be refused until you run  brew install gitleaks" >&2
+for tool in python3 jq; do
+  command -v "$tool" >/dev/null 2>&1 ||
+    echo "  ⚠ $tool is not installed: the Claude guard hook refuses every command until you install it" >&2
+done
 
 # 3. development branch
 if ! git ls-remote --exit-code --heads origin development >/dev/null 2>&1; then
@@ -70,6 +136,10 @@ fi
 git fetch origin development
 git switch development 2>/dev/null || git switch -c development --track origin/development
 
+# What you asked for and couldn't be set: listed at the end, and the script fails.
+failed=()
+fail_step() { echo "  ✗ Could not set: $1" >&2; failed+=("$1"); }
+
 # 4. Repo settings
 #    delete_branch_on_merge=false: otherwise GitHub would delete development when merging the PR to main.
 gh api -X PATCH "repos/$REPO" \
@@ -77,7 +147,7 @@ gh api -X PATCH "repos/$REPO" \
   -F allow_merge_commit=true \
   -F allow_squash_merge=false \
   -F allow_rebase_merge=false \
-  -F has_wiki=false >/dev/null
+  -F has_wiki=false >/dev/null || fail_step "merge settings (merge commits only, keep development)"
 
 # 5. Security: Dependabot alerts, private vulnerability reporting,
 #    secret scanning and push protection (free on public repos)
@@ -85,19 +155,29 @@ warn() { echo "  ⚠ Could not enable: $1 (check it by hand in Settings → Secu
 gh api -X PUT "repos/$REPO/vulnerability-alerts" >/dev/null 2>&1 || warn "Dependabot alerts"
 gh api -X PUT "repos/$REPO/automated-security-fixes" >/dev/null 2>&1 || warn "Dependabot automated security fixes"
 gh api -X PUT "repos/$REPO/private-vulnerability-reporting" >/dev/null 2>&1 || warn "private vulnerability reporting"
-gh api -X PATCH "repos/$REPO" --input - >/dev/null 2>&1 <<'JSON' || warn "secret scanning and push protection (private repos require GitHub Advanced Security)"
+if ! gh api -X PATCH "repos/$REPO" --input - >/dev/null 2>&1 <<'JSON'
 {"security_and_analysis": {
   "secret_scanning": {"status": "enabled"},
   "secret_scanning_push_protection": {"status": "enabled"}
 }}
 JSON
+then
+  # Free on public repos, so a failure there is a failure; private ones need GitHub Advanced Security.
+  if [[ "$PRIVATE" == "true" ]]; then warn "secret scanning and push protection (private repos require GitHub Advanced Security)"
+  else fail_step "secret scanning and push protection"; fi
+fi
 
 # 6. Protect main with a ruleset: PR required, green CI, no force-push or deletion
 #    Idempotent: if the ruleset already exists it is updated to this definition, so repos configured
 #    with an older template also get the new required checks. If GitHub refuses it
 #    (private repo on GitHub Free), the script goes on and warns at the end.
-ruleset_id() { gh api "repos/$REPO/rulesets" --jq ".[] | select(.name == \"$1\") | .id" 2>/dev/null | head -1; }
 ruleset_exists() { [[ -n "$(ruleset_id "$1")" ]]; }
+# apply_ruleset <name> <json>: creates it, or updates the existing one to this definition
+apply_ruleset() {
+  local id; id="$(ruleset_id "$1")"
+  if [[ -n "$id" ]]; then printf '%s' "$2" | gh api -X PUT "repos/$REPO/rulesets/$id" --input - >/dev/null 2>&1
+  else printf '%s' "$2" | gh api -X POST "repos/$REPO/rulesets" --input - >/dev/null 2>&1; fi
+}
 protect_main_json='{
   "name": "Protect main",
   "target": "branch",
@@ -107,36 +187,53 @@ protect_main_json='{
     {"type": "deletion"},
     {"type": "non_fast_forward"},
     {"type": "pull_request", "parameters": {
-      "required_approving_review_count": 0,
+      "required_approving_review_count": __REVIEWS__,
       "dismiss_stale_reviews_on_push": true,
-      "require_code_owner_review": false,
-      "require_last_push_approval": false,
+      "require_code_owner_review": __CODE_OWNERS__,
+      "require_last_push_approval": __CODE_OWNERS__,
       "required_review_thread_resolution": true
     }},
     {"type": "required_status_checks", "parameters": {
       "strict_required_status_checks_policy": true,
       "required_status_checks": [
-        {"context": "Secrets"},
-        {"context": "Hook"},
-        {"context": "Authorship"},
-        {"context": "Records"},
-        {"context": "SAST"},
-        {"context": "Dependencies"}
+        {"context": "Secrets", "integration_id": 15368},
+        {"context": "Hook", "integration_id": 15368},
+        {"context": "Authorship", "integration_id": 15368},
+        {"context": "Records", "integration_id": 15368},
+        {"context": "SAST", "integration_id": 15368},
+        {"context": "Dependencies", "integration_id": 15368}
       ]
     }}
   ]
 }'
+# integration_id 15368 is GitHub Actions: only its check runs count, not a commit status anyone with write access
+# can post under the same name.
+# Without an agent account the owner opens the PRs, and GitHub doesn't let anyone approve their own PR, so no
+# review can be required. With one, the agent opens them and the owner must approve as code owner.
+if [[ -n "$AGENT_BOT" ]]; then reviews=1 code_owners=true; else reviews=0 code_owners=false; fi
+protect_main_json="${protect_main_json//__REVIEWS__/$reviews}"
+protect_main_json="${protect_main_json//__CODE_OWNERS__/$code_owners}"
 protected=1
-if id="$(ruleset_id "Protect main")" && [[ -n "$id" ]]; then
-  if printf '%s' "$protect_main_json" | gh api -X PUT "repos/$REPO/rulesets/$id" --input - >/dev/null 2>&1; then
-    echo "  ✓ 'Protect main' ruleset updated (required checks: Secrets, Hook, Authorship, Records, SAST, Dependencies)"
-  else
-    protected=0
-  fi
-elif printf '%s' "$protect_main_json" | gh api -X POST "repos/$REPO/rulesets" --input - >/dev/null 2>&1; then
-  echo "  ✓ main protected (PR, green CI, no force-push or deletion)"
+if apply_ruleset "Protect main" "$protect_main_json"; then
+  echo "  ✓ main protected (PR, the six checks from GitHub Actions, no force-push or deletion; owner review: $code_owners)"
 else
   protected=0
+fi
+
+# 6a. development can't be deleted or force-pushed, and tags are the owner's (repository admins), so an agent
+#     with write access can't rewrite the work everyone builds on or cut a release.
+if (( protected )); then
+  apply_ruleset "Protect development" '{
+  "name": "Protect development", "target": "branch", "enforcement": "active",
+  "conditions": {"ref_name": {"include": ["refs/heads/development"], "exclude": []}},
+  "rules": [{"type": "deletion"}, {"type": "non_fast_forward"}]
+}' && echo "  ✓ development protected (no force-push or deletion)" || fail_step "'Protect development' ruleset"
+  apply_ruleset "Protect tags" '{
+  "name": "Protect tags", "target": "tag", "enforcement": "active",
+  "conditions": {"ref_name": {"include": ["~ALL"], "exclude": []}},
+  "bypass_actors": [{"actor_id": 5, "actor_type": "RepositoryRole", "bypass_mode": "always"}],
+  "rules": [{"type": "creation"}, {"type": "update"}, {"type": "deletion"}]
+}' && echo "  ✓ tags protected (only repository admins create, move or delete them)" || fail_step "'Protect tags' ruleset"
 fi
 
 # 6b. Optional: require signed commits (SIGNED_COMMITS=1 ./scripts/setup-repo.sh). Set up your signing key first:
@@ -152,7 +249,20 @@ JSON
   then
     echo "  ✓ Signed commits required on main and development"
   else
-    warn "signed-commits ruleset"
+    fail_step "signed-commits ruleset"
+  fi
+fi
+
+# 6c. Optional: the agent's own GitHub account (AGENT_BOT=<login>). Write access: it can push branches and open
+#     PRs, never change settings, rulesets or secrets, approve, force-push or delete main or development, or touch
+#     tags. A PR the owner approved can be merged by anyone with write access, the agent too: the approval is
+#     the gate.
+if [[ -n "$AGENT_BOT" ]]; then
+  if gh api -X PUT "repos/$REPO/collaborators/$AGENT_BOT" -f permission=push >/dev/null 2>&1; then
+    echo "  ✓ $AGENT_BOT invited with write access; PRs into main need your approval as code owner"
+    echo "    Accept the invitation from that account, then follow docs/SECURITY_GUIDE.md → Agent identity."
+  else
+    fail_step "write access for $AGENT_BOT"
   fi
 fi
 
@@ -167,6 +277,15 @@ if (( protected == 0 )); then
   echo "  The rest is configured. Make the repo public or upgrade to GitHub Pro, then run this script again." >&2
   exit 1
 fi
+if (( ${#failed[@]} > 0 )); then
+  echo "" >&2
+  echo "⚠ Not everything was set up:" >&2
+  printf '    %s\n' "${failed[@]}" >&2
+  echo "  Fix the cause (permissions, plan) and run this script again (with the same variables)." >&2
+  exit 1
+fi
 
 echo "✓ Done. Work on 'development' and open a PR to 'main'."
-echo "  Review the placeholder changes with: git status"
+echo "  Review the changes (git status, git diff). They touch guardrail files (.claude/TEMPLATE_VERSION, .github/),"
+echo "  so you, the owner, commit them:  git add -A && GUARDRAILS_OWNER_CHANGE=1 git commit -m \"chore: set up from the template\""
+echo "  The first PR with code needs a worklog entry (docs/WORKLOG.md starts empty)."
