@@ -1272,10 +1272,15 @@ print(os.path.relpath(p, os.path.realpath(top)) if top else os.path.normpath(sys
             block "git config '$ckey' holds a credential (a URL with a token or an auth header): it is not printed."
           :
         else
-          # Each allowed value is bound to its own key: core.hooksPath can only be .githooks, and so on.
-          has '^(--(global|local) +)?user\.email +serbenda@gmail\.com *$' "$rest" ||
-          has '^(--(global|local) +)?user\.name +Sergio Santiago Bendaña Quesada *$' "$rest" ||
-          has '^(--local +)?core\.hooksPath +\.githooks *$' "$rest" ||
+          # Each allowed value is bound to its own key: core.hooksPath can only be .githooks, and the identity only
+          # the owner's, as .github/OWNER says in the project's last commit (a changed copy on disk doesn't count).
+          own="$(git -C "$proj" show HEAD:.github/OWNER 2>/dev/null)"
+          o_email="$(printf '%s\n' "$own" | sed -n 's/^email=//p' | head -n 1)"
+          o_name="$(printf '%s\n' "$own" | sed -n 's/^name=//p' | head -n 1)"
+          cfg="$(printf '%s' "${rest//$US/ }" | tr -s ' ' | sed -E 's/^--(global|local) //; s/ $//')"   # "Ada Owner" is one word
+          { [[ -n "$o_email" && "$cfg" == "user.email $o_email" ]] ||
+            [[ -n "$o_name" && "$cfg" == "user.name $o_name" ]] ||
+            has '^(--local +)?core\.hooksPath +\.githooks *$' "$rest"; } ||
             block "git config is read-only for the agent: only reads, or the owner's identity and .githooks, are allowed."
         fi ;;
     esac

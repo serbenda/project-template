@@ -28,7 +28,12 @@ export GIT_NO_REPLACE_OBJECTS=1   # git replace would show other commits' data i
 while IFS= read -r v; do unset "$v"; done < <(env | sed -n 's/^\(GITLEAKS_[A-Za-z0-9_]*\)=.*/\1/p')
 
 url="${2:-${1:-origin}}"
-owner="serbenda@gmail.com"
+# The owner's identity, from .github/OWNER as last committed (the staged copy only before the first commit):
+# a changed copy on disk doesn't change who the owner is.
+owner_field() { { git show HEAD:.github/OWNER 2>/dev/null || git show :.github/OWNER 2>/dev/null; } |
+  sed -n "s/^$1=//p" | head -n 1; }
+owner="$(owner_field email | tr '[:upper:]' '[:lower:]')"
+[[ -n "$owner" ]] || { echo "pre-push: .github/OWNER has no email, so the commits' author can't be checked." >&2; exit 1; }
 switch="${GUARDRAILS_OWNER_CHANGE:-}"
 # The same signature pattern as commit-msg and CI.
 pattern='^[[:space:]#>*_-]*((co-authored|co-developed|assisted|generated)-by:|(signed-off|authored)-by:[[:space:]]*\[?(claude|cursor|copilot|codex|gemini|aider|chatgpt|openai|anthropic|devin|windsurf|gpt)|claude-session:|(generated|made|created|written|authored|assisted)[*_[:space:]]+(with|by|using|via|in)[*_[:space:]]+(the[[:space:]]+)?\[?[*_]*((github|microsoft)[[:space:]]+)?(claude|cursor|copilot|codex|gemini|aider|chatgpt|openai|anthropic|devin|windsurf|gpt)(-[[:alnum:].]*[0-9][[:alnum:].]*|-(code|cli|agent))?([^[:alnum:]-]|$)|(\[[^]]*\]\()?<?https?://(claude\.ai/code|claude\.com/claude-code)/?[)>]*[[:space:].]*$)|claude\.ai/code/session|noreply@anthropic|🤖'

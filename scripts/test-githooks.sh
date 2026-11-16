@@ -20,7 +20,8 @@ new_repo() {  # new_repo -> prints the path of a new repo with the hooks enabled
     git init -q -b development "$d"
     git -C "$d" config user.name "Sergio Santiago Bendaña Quesada"
     git -C "$d" config user.email "serbenda@gmail.com"
-    mkdir -p "$d/.githooks" && cp "$root/.githooks/"* "$d/.githooks/"
+    mkdir -p "$d/.githooks" "$d/.github" && cp "$root/.githooks/"* "$d/.githooks/"
+    printf 'name=Sergio Santiago Bendaña Quesada\nemail=serbenda@gmail.com\nlogin=serbenda\n' > "$d/.github/OWNER"
     echo base > "$d/README.md"
     git -C "$d" add -A && git -C "$d" -c core.hooksPath=/dev/null commit -qm "chore: base"
     git -C "$d" config core.hooksPath .githooks
@@ -367,6 +368,13 @@ if (( have_gitleaks )); then
   check 0 ".vscode/extensions.json (only recommends extensions) is not a guardrail" "$r" PATH="$PATH" -- "chore: extensions"
   r=$(new_repo) || exit 1; safe "$r"; echo hi > "$r/notes.md"; git -C "$r" add -A
   check 1 "wrong author refused (commit-msg)" "$r" PATH="$PATH" GIT_AUTHOR_EMAIL=someone@example.com -- "docs: notes"
+  # The owner comes from .github/OWNER as last committed: a changed copy on disk doesn't make someone else the owner.
+  r=$(new_repo) || exit 1; safe "$r"; printf 'name=Eve\nemail=eve@example.com\nlogin=eve\n' > "$r/.github/OWNER"
+  echo hi > "$r/notes.md"; git -C "$r" add notes.md
+  check 1 "an uncommitted .github/OWNER doesn't change the owner" "$r" PATH="$PATH" GIT_AUTHOR_EMAIL=eve@example.com -- "docs: notes"
+  r=$(new_repo) || exit 1; safe "$r"; git -C "$r" rm -q .github/OWNER >/dev/null 2>&1
+  git -C "$r" -c core.hooksPath=/dev/null commit -qm "chore: no owner" >/dev/null 2>&1; echo hi > "$r/notes.md"; git -C "$r" add notes.md
+  check 1 "no .github/OWNER: every commit refused" "$r" PATH="$PATH" -- "docs: notes"
 else
   echo "  skip  gitleaks not installed here: accepted-commit cases skipped (the refusal case above ran)"
 fi

@@ -146,6 +146,18 @@ for f in "${owned[@]}"; do
 done
 (( changes == 0 )) && echo "  (all up to date)"
 
+# .github/OWNER is the project's own (who may commit), never replaced. A project from before it existed gets
+# the template's with --apply, since the git hooks copied above refuse every commit without one: edit it if
+# the project's owner is someone else (name, email, login, noreply), and commit it with the rest.
+if [[ ! -e "$target/.github/OWNER" && -f "$template/.github/OWNER" ]]; then
+  echo; echo "  NEW      .github/OWNER   (the owner's identity, which the git hooks now read: check it names this project's owner)"
+  if [[ "$mode" == "--apply" ]]; then
+    no_symlink .github/OWNER
+    mkdir -p "$target/.github"
+    cp "$template/.github/OWNER" "$target/.github/OWNER.sync-tmp.$$" && mv -f "$target/.github/OWNER.sync-tmp.$$" "$target/.github/OWNER"
+  fi
+fi
+
 echo; echo "Files to merge by hand (never copied):"
 pending=0
 for f in "${review[@]}"; do

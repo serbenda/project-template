@@ -417,7 +417,7 @@ El repositorio de Anthropic trae 19 skills; aquí van 3. Las demás se han quita
 
 ## Normas que aplican siempre
 
-- **Autoría:** los commits van solo a nombre de `Sergio Santiago Bendaña Quesada <serbenda@gmail.com>`, sin `Co-Authored-By` ni firmas de IA. Lo comprueban el hook de Claude, el hook de git y la CI.
+- **Autoría:** los commits van solo a nombre del dueño que indica `.github/OWNER` (nombre, email y usuario; `setup-repo.sh` lo crea en cada proyecto nuevo con los datos de quien lo ejecuta), sin `Co-Authored-By` ni firmas de IA. Lo comprueban el hook de Claude, el hook de git y la CI.
 - **Ramas:** se trabaja en `development`. A `main` solo se llega por una PR, y **la fusiona el propietario**, nunca la IA.
 - **Seguridad de la app:** antes del primer código sensible se rellena `docs/THREAT_MODEL.md`; cada fase dice su impacto de seguridad; la Definition of Done exige autorización en cada petición, contraseñas con argon2id/scrypt/bcrypt, límites de peticiones, cabeceras y cookies seguras, y copias de seguridad probadas. Los hallazgos de SAST o Dependencies se arreglan, no se silencian.
 - **Lo que solo cambias tú:** `.claude/` (salvo `launch.json`), `.githooks/`, `.github/` y los scripts de control. Lo impiden tres barreras a la vez: reglas `deny`, el guardián y el sandbox. Si una fase necesita un cambio ahí (por ejemplo, el job de CI del stack en P03), Claude te deja el cambio exacto en la ficha y lo aplicas tú.

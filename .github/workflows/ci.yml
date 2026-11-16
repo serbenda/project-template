@@ -98,6 +98,19 @@ jobs:
           #   - commits GitHub made and signed (verified): its merges of PRs, authored with the owner's noreply
           #     address, and Dependabot's updates, also when they reach main inside a release PR.
           verified() { [ "$(gh api "repos/$GITHUB_REPOSITORY/commits/$1" --jq .commit.verification.verified 2>/dev/null)" = "true" ]; }
+          # The owner (.github/OWNER) as on the PR's base branch, so a PR can't name a new owner for itself. A base
+          # whose OWNER names someone else than this repository's owner is the template's, before setup-repo's
+          # first commit reached it (or an organisation's repo): the PR's own file is read then.
+          owner_file() { git show "$1:.github/OWNER" 2>/dev/null; }
+          field() { printf '%s\n' "$1" | sed -n "s/^$2=//p" | head -n 1 | tr '[:upper:]' '[:lower:]'; }
+          owner="$(owner_file "$BASE")"
+          if [ "$(field "$owner" login)" != "$(printf '%s' "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')" ]; then
+            owner="$(owner_file "$HEAD")"
+          fi
+          o_email="$(field "$owner" email)" o_noreply="$(field "$owner" noreply)" o_login="$(field "$owner" login)"
+          if [ -z "$o_email" ] || [ -z "$o_login" ]; then
+            echo "::error file=.github/OWNER::.github/OWNER is missing or has no email or login: the authors can't be checked."; exit 1
+          fi
           shas="$(git rev-list "$BASE..$HEAD")" || { echo "::error::cannot read the PR's commits (fetch-depth: 0)."; exit 1; }
           for sha in $shas; do
             # One field per call: an email can contain any separator.
@@ -107,17 +120,17 @@ jobs:
               echo "::error::Commit $sha contains AI signatures in the message."; failed=1
             fi
             case "$email" in
-              serbenda@gmail.com)
-                if [ "$committer" != "serbenda@gmail.com" ] && [ "$committer" != "noreply@github.com" ]; then
+              "$o_email")
+                if [ "$committer" != "$o_email" ] && [ "$committer" != "noreply@github.com" ]; then
                   echo "::error::Commit $sha has committer '$committer'."; failed=1
                 fi ;;
-              57532210+serbenda@users.noreply.github.com|serbenda@users.noreply.github.com|49699333+dependabot\[bot\]@users.noreply.github.com)
+              "${o_noreply:-$o_login@users.noreply.github.com}"|"$o_login@users.noreply.github.com"|"49699333+dependabot[bot]@users.noreply.github.com")
                 if [ "$committer" = "noreply@github.com" ] && verified "$sha"; then
                   echo "Commit $sha by $email: made and signed by GitHub, accepted."
                 else
                   echo "::error::Commit $sha has author '$email' but was not made and signed by GitHub."; failed=1
                 fi ;;
-              *) echo "::error::Commit $sha has author '$email' (must be serbenda@gmail.com)."; failed=1 ;;
+              *) echo "::error::Commit $sha has author '$email' (must be $o_email, from .github/OWNER)."; failed=1 ;;
             esac
           done
           [ "$failed" -eq 0 ] && echo "✓ Correct authorship and no AI signatures."
