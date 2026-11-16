@@ -101,7 +101,7 @@ jobs:
           # The owner (.github/OWNER) as on the PR's base branch, so a PR can't name a new owner for itself. A base
           # whose OWNER names someone else than this repository's owner is the template's, before setup-repo's
           # first commit reached it (or an organisation's repo): the PR's own file is read then.
-          owner_file() { git show "$1:.github/OWNER" 2>/dev/null; }
+          owner_file() { git show "$1:.github/OWNER" 2>/dev/null || true; }   # missing there: empty, not an exit (bash -e)
           field() { printf '%s\n' "$1" | sed -n "s/^$2=//p" | head -n 1 | tr '[:upper:]' '[:lower:]'; }
           owner="$(owner_file "$BASE")"
           if [ "$(field "$owner" login)" != "$(printf '%s' "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')" ]; then

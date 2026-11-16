@@ -27,7 +27,7 @@
 - **Rejected:** reading the identity from `git config` (anyone can set it, so it can't be the reference it is checked against); a multi-owner list (one owner is the template's model).
 - **Files:** .github/OWNER, .githooks/commit-msg, .githooks/applypatch-msg, .githooks/pre-push, .github/workflows/ci.yml, .claude/hooks/guard.sh, scripts/setup-repo.sh, scripts/sync-from-template.sh, scripts/test-guard.sh, scripts/test-githooks.sh, scripts/test-scripts.sh, AGENTS.md, README.es.md, README.md, docs/templates/README.project.md, .claude/agents/dod-reviewer.md, CHANGELOG.md
 - **Commits:** pending (the owner's)
-- **Tested:** the four suites on /bin/bash 3.2 (guard 1316, git hooks 160, records 46, scripts 63).
+- **Tested:** the four suites on /bin/bash 3.2 (guard 1316, git hooks 160, records 46, scripts 63). The Authorship step run locally with the PR's real base and head, after CI caught it exiting (128) when the base has no OWNER yet: `git show` failing inside `$(…)` ended the step under `bash -e`.
 - **Pending:** —
 
 ## 2026-11-16 — Final review (Fable, second pass): fixes for its High, Mediums and Lows
