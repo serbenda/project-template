@@ -16,6 +16,16 @@
 - **Pending:**
 -->
 
+## 2026-11-16 — Scanner images move to .scanners/ so Dependabot can update them
+- **Phase / issue:** —
+- **What:** `.github/scanners/{semgrep,osv-scanner}/Dockerfile` move to `.scanners/…`. The new folder is a guardrail in every layer: the hooks' path list, the guard (files, shell paths, tripwire), the settings deny and `denyWrite` lists, CODEOWNERS, and the layer-consistency test. ci.yml, dependabot.yml, sync-from-template, the tests and the docs follow the new path.
+- **Why:** Dependabot's docker update for the scanners failed at `create_pull_request` with `400 "invalid or unauthorized changes"`. GitHub gives Dependabot the workflows permission only for the github-actions ecosystem, so another ecosystem can't open a PR that changes `.github/` (dependabot-core#15237, still open). The scanners were never updated automatically.
+- **Rejected:** updating the images by hand (the cooldown and weekly check would be lost); `.devcontainer/` for them (it is the dev container's folder, built on every change).
+- **Files:** .scanners/, .githooks/pre-commit, .githooks/pre-push, .claude/hooks/guard.sh, .claude/settings.json, .github/CODEOWNERS, .github/dependabot.yml, .github/workflows/ci.yml, scripts/sync-from-template.sh, scripts/test-guard.sh, scripts/test-githooks.sh, scripts/test-scripts.sh, AGENTS.md, README.es.md, docs/SECURITY_GUIDE.md
+- **Commits:** pending (the owner's)
+- **Tested:** the four suites on /bin/bash 3.2 (guard 1298, git hooks 150, records 46, scripts 54); Dependabot's PR only after the merge into development.
+- **Pending:** projects already synced keep a stale `.github/scanners/`; sync copies the new files but doesn't delete the old ones.
+
 ## 2026-11-16 — CI fixes for PR #9: TMPDIR on Linux, Gitleaks before the tests, dev container sandbox
 - **Phase / issue:** — · PR #9
 - **What:**

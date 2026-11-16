@@ -20,9 +20,10 @@ updates:
         patterns: ["*"]
 
   # The scanner images the SAST and Dependencies jobs run (Semgrep, OSV-Scanner), pinned by tag and digest
-  # in .github/scanners/*/Dockerfile. Same cooldown: a new scanner release waits a week.
+  # in .scanners/*/Dockerfile (outside .github/: Dependabot opens PRs there only for
+  # GitHub Actions). Same cooldown: a new scanner release waits a week.
   - package-ecosystem: "docker"
-    directories: ["/.github/scanners/*"]
+    directories: ["/.scanners/*"]
     target-branch: "development"
     schedule:
       interval: "weekly"

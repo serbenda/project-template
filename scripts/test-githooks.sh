@@ -62,7 +62,7 @@ prot_line() { grep -m1 "^protected='" "$1"; }
 if [[ "$(prot_line "$root/.githooks/pre-commit")" == "$(prot_line "$root/.githooks/pre-push")" ]]; then echo "  ok    pre-commit and pre-push use the same paths"
 else echo "  FAIL  pre-commit and pre-push use different paths"; failures=$((failures + 1)); fi
 guard_files="$(grep -m1 "^protected_files_re=" "$root/.claude/hooks/guard.sh")"
-for n in .claude .mcp.json .githooks .github .devcontainer .semgrep .gitattributes .gitleaks .semgrepignore osv-scanner.toml \
+for n in .claude .mcp.json .githooks .github .devcontainer .semgrep .scanners .gitattributes .gitleaks .semgrepignore osv-scanner.toml \
          .vscode/ .code-workspace .envrc .husky .pre-commit-config.yaml setup-repo sync-from-template check-records \
          test-guard test-check-records test-githooks test-scripts; do
   esc="$(printf '%s' "$n" | sed 's/\./\\./g')"
@@ -85,6 +85,8 @@ check 1 "commit touching .claude/hooks is refused" "$r" PATH="$PATH" -- "chore: 
 
 r=$(new_repo) || exit 1; safe "$r"; mkdir -p "$r/.devcontainer"; echo "FROM x" > "$r/.devcontainer/Dockerfile"; git -C "$r" add -A
 check 1 "commit touching .devcontainer/ is refused" "$r" PATH="$PATH" -- "chore: change"
+r=$(new_repo) || exit 1; safe "$r"; mkdir -p "$r/.scanners/semgrep"; echo "FROM x" > "$r/.scanners/semgrep/Dockerfile"; git -C "$r" add -A
+check 1 "commit touching .scanners/ is refused" "$r" PATH="$PATH" -- "chore: change"
 r=$(new_repo) || exit 1; safe "$r"; echo '{"image":"x"}' > "$r/.devcontainer.json"; git -C "$r" add -A
 check 1 "commit adding a root .devcontainer.json is refused" "$r" PATH="$PATH" -- "chore: change"
 

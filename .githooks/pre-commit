@@ -13,7 +13,7 @@ while IFS= read -r v; do unset "$v"; done < <(env | sed -n 's/^\(GITLEAKS_[A-Za-
 automerge=0; [[ "${1:-}" == --automerge ]] && automerge=1
 
 # --- 1. Guardrails: everything under .claude/ but launch.json (settings, hook, commands, subagents, skills,
-#        rules…), .mcp.json, the git hooks, the CI and Dependabot, the scanners' own settings (an ignore file
+#        rules…), .mcp.json, the git hooks, the CI and Dependabot, the scanner images (.scanners/), the scanners' own settings (an ignore file
 #        would switch a scan off; in any folder, as the scanners read them next to the files), .gitattributes
 #        (in any folder: "-diff" hides changes from the diff the scans read), the dev container, the files
 #        editors and tools run on their own, in any folder (.vscode/settings, tasks and launch, workspace
@@ -21,7 +21,7 @@ automerge=0; [[ "${1:-}" == --automerge ]] && automerge=1
 #        paths in commits that skipped this.
 #        Deletions and renames count too; a protected directory replaced by a file, symlink or submodule
 #        counts too ("($|/)"); case doesn't matter (.GitHub is .github on a case-insensitive disk).
-protected='^(\.claude|\.mcp\.json|\.githooks|\.github|\.devcontainer|\.devcontainer\.json|\.semgrep|scripts/(setup-repo|sync-from-template|check-records|test-guard|test-check-records|test-githooks|test-scripts)\.sh)($|/)|(^|/)\.husky($|/)|(^|/)(\.vscode/(settings|tasks|launch)\.json|[^/]*\.code-workspace|\.envrc|\.pre-commit-config\.yaml|\.gitattributes|\.gitleaks\.toml|\.gitleaksignore|\.semgrepignore|osv-scanner\.toml)$'
+protected='^(\.claude|\.mcp\.json|\.githooks|\.github|\.devcontainer|\.devcontainer\.json|\.semgrep|\.scanners|scripts/(setup-repo|sync-from-template|check-records|test-guard|test-check-records|test-githooks|test-scripts)\.sh)($|/)|(^|/)\.husky($|/)|(^|/)(\.vscode/(settings|tasks|launch)\.json|[^/]*\.code-workspace|\.envrc|\.pre-commit-config\.yaml|\.gitattributes|\.gitleaks\.toml|\.gitleaksignore|\.semgrepignore|osv-scanner\.toml)$'
 
 # What this commit changes is compared with HEAD; in a merge, with what git's own merge of the parents gives
 # (git merge-tree), so what the other side brings (Dependabot's or main's guardrail changes, already reviewed)
