@@ -175,6 +175,7 @@
         "./.claude/rules",
         "./.claude/output-styles",
         "./.claude/CLAUDE.md",
+        "./.claude/AGENTS.md",
         "./AGENTS.md",
         "./CLAUDE.md",
         "./CLAUDE.local.md",
