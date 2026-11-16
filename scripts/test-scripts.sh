@@ -114,13 +114,14 @@ expect "tells the owner to commit the setup changes with the switch" 'grep -q "G
 expect "leaves no .bak files behind" '[[ -z "$(find "$p" -name "*.bak" -not -path "*/.git/*")" ]]'
 expect "no agent account: no review required (the owner can't approve their own PR)" \
   'grep -q "\"required_approving_review_count\": 0" "$p.gh/calls.log" && grep -q "\"require_code_owner_review\": false" "$p.gh/calls.log"'
-expect "CODEOWNERS names this repository's owner" '[[ "$(grep -c " @owner$" "$p/.github/CODEOWNERS")" == 23 ]] && ! grep -q " @serbenda$" "$p/.github/CODEOWNERS"'
+expect "CODEOWNERS names this repository's owner" '[[ "$(grep -c " @owner$" "$p/.github/CODEOWNERS")" == "$(grep -c " @serbenda$" "$root/.github/CODEOWNERS")" ]] && ! grep -q " @serbenda$" "$p/.github/CODEOWNERS"'
 
 echo "setup-repo.sh, run a second time:"
-printf '\n## 2026-01-01 — First change\n' >> "$p/docs/WORKLOG.md"
+printf '\n## 2026-01-01 — First change\n- Explains the PROJECT_NAME placeholder.\n' >> "$p/docs/WORKLOG.md"
 run_setup "$p" -- owner/my-app
 finished_ok "$p"
 expect "keeps the project's own worklog" 'grep -q "First change" "$p/docs/WORKLOG.md"'
+expect "leaves the project's own mentions of PROJECT_NAME alone" 'grep -q "Explains the PROJECT_NAME placeholder" "$p/docs/WORKLOG.md"'
 expect "updates the existing ruleset instead of creating another" 'grep -q "api -X PUT repos/owner/my-app/rulesets/42 --input -" "$p.gh/calls.log"'
 
 echo "setup-repo.sh, light mode:"
@@ -208,7 +209,7 @@ expect "--apply with uncommitted project changes is refused" '[[ $status == 1 ]]
 p=$(old_project link) || exit 1
 # Planted on a path late in the owned list: only the check before copying stops it before guard.sh is replaced.
 outside="$tmp/outside"; mkdir -p "$outside/semgrep"; echo "keep" > "$outside/semgrep/Dockerfile"
-rm -rf "$p/.github/scanners"; ln -s "$outside" "$p/.github/scanners"; git -C "$p" add -A >/dev/null 2>&1
+rm -rf "$p/.scanners"; ln -s "$outside" "$p/.scanners"; git -C "$p" add -A >/dev/null 2>&1
 git -C "$p" -c core.hooksPath=/dev/null commit -qm "chore: link" >/dev/null 2>&1
 run_sync "$p" --apply
 expect "--apply refuses to write through a symlink" '[[ $status == 1 && "$(cat "$outside/semgrep/Dockerfile")" == keep ]]'

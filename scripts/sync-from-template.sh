@@ -73,8 +73,8 @@ owned=(
   scripts/test-githooks.sh
   scripts/test-scripts.sh
   .github/pull_request_template.md
-  .github/scanners/semgrep/Dockerfile
-  .github/scanners/osv-scanner/Dockerfile
+  .scanners/semgrep/Dockerfile
+  .scanners/osv-scanner/Dockerfile
   scripts/sync-from-template.sh
 )
 while IFS= read -r f; do owned+=("$f"); done < <(cd "$template" && ls .claude/commands/*.md .claude/agents/*.md)

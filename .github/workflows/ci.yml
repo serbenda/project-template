@@ -203,12 +203,12 @@ jobs:
 
       # Semgrep works for any language: injection, unsafe deserialisation, weak crypto, debug flags,
       # insecure CI and Dependabot settings… Fails on any finding. Third-party skills are excluded.
-      # Image pinned by tag and digest in .github/scanners/semgrep/Dockerfile (Dependabot keeps it current).
+      # Image pinned by tag and digest in .scanners/semgrep/Dockerfile (Dependabot keeps it current).
       # A false positive is silenced in the code with `# nosemgrep: <rule-id>` and the reason, never by
       # removing this job.
       - name: Static analysis (Semgrep)
         run: |
-          image="$(sed -n 's/^FROM //p' .github/scanners/semgrep/Dockerfile)"
+          image="$(sed -n 's/^FROM //p' .scanners/semgrep/Dockerfile)"
           case "$image" in *@sha256:*) ;; *) echo "::error::the Semgrep image must be pinned by digest"; exit 1 ;; esac
           docker run --rm -v "$PWD:/src:ro" -w /src "$image" \
             semgrep scan --config p/default --error --metrics=off --exclude .claude/skills .
@@ -224,10 +224,10 @@ jobs:
 
       # OSV-Scanner reads the lockfiles and manifests of any ecosystem (npm, pip, go, cargo, pub…)
       # and fails if a dependency has a known vulnerability. Passes while there are none yet.
-      # Image pinned by tag and digest in .github/scanners/osv-scanner/Dockerfile (Dependabot keeps it current).
+      # Image pinned by tag and digest in .scanners/osv-scanner/Dockerfile (Dependabot keeps it current).
       - name: Known vulnerabilities (OSV-Scanner)
         run: |
-          image="$(sed -n 's/^FROM //p' .github/scanners/osv-scanner/Dockerfile)"
+          image="$(sed -n 's/^FROM //p' .scanners/osv-scanner/Dockerfile)"
           case "$image" in *@sha256:*) ;; *) echo "::error::the OSV-Scanner image must be pinned by digest"; exit 1 ;; esac
           docker run --rm -v "$PWD:/src:ro" "$image" \
             scan source --recursive --allow-no-lockfiles --x-exclude "g:**/.claude/skills/**" /src

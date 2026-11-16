@@ -25,5 +25,5 @@ First, `git status`: if there are uncommitted changes, **stop** and ask me wheth
    - `docs/WORKLOG.md`: with the `record-changes` skill, an entry that closes the phase and cites its commits.
    - `docs/RISKS.md`: mitigated or new risks.
    - `docs/ARCHITECTURE.md`: only if a component or flow has changed.
-7. If "Lessons learned" changes how work is done in this repo, propose the change to `AGENTS.md` (do not apply it without my approval).
+7. If "Lessons learned" changes how work is done in this repo, propose the change to `AGENTS.md` as a diff for me to commit: it is a guardrail, so only I change it.
 8. Make a `docs: close PNN` commit with those changes and tell me whether it is time for `/prepare-pr` (when the stage's exit criterion is met, or the phase is worth releasing on its own).
