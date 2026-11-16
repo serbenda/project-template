@@ -39,7 +39,9 @@ prot_paths=(.claude/settings.json .claude/settings.local.json .claude/hooks .cla
   .claude/skills .githooks .github .devcontainer .devcontainer.json scripts/setup-repo.sh
   scripts/sync-from-template.sh scripts/check-records.sh scripts/test-guard.sh scripts/test-check-records.sh
   scripts/test-githooks.sh scripts/test-scripts.sh .claude/rules .claude/output-styles .claude/CLAUDE.md .mcp.json
-  .gitleaks.toml .gitleaksignore .semgrepignore .semgrep .scanners osv-scanner.toml .gitattributes)
+  AGENTS.md CLAUDE.md '*/AGENTS.md' '*/CLAUDE.md' .gitleaks.toml .gitleaksignore .semgrepignore .semgrep .scanners osv-scanner.toml .gitattributes)
+# (Not CLAUDE.local.md: it is the owner's own uncommitted file, so it would trip this for good. The deny rules
+# and the checks below still keep the agent from writing it.)
 prot_top=(); for pp in "${prot_paths[@]}"; do prot_top+=(":/$pp"); done
 
 # --- Tripwire: guardrails changed outside a commit ---
@@ -614,7 +616,7 @@ cmd="$cmd"$'\n'"$(printf '%s' "$cmd_code" | tr -d "\"'\\\\")"
 # .pre-commit-config.yaml: they could run code outside this hook or switch the git hooks off); and the
 # scripts that enforce or test the rules. Only the owner changes them. (They are not in the tripwire: an
 # editor rewrites .vscode/ on its own.)
-protected_files_re='(^|/)(\.git/|\.claude/(settings(\.local)?\.json|hooks/|agents/|commands/|skills/|rules/|output-styles/|CLAUDE\.md)|\.mcp\.json|\.gitleaks(\.toml|ignore)|\.gitattributes|\.semgrepignore|\.semgrep/|\.scanners/|osv-scanner\.toml|\.githooks/|\.github/|\.devcontainer(/|\.json)|\.vscode/(settings|tasks|launch)\.json|[^/]*\.code-workspace|\.envrc|\.husky/|\.pre-commit-config\.yaml|scripts/(setup-repo|sync-from-template|check-records|test-guard|test-check-records|test-githooks|test-scripts)\.sh)'
+protected_files_re='(^|/)(\.git/|\.claude/(settings(\.local)?\.json|hooks/|agents/|commands/|skills/|rules/|output-styles/|CLAUDE\.md)|AGENTS\.md|CLAUDE\.md|CLAUDE\.local\.md|\.mcp\.json|\.gitleaks(\.toml|ignore)|\.gitattributes|\.semgrepignore|\.semgrep/|\.scanners/|osv-scanner\.toml|\.githooks/|\.github/|\.devcontainer(/|\.json)|\.vscode/(settings|tasks|launch)\.json|[^/]*\.code-workspace|\.envrc|\.husky/|\.pre-commit-config\.yaml|scripts/(setup-repo|sync-from-template|check-records|test-guard|test-check-records|test-githooks|test-scripts)\.sh)'
 if [[ -n "$path" ]] && has "$protected_files_re" "$path"; then
   has '"tool_name" *: *"(Read|Grep|Glob)"' "$input" ||
     block "the security configuration (.claude/, .githooks/, .github/, enforcement scripts) is changed only by the owner."
@@ -624,11 +626,11 @@ fi
 # variables or command substitution): there each subcommand is checked on its own, so read-only commands like
 # "git rm app.py && git grep x -- ':!.claude/skills'" or "ls .claude/commands 2>/dev/null" are not taken for
 # writes. Harmless redirections (2>/dev/null, >&2, 2>&1) never count as writing.
-protected_re='((^|[ /=<>])\.git(/|( |$))|\.claude/(settings|hooks|agents|commands|skills|rules|output-styles|CLAUDE\.md)|\.mcp\.json|\.gitleaks(\.toml|ignore)|\.gitattributes|\.semgrepignore|\.semgrep/|\.scanners/|osv-scanner\.toml|\.githooks([^A-Za-z0-9_-]|$)|(^|[ /=])\.claude/?( |$)|\.github([^A-Za-z0-9_-]|$)|\.devcontainer([^A-Za-z0-9_-]|$)|\.vscode([^A-Za-z0-9_-]|$)|\.envrc|\.husky([^A-Za-z0-9_-]|$)|\.pre-commit-config\.yaml|(^|[ /=])scripts/?( |$)|scripts/(setup-repo|sync-from-template|check-records|test-guard|test-check-records|test-githooks|test-scripts)\.sh)'
+protected_re='((^|[ /=<>])\.git(/|( |$))|\.claude/(settings|hooks|agents|commands|skills|rules|output-styles|CLAUDE\.md)|AGENTS\.md|CLAUDE\.md|CLAUDE\.local\.md|\.mcp\.json|\.gitleaks(\.toml|ignore)|\.gitattributes|\.semgrepignore|\.semgrep/|\.scanners/|osv-scanner\.toml|\.githooks([^A-Za-z0-9_-]|$)|(^|[ /=])\.claude/?( |$)|\.github([^A-Za-z0-9_-]|$)|\.devcontainer([^A-Za-z0-9_-]|$)|\.vscode([^A-Za-z0-9_-]|$)|\.envrc|\.husky([^A-Za-z0-9_-]|$)|\.pre-commit-config\.yaml|(^|[ /=])scripts/?( |$)|scripts/(setup-repo|sync-from-template|check-records|test-guard|test-check-records|test-githooks|test-scripts)\.sh)'
 write_re='((^|[^'$'\x1f''])>|sed +-i|(^|[ ;&|(])(tee|cp|mv|rm|chmod|ln|truncate|install|patch|tar|unzip|rsync|touch|mkdir|unlink|shred|rmdir|ditto|sponge|split|uniq|vi|vim|nvim|emacs)([ <>]|$)|find .* -delete|(curl|wget) .*(-o|-O|--output|--output-document)( |=)|sort( .*)? -o|awk .*>|unlink|file_put_contents|File\.(delete|write)|fs\.(unlink|rm|write)|os\.(remove|unlink)|shutil\.|dd .*of=|perl +-[a-z]*i|ruby +-[a-z]*i|awk +-i|python3? +-c|node +-e|writeFile|\.write\(|open\(|git( +[^ ]+)* +(checkout|restore)( +[^ ]+)* +-- )'
 indirect_re='((^|[ ;&|])(cd|pushd|for|while|until|read|set|printf +-v|xargs|find|eval|source|exec)( |$)|=|\$\(|`|\$\{?[A-Za-z_])'
 prot_paths_text=(.git/ .claude/settings .claude/hooks .claude/agents .claude/commands .claude/skills .claude/rules
-  .claude/output-styles .claude/CLAUDE.md .mcp.json .gitleaks .gitattributes .semgrep .scanners osv-scanner.toml .githooks
+  .claude/output-styles .claude/CLAUDE.md AGENTS.md CLAUDE.md CLAUDE.local.md .mcp.json .gitleaks .gitattributes .semgrep .scanners osv-scanner.toml .githooks
   .github .devcontainer scripts/setup-repo.sh scripts/sync-from-template.sh scripts/check-records.sh scripts/test-)
 # URLs (https://…/.github, git@…) name another repository, not a path here.
 nourl() { printf '%s' "$1" | sed -E 's#[A-Za-z][A-Za-z0-9+.-]*://[^] <>|;&()]*|git@[^] <>|;&()]*##g'; }

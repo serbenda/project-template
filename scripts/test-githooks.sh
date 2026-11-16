@@ -62,7 +62,7 @@ prot_line() { grep -m1 "^protected='" "$1"; }
 if [[ "$(prot_line "$root/.githooks/pre-commit")" == "$(prot_line "$root/.githooks/pre-push")" ]]; then echo "  ok    pre-commit and pre-push use the same paths"
 else echo "  FAIL  pre-commit and pre-push use different paths"; failures=$((failures + 1)); fi
 guard_files="$(grep -m1 "^protected_files_re=" "$root/.claude/hooks/guard.sh")"
-for n in .claude .mcp.json .githooks .github .devcontainer .semgrep .scanners .gitattributes .gitleaks .semgrepignore osv-scanner.toml \
+for n in .claude AGENTS.md CLAUDE.md CLAUDE.local.md .mcp.json .githooks .github .devcontainer .semgrep .scanners .gitattributes .gitleaks .semgrepignore osv-scanner.toml \
          .vscode/ .code-workspace .envrc .husky .pre-commit-config.yaml setup-repo sync-from-template check-records \
          test-guard test-check-records test-githooks test-scripts; do
   esc="$(printf '%s' "$n" | sed 's/\./\\./g')"
@@ -95,7 +95,7 @@ check 1 "protected directory replaced by a symlink is refused" "$r" PATH="$PATH"
 for f in .gitleaksignore .gitleaks.toml .semgrepignore osv-scanner.toml .mcp.json .claude/rules/r.md .claude/CLAUDE.md .GitHub/workflows/x.yml \
          .gitattributes src/.gitattributes sub/osv-scanner.toml sub/.gitleaksignore sub/.gitleaks.toml \
          .vscode/tasks.json .envrc .husky/pre-commit .pre-commit-config.yaml app/.vscode/settings.json app/.envrc \
-         x.code-workspace; do
+         x.code-workspace AGENTS.md CLAUDE.md CLAUDE.local.md app/AGENTS.md src/CLAUDE.md; do
   r=$(new_repo) || exit 1; safe "$r"; mkdir -p "$r/$(dirname "$f")"; echo x > "$r/$f"; git -C "$r" add -f -- "$f"
   check 1 "commit adding $f is refused" "$r" PATH="$PATH" -- "chore: change"
 done

@@ -17,11 +17,12 @@ automerge=0; [[ "${1:-}" == --automerge ]] && automerge=1
 #        would switch a scan off; in any folder, as the scanners read them next to the files), .gitattributes
 #        (in any folder: "-diff" hides changes from the diff the scans read), the dev container, the files
 #        editors and tools run on their own, in any folder (.vscode/settings, tasks and launch, workspace
-#        files, .envrc, .husky/, .pre-commit-config.yaml: they could switch these hooks off), and the scripts that enforce or test the rules. pre-push checks the same
+#        files, .envrc, .husky/, .pre-commit-config.yaml: they could switch these hooks off), the agent's
+#        instructions (AGENTS.md, CLAUDE.md, CLAUDE.local.md, in any folder: the agent must not rewrite its own rules), and the scripts that enforce or test the rules. pre-push checks the same
 #        paths in commits that skipped this.
 #        Deletions and renames count too; a protected directory replaced by a file, symlink or submodule
 #        counts too ("($|/)"); case doesn't matter (.GitHub is .github on a case-insensitive disk).
-protected='^(\.claude|\.mcp\.json|\.githooks|\.github|\.devcontainer|\.devcontainer\.json|\.semgrep|\.scanners|scripts/(setup-repo|sync-from-template|check-records|test-guard|test-check-records|test-githooks|test-scripts)\.sh)($|/)|(^|/)\.husky($|/)|(^|/)(\.vscode/(settings|tasks|launch)\.json|[^/]*\.code-workspace|\.envrc|\.pre-commit-config\.yaml|\.gitattributes|\.gitleaks\.toml|\.gitleaksignore|\.semgrepignore|osv-scanner\.toml)$'
+protected='^(\.claude|\.mcp\.json|\.githooks|\.github|\.devcontainer|\.devcontainer\.json|\.semgrep|\.scanners|scripts/(setup-repo|sync-from-template|check-records|test-guard|test-check-records|test-githooks|test-scripts)\.sh)($|/)|(^|/)\.husky($|/)|(^|/)(AGENTS\.md|CLAUDE\.md|CLAUDE\.local\.md|\.vscode/(settings|tasks|launch)\.json|[^/]*\.code-workspace|\.envrc|\.pre-commit-config\.yaml|\.gitattributes|\.gitleaks\.toml|\.gitleaksignore|\.semgrepignore|osv-scanner\.toml)$'
 
 # What this commit changes is compared with HEAD; in a merge, with what git's own merge of the parents gives
 # (git merge-tree), so what the other side brings (Dependabot's or main's guardrail changes, already reviewed)

@@ -16,6 +16,15 @@
 - **Pending:**
 -->
 
+## 2026-11-16 — The agent's instructions (AGENTS.md, CLAUDE.md) are owner-only
+- **Phase / issue:** —
+- **What:** `AGENTS.md`, `CLAUDE.md` and `CLAUDE.local.md`, in any folder, are guardrails in every layer: the hooks' path list (pre-commit, pre-push), the guard (files, shell paths; the tripwire for the first two), the settings `Edit()` denies (root and nested) and `denyWrite`, CODEOWNERS (now in any folder, not only the root), and the layer-consistency test. `/close-phase` proposes AGENTS.md changes as a diff for the owner. Docs: AGENTS, SECURITY_GUIDE.
+- **Why:** they hold the rules the agent follows; a prompt injection could talk it into rewriting them (dropping "never push without asking"), and the change would arrive in an ordinary PR. `.claude/CLAUDE.md` was already owner-only; the root files were not.
+- **Rejected:** `CLAUDE.local.md` in the tripwire (the owner's uncommitted file would block the agent for good); protecting only the root files (Claude Code loads nested CLAUDE.md files too).
+- **Files:** .githooks/pre-commit, .githooks/pre-push, .claude/hooks/guard.sh, .claude/settings.json, .github/CODEOWNERS, .claude/commands/close-phase.md, scripts/test-guard.sh, scripts/test-githooks.sh, AGENTS.md, docs/SECURITY_GUIDE.md
+- **Commits:** pending (the owner's)
+- **Tested:** the four suites on /bin/bash 3.2 (guard 1302, git hooks 156, records 46, scripts 55 after merging development).
+- **Pending:** —
 ## 2026-11-16 — setup-repo tested against GitHub; a second run no longer rewrites the project's docs
 - **Phase / issue:** —
 - **What:** `setup-repo.sh` replaces the `PROJECT_NAME` placeholder only on the first run (no `.claude/TEMPLATE_VERSION` yet). New test: a second run leaves the project's own mentions of `PROJECT_NAME` alone.
