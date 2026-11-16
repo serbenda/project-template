@@ -17,7 +17,8 @@ You remember nothing between sessions. Whatever is not written down here is lost
 ## When
 
 - When a change is finished, **before the commit**, so the record and the change go in the same commit.
-- If the change took several commits, a single entry at the end citing all of them.
+- **One entry per piece of work** (a step of the plan, a fix, a PR), not per commit. Follow-up commits of the same work (review fixes, typos, CI fixes) update that entry, under *Tested* or *Pending*, instead of adding new ones.
+- If the change took several commits, a single entry citing all of them.
 - Do not record intermediate steps or discarded attempts as entries of their own: they go inside the entry, under *Rejected*.
 
 ## 1. docs/WORKLOG.md
@@ -56,6 +57,6 @@ Written once per phase by `/close-phase`, never per change, so it doesn't duplic
 ## 3. Final check
 
 Before the commit, go over:
-- [ ] Is there an entry in `docs/WORKLOG.md` with *Why* and *Tested*?
+- [ ] Is there an entry in `docs/WORKLOG.md` with *Why* and *Tested*? CI's **Records** check refuses a PR that changes anything other than documentation (Markdown under `.claude/` counts as code) unless the worklog gains a `## YYYY-MM-DD — title` heading with a filled-in *Why* and *Tested*.
 - [ ] Has the state or the next step changed? Then update `docs/STATE.md`.
 - [ ] Closing a phase in full mode? Then its user-visible changes are in `CHANGELOG.md`.

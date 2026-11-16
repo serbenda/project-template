@@ -111,13 +111,17 @@ sequenceDiagram
     R-->>C: READY or MISSING
     C->>C: Result, STATE, ROADMAP, CHANGELOG once, RISKS
     O->>C: /prepare-pr
+    C->>C: phases closed? development has all of main?
     C->>R: dod, security and architecture reviewers
     R-->>C: verdicts and findings
-    C-->>O: PR title and text
+    C-->>O: PR text from the PR template
     O->>C: confirm
     C->>G: push development, open PR
     G-->>O: 6 checks
     O->>G: merge
+    O->>O: after the merge: DoD section 7
+    O->>C: /status
+    C->>C: merge origin/main into development
 ```
 
 ## 6. A piece of work, in light mode
@@ -143,7 +147,8 @@ flowchart TD
     B -->|"yes"| C["Claude quotes it and asks<br/>whether to supersede it"]
     B -->|"no"| D["docs/decisions/NNNN-title.md<br/>context, 2+ real options, pros and cons"]
     C -->|"supersede"| D
-    D --> E["Status proposed,<br/>with a recommendation"]
+    D --> CH["Challenge: 2 challengers<br/>attack the recommendation cold"]
+    CH --> E["Status proposed, with a recommendation<br/>and the challenge comparison"]
     E --> F{"You decide"}
     F -->|"accept"| G["Status accepted, indexed;<br/>the old one marked superseded"]
     F -->|"reject or change"| D
@@ -177,7 +182,7 @@ flowchart TB
     end
     subgraph AGENT["Claude in the project"]
         A1["permissions deny / ask / allow"]
-        A2["guard.sh hook: 85 tests"]
+        A2["guard.sh hook and its tests"]
         A3["Sandbox: writes only in the project,<br/>allow-listed domains, no credential files"]
     end
     subgraph DESIGN["Before and during the code"]
@@ -236,12 +241,12 @@ flowchart TD
     B --> C["Report: NEW / CHANGED template-owned files,<br/>files to merge by hand,<br/>legacy Spanish files"]
     C --> D{"Apply?"}
     D -->|"no"| E["Nothing changed"]
-    D -->|"yes"| F["Project on development or a branch,<br/>clean working tree"]
+    D -->|"yes"| F["Template committed; project on development<br/>or a branch, clean, no symlinks in the way"]
     F --> G["sync-from-template.sh ../project --apply"]
     G --> H["Template-owned files replaced,<br/>.claude/TEMPLATE_VERSION written"]
     H --> I["Merge settings.json, ci.yml, AGENTS.md…<br/>by hand, using --diff"]
-    I --> J["./scripts/setup-repo.sh in the project<br/>to update the main ruleset"]
-    J --> K["Tests, WORKLOG entry, commit, PR"]
+    I --> J["./scripts/setup-repo.sh in the project,<br/>with the same variables,<br/>to update the rulesets"]
+    J --> K["Tests, WORKLOG entry, owner commit<br/>with GUARDRAILS_OWNER_CHANGE=1, PR"]
 ```
 
 ## 13. Update a third-party skill

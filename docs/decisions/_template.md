@@ -12,6 +12,9 @@
 | A | | |
 | B | | |
 
+## Challenge
+<!-- Independent second opinion (/challenge): the main objections, the agent's view on each and whether the recommendation changed. -->
+
 ## Decision
 <!-- What is chosen, in one sentence. -->
 

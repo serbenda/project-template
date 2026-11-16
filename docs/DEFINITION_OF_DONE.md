@@ -2,6 +2,12 @@
 
 A change is **done** only when it meets everything on this list. If something does not apply, say so in the PR with the reason.
 
+Sections 1–6 are checked **before the PR** (by `/close-phase` and `/prepare-pr`, with the `dod-reviewer`). Section 7 can only be checked **after the merge**: the owner does it, and `/status` reminds of anything left.
+
+```text
+work + worklog → /close-phase (1–5) → /prepare-pr (1–6, three reviewers) → owner merges → section 7
+```
+
 ## 1. Code
 - [ ] Does what the issue and the phase file ask for, and nothing more (no unrequested side changes).
 - [ ] Meets the acceptance criteria in the phase file.
@@ -58,9 +64,15 @@ A change is **done** only when it meets everything on this list. If something do
 - [ ] If a hard-to-reverse decision was made, it has its ADR in `docs/decisions/` (light mode: only irreversible ones).
 - [ ] Public data sources used are cited with their license.
 
-## 6. Integration
+## 6. Integration (before the PR)
 - [ ] Work on `development` (or a branch off it), never directly on `main`.
 - [ ] Commits follow Conventional Commits with the correct author.
-- [ ] PR from `development` → `main` with the template filled in and reviewed.
-- [ ] After the merge, what is deployed (if anything) works.
+- [ ] `development` already contains everything in `main` (merged with `--no-ff` if not), so the checks run on what will be merged.
+- [ ] Full mode: every phase in the PR is closed (✅ with its *Result*). Light mode: the plan is under *Recently done* in STATE.
+- [ ] PR from `development` → `main` with [the PR template](../.github/pull_request_template.md) filled in, and the three reviewers passed.
+
+## 7. After the merge (owner)
+- [ ] The six CI checks were green on the merged PR.
+- [ ] What is deployed (if anything) works.
 - [ ] Issue closed and card moved to *Done* in GitHub Projects.
+- [ ] `development` brought up to date with `main` (`git fetch` and `git merge --no-ff origin/main`) before the next piece of work.
