@@ -3,6 +3,8 @@
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioned with [SemVer](https://semver.org/).
 
 ## [Unreleased]
+
+## [1.0.0] - 2026-11-16
 ### Added
 - `/challenge` and the read-only `challenger` subagent: an independent second opinion on any decision, plan, idea or text. Two challengers get only a brief (never the agent's reasoning), attack it from two lenses, ideally on another model, and the owner gets a side-by-side comparison with the agent's view. Every proposed decision is challenged first; ADRs gain a *Challenge* section.
 - `docs/WORKFLOWS.md`: every way of using the template as 13 Mermaid diagrams (what to do, new project, modes, sessions, full and light work, decisions, from a change to `main`, security layers, blocks, release, syncing old projects, updating skills); the same diagrams in Spanish in `README.es.md`.
