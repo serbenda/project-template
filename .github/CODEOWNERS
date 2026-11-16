@@ -14,6 +14,7 @@
 /CLAUDE.md       @serbenda
 /.devcontainer.json @serbenda
 /.semgrep/       @serbenda
+/.scanners/      @serbenda
 # Scanner settings and .gitattributes in any folder: the scanners read them next to the files they scan.
 .gitleaks.toml   @serbenda
 .gitleaksignore  @serbenda

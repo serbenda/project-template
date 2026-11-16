@@ -55,6 +55,8 @@ check 2 "Write with GitHub token"         "$(file_json Write /repo/js/app.js "co
 check 2 "Write with private key"          "$(file_json Write /repo/k.txt "$pk")"
 check 2 "Edit of the dev container"       "$(file_json Edit /repo/.devcontainer/Dockerfile 'FROM evil')"
 check 2 "shell write to the dev container" "$(bash_json 'echo "FROM evil" > .devcontainer/Dockerfile')"
+check 2 "Edit of a scanner image"          "$(file_json Edit /repo/.scanners/semgrep/Dockerfile 'FROM evil')"
+check 2 "shell write to a scanner image"   "$(bash_json 'echo "FROM evil" > .scanners/osv-scanner/Dockerfile')"
 check 2 "Write of a root .devcontainer.json"  "$(file_json Write /repo/.devcontainer.json '{"image":"x"}')"
 check 2 "commit after builtin cd"         "$(bash_json 'builtin cd /tmp && git commit -m "fix: x"')"
 check 2 "plain push after command cd"     "$(bash_json 'command cd /tmp && git push')"
