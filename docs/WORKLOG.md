@@ -16,6 +16,16 @@
 - **Pending:**
 -->
 
+## 2026-11-16 — The agent's instructions (AGENTS.md, CLAUDE.md) are owner-only
+- **Phase / issue:** —
+- **What:** `AGENTS.md`, `CLAUDE.md` and `CLAUDE.local.md`, in any folder, are guardrails in every layer: the hooks' path list (pre-commit, pre-push), the guard (files, shell paths; the tripwire for the first two), the settings `Edit()` denies (root and nested) and `denyWrite`, CODEOWNERS (now in any folder, not only the root), and the layer-consistency test. `/close-phase` proposes AGENTS.md changes as a diff for the owner. Docs: AGENTS, SECURITY_GUIDE.
+- **Why:** they hold the rules the agent follows; a prompt injection could talk it into rewriting them (dropping "never push without asking"), and the change would arrive in an ordinary PR. `.claude/CLAUDE.md` was already owner-only; the root files were not.
+- **Rejected:** `CLAUDE.local.md` in the tripwire (the owner's uncommitted file would block the agent for good); protecting only the root files (Claude Code loads nested CLAUDE.md files too).
+- **Files:** .githooks/pre-commit, .githooks/pre-push, .claude/hooks/guard.sh, .claude/settings.json, .github/CODEOWNERS, .claude/commands/close-phase.md, scripts/test-guard.sh, scripts/test-githooks.sh, AGENTS.md, docs/SECURITY_GUIDE.md
+- **Commits:** pending (the owner's)
+- **Tested:** the four suites on /bin/bash 3.2 (guard 1302, git hooks 156, records 46, scripts 54).
+- **Pending:** the README test counts, after PR #11 (they share a line).
+
 ## 2026-11-16 — Scanner images move to .scanners/ so Dependabot can update them
 - **Phase / issue:** —
 - **What:** `.github/scanners/{semgrep,osv-scanner}/Dockerfile` move to `.scanners/…`. The new folder is a guardrail in every layer: the hooks' path list, the guard (files, shell paths, tripwire), the settings deny and `denyWrite` lists, CODEOWNERS, and the layer-consistency test. ci.yml, dependabot.yml, sync-from-template, the tests and the docs follow the new path.
@@ -579,7 +589,7 @@
 - **Files:** `scripts/setup-repo.sh`.
 - **Commits:** this entry's commit.
 - **Tested:** with a fake `gh`: on `serbenda/demo` it still replaces the placeholder and resets the history; on `serbenda/project-template` it changes no file.
-- **Pending:** —
+- **Pending:** the README test counts, after PR #11 (they share a line).
 
 ## 2026-11-14 — Light mode tested; GitHub Actions bumped
 - **Phase / issue:** —
@@ -649,7 +659,7 @@
 - **Files:** `.claude/skills/{docx,xlsx,pptx,pdf}/` (removed), `.claude/skills/UPSTREAM.md`, `AGENTS.md`, `CLAUDE.md`, `README.es.md`, `CHANGELOG.md`.
 - **Commits:** this entry's commit.
 - **Tested:** links checked; every skill folder is listed in `README.es.md` and `UPSTREAM.md`; `bash scripts/test-guard.sh` passes.
-- **Pending:** —
+- **Pending:** the README test counts, after PR #11 (they share a line).
 
 ## 2026-11-13 — Spanish guide to the template
 - **Phase / issue:** —

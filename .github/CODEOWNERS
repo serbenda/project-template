@@ -10,11 +10,13 @@
 /.devcontainer/  @serbenda
 /scripts/        @serbenda
 /.mcp.json       @serbenda
-/AGENTS.md       @serbenda
-/CLAUDE.md       @serbenda
 /.devcontainer.json @serbenda
 /.semgrep/       @serbenda
 /.scanners/      @serbenda
+# The agent's instructions, in any folder: it must not rewrite its own rules.
+AGENTS.md        @serbenda
+CLAUDE.md        @serbenda
+CLAUDE.local.md  @serbenda
 # Scanner settings and .gitattributes in any folder: the scanners read them next to the files they scan.
 .gitleaks.toml   @serbenda
 .gitleaksignore  @serbenda
