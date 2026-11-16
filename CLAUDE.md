@@ -7,7 +7,7 @@ This repository's rules live in AGENTS.md and apply to any agent. They are impor
 ## Specific to Claude Code
 
 - **Project mode:** read *Mode* in `docs/STATE.md` first; light and full use different amounts of process (`AGENTS.md` → Project mode).
-- **Project configuration:** `.claude/settings.json` disables attribution in commits and PRs, defines permissions (deny / ask / allow) and enables the `.claude/hooks/guard.sh` hook. Do not modify them: changes are made by the owner.
+- **Project configuration:** `.claude/settings.json` disables attribution in commits and PRs, defines permissions (deny / ask / allow), the sandbox and the `.claude/hooks/guard.sh` hook. Owner-only, enforced by deny rules, the hook and the sandbox: `.claude/` (except `launch.json`), `.githooks/`, `.github/` and the enforcement scripts in `scripts/`. When a phase needs a change there (for example the stack's CI job in P03), write the exact change in the phase file for the owner to apply.
 - **Skills:** `.claude/skills/` (`security-audit`, `repo-security-posture`, 3 Anthropic skills for software work and our own `record-changes`, which writes `docs/WORKLOG.md` after every change and CHANGELOG when closing a phase). Global skills in `~/.claude/skills` are also available. They are pinned to a commit; see `.claude/skills/UPSTREAM.md`.
 - **Subagents:** `security-reviewer`, `dod-reviewer` and `architecture-reviewer` in `.claude/agents/`. Run them before opening a PR. They are read-only. `challenger` (also read-only) gives the independent second opinion used by `/challenge` and `/decision`.
 - **Commands** (`.claude/commands/`):

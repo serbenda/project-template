@@ -12,7 +12,7 @@
   <img alt="Dependencies" src="https://img.shields.io/badge/dependencies-OSV--Scanner-4285F4?logo=google&logoColor=white">
   <img alt="Secrets" src="https://img.shields.io/badge/secrets-Gitleaks-CC2E2E">
   <img alt="Sandbox" src="https://img.shields.io/badge/agent-sandboxed-0E7C86">
-  <img alt="Guard hook tests" src="https://img.shields.io/badge/guard%20hook-85%20tests-2EA44F">
+  <img alt="Guard hook tests" src="https://img.shields.io/badge/guard%20hook-1296%20tests-2EA44F">
   <br>
   <img alt="Docs" src="https://img.shields.io/badge/docs-English%20%C2%B7%20gu%C3%ADa%20en%20espa%C3%B1ol-555">
   <img alt="License" src="https://img.shields.io/badge/license-all%20rights%20reserved-lightgrey">
@@ -49,8 +49,13 @@ AI agents forget everything between sessions, expand the scope on their own and 
 # 1. GitHub → "Use this template" → create the repo, then:
 git clone https://github.com/serbenda/<your-project>.git && cd <your-project>
 
-# 2. Configure it (protects main, git hooks, empty history). For an experiment: MODE=light
+# 2. Configure it (protects main, git hooks, empty history).
+#    Options: MODE=light (experiments) · SIGNED_COMMITS=1 · AGENT_BOT=<login> (agent account)
+#    Re-running it is safe; pass the same options again.
 ./scripts/setup-repo.sh
+
+# 3. Commit what it changed (it touches guardrail files, so the owner's switch):
+git add -A && GUARDRAILS_OWNER_CHANGE=1 git commit -m "chore: set up from the template"
 ```
 
 Then open Claude Code in the folder:
@@ -87,7 +92,7 @@ flowchart LR
 |---|---|---|
 | For | Experiments, prototypes, small tools | Anything that lasts or that others use |
 | Planning | Plan in chat, recorded in `STATE.md` | A phase file per block of work, inside stages |
-| Docs kept | VISION, STATE, WORKLOG, SETUP, THREAT_MODEL | All of `docs/` |
+| Docs kept | VISION, STATE, WORKLOG, SETUP, THREAT_MODEL (setup removes ROADMAP, RISKS and phases) | All of `docs/` |
 | Branches, hooks, CI, sandbox | Same | Same |
 
 Claude proposes switching to full as soon as someone else uses the project, it is deployed, it handles personal data or money, it lasts more than a month or someone else contributes.
@@ -107,12 +112,13 @@ flowchart LR
 | Layer | What it stops |
 |---|---|
 | **Global settings** | Reading `.env`, SSH/AWS keys, the gh token, browser data or the keychain; editing its own settings, your shell or git config; bypass-permissions mode |
-| **Guard hook** (85 tests) | Push to `main`, force push, rewriting history, `rm -rf`, `curl \| sh`, AI signatures, touching its own guardrails, changing the git identity |
-| **Sandbox** | Shell commands write only inside the project and reach only GitHub and package registries |
+| **Guard hook** (fails closed, runs from the last commit, tripwire) | Any push other than `git push origin development` or a work branch, rewriting history, `rm -rf`, `curl \| sh`, AI signatures, touching its own guardrails, changing the git identity |
+| **Sandbox** (OS-enforced) | Shell commands, Docker included, write only inside the project and never to the guardrails (`.claude/`, `.githooks/`, `.github/`, `.devcontainer/`, enforcement scripts); they reach only GitHub and package registries |
 | **Threat model + DoD** | Sensitive code without a threat model; missing authorisation, weak password hashing, no rate limits, open CORS, missing security headers, untested backups |
-| **Git hooks** | A secret in a commit (before it exists), a commit with another author |
+| **Git hooks** | Any commit touching the guardrails (however it was staged), a secret in a commit (before it exists; no Gitleaks, no commit), a commit with another author, any push to `main` or force push (however it was typed) |
 | **CI on every PR** | `Secrets` · `Authorship` · `Hook` · `Records` · `SAST` (Semgrep, any language) · `Dependencies` (OSV-Scanner, any lockfile) |
-| **Ruleset** | Merging into `main` without a PR and six green checks |
+| **Ruleset** | Merging into `main` without a PR and six green checks; with `AGENT_BOT`, without your approval as code owner |
+| **Agent account + dev container** (optional, recommended in full mode) | The agent acting as you on GitHub (it gets write access only: it can't approve, change settings, force-push or delete `main` or `development`, or touch tags; a PR you approved it can merge); the agent seeing anything on your Mac beyond the project |
 
 Every action is pinned to a commit SHA and every scanner image to a digest. Details: [docs/SECURITY_GUIDE.md](docs/SECURITY_GUIDE.md).
 
@@ -137,9 +143,10 @@ Every action is pinned to a commit SHA and every scanner image to a digest. Deta
 │   ├── commands/            /status /new-phase /close-phase /decision /challenge /prepare-pr
 │   ├── agents/              security · DoD · architecture reviewers · challenger
 │   └── skills/              6 skills, pinned (UPSTREAM.md)
-├── .githooks/               pre-commit (Gitleaks) · commit-msg (author, AI signatures)
-├── .github/                 CI (6 jobs) · Dependabot with cooldown
-├── scripts/                 setup-repo · sync-from-template · check-records · tests
+├── .githooks/               pre-commit (guardrails, Gitleaks) · commit-msg (author, AI signatures) · pre-push (no main, no force)
+├── .github/                 CI (6 jobs) · Dependabot with cooldown · PR template · CODEOWNERS · scanner pins
+├── .devcontainer/           optional container: Claude sees only the project
+├── scripts/                 setup-repo · sync-from-template · check-records · their tests
 ├── AGENTS.md                rules for any AI agent
 ├── CLAUDE.md                Claude Code specifics, imports AGENTS.md
 └── README.es.md             full guide in Spanish
@@ -156,11 +163,11 @@ scripts/sync-from-template.sh ../my-project          # report only
 scripts/sync-from-template.sh ../my-project --apply  # replace the template-owned files
 ```
 
-It never touches `main`, never overwrites what each project adapts (permissions, CI jobs, rules) and records the version in `.claude/TEMPLATE_VERSION`.
+It never touches `main`, copies only committed template files, never writes through a symlink, never overwrites what each project adapts (permissions, CI jobs, rules) and records the version in `.claude/TEMPLATE_VERSION`.
 
 ## 🧪 How it was tested
 
-- CI green on every push; guard hook (85 cases) and records check (6 cases) run on macOS bash 3.2 and Linux.
+- CI green on every push; guard hook (1296 cases), git hooks (148), records check (46) and `setup-repo`/`sync` (54, with a fake `gh`) run on Linux, and all but the git hooks also on macOS bash 3.2.
 - End to end on GitHub in a throwaway repo: direct push to `main` rejected, a PR without a worklog entry blocked, a PR with an AI signature blocked, all checks green with a proper PR.
 - Real Claude Code sessions in both modes: `/status`, `/new-phase` (it stopped a feature that contradicted the vision), `/close-phase` (it stopped on a missing owner approval), `/prepare-pr` with the three reviewers. The security reviewer found a guard regression that was fixed before release.
 - Sandbox: package registries reachable, other sites and writes outside the project blocked.
