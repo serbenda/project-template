@@ -167,7 +167,7 @@ It never touches `main`, copies only committed template files, never writes thro
 
 ## 🧪 How it was tested
 
-- CI green on every push; guard hook (1302 cases), git hooks (156), records check (46) and `setup-repo`/`sync` (55, with a fake `gh`) run on Linux, and all but the git hooks also on macOS bash 3.2.
+- CI green on every push; guard hook (1302 cases), git hooks (158), records check (46) and `setup-repo`/`sync` (56, with a fake `gh`) run on Linux, and all but the git hooks also on macOS bash 3.2.
 - End to end on GitHub in a throwaway repo: direct push to `main` rejected, a PR without a worklog entry blocked, a PR with an AI signature blocked, all checks green with a proper PR.
 - Real Claude Code sessions in both modes: `/status`, `/new-phase` (it stopped a feature that contradicted the vision), `/close-phase` (it stopped on a missing owner approval), `/prepare-pr` with the three reviewers. The security reviewer found a guard regression that was fixed before release.
 - Sandbox: package registries reachable, other sites and writes outside the project blocked.

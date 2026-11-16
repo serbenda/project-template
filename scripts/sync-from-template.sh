@@ -101,6 +101,7 @@ legacy=(
   .claude/commands/estado.md .claude/commands/nueva-fase.md .claude/commands/cerrar-fase.md .claude/commands/preparar-pr.md
   .claude/agents/revisor-seguridad.md .claude/agents/revisor-dod.md .claude/agents/revisor-arquitectura.md
   .claude/skills/registro-cambios
+  .github/scanners
 )
 
 version="$(git -C "$template" rev-parse --short HEAD)"
@@ -161,10 +162,13 @@ done
 found=()
 for f in "${legacy[@]}"; do [[ -e "$target/$f" ]] && found+=("$f"); done
 if (( ${#found[@]} > 0 )); then
-  echo; echo "Files from the older Spanish template (renamed since): remove them once the new ones are in place:"
+  echo; echo "Files the template no longer uses (renamed or moved since): remove them once the new ones are in place:"
   printf '  %s\n' "${found[@]}"
   if grep -q 'guardia.sh' "$target/.claude/settings.json" 2>/dev/null; then
     echo "  ⚠ .claude/settings.json still runs .claude/hooks/guardia.sh: point the hook to guard.sh when you merge settings.json."
+  fi
+  if grep -q '\.github/scanners' "$target/.github/dependabot.yml" "$target/.github/workflows/ci.yml" 2>/dev/null; then
+    echo "  ⚠ dependabot.yml or ci.yml still reads .github/scanners: merge them from the template (the images moved to .scanners/)."
   fi
 fi
 

@@ -143,18 +143,19 @@ jobs:
           echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  gitleaks.tgz" | sha256sum -c -
           tar -xzf gitleaks.tgz gitleaks && sudo install -m 0755 gitleaks /usr/local/bin/gitleaks && rm gitleaks.tgz gitleaks
 
+      # Each suite's output is kept (pipefail is on in Actions' bash) for the README count check at the end.
       - name: Security hook tests
-        run: bash scripts/test-guard.sh
+        run: bash scripts/test-guard.sh | tee "$RUNNER_TEMP/guard.out"
 
       - name: Records check tests
-        run: bash scripts/test-check-records.sh
+        run: bash scripts/test-check-records.sh | tee "$RUNNER_TEMP/records.out"
 
       # setup-repo and sync are the template's tools, tested on a copy of the template as it is: in a project made
       # from it (.claude/TEMPLATE_VERSION) the copy is the project, already set up, so they are skipped there.
       - name: setup-repo and sync-from-template tests
         run: |
           if [ -f .claude/TEMPLATE_VERSION ]; then echo "A project made from the template: skipped."; exit 0; fi
-          bash scripts/test-scripts.sh
+          bash scripts/test-scripts.sh | tee "$RUNNER_TEMP/scripts.out"
 
       # actionlint pinned to a release and checked against its published SHA-256. Its shellcheck and pyflakes
       # integrations are off: the scripts are already checked above, and this job must not depend on the
@@ -166,7 +167,21 @@ jobs:
           tar -xzf actionlint.tgz actionlint && ./actionlint -shellcheck= -pyflakes= && rm actionlint.tgz actionlint
 
       - name: Git hook tests
-        run: bash scripts/test-githooks.sh
+        run: bash scripts/test-githooks.sh | tee "$RUNNER_TEMP/githooks.out"
+
+      # The README states how many cases each suite has (badge and "What's verified"): checked against the real
+      # counts, so the numbers can't drift. Only in the template: a project's README is its own.
+      - name: README test counts
+        run: |
+          if [ -f .claude/TEMPLATE_VERSION ]; then echo "A project made from the template: skipped."; exit 0; fi
+          n() { grep -c '^  ok ' "$RUNNER_TEMP/$1.out"; }
+          g="$(n guard)" h="$(n githooks)" r="$(n records)" s="$(n scripts)"
+          want="guard hook ($g cases), git hooks ($h), records check ($r) and \`setup-repo\`/\`sync\` ($s,"
+          ok=1
+          grep -qF "$want" README.md || { echo "::error file=README.md::the README's test counts should read: $want"; ok=0; }
+          grep -qF "guard%20hook-$g%20tests" README.md || { echo "::error file=README.md::the guard badge should say $g tests"; ok=0; }
+          [ "$ok" = 1 ] && echo "✓ README counts match: guard $g, git hooks $h, records $r, scripts $s."
+          [ "$ok" = 1 ]
 
   # The same suites with macOS's /bin/bash 3.2 (the README's claim): the guard, the records check and the
   # setup/sync scripts. The git hook tests run on Linux above.

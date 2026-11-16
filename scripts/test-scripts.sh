@@ -198,6 +198,14 @@ expect "--apply replaces the template-owned files" '[[ $status == 0 ]] && cmp -s
 expect "--apply never overwrites the files each project adapts" 'grep -q custom "$p/.claude/settings.json"'
 expect "--apply records the template version" '[[ -s "$p/.claude/TEMPLATE_VERSION" ]]'
 
+p=$(old_project moved) || exit 1
+mkdir -p "$p/.github/scanners/semgrep"; echo "FROM x" > "$p/.github/scanners/semgrep/Dockerfile"
+echo 'directories: ["/.github/scanners/*"]' >> "$p/.github/dependabot.yml"; git -C "$p" add -A >/dev/null 2>&1
+git -C "$p" -c core.hooksPath=/dev/null commit -qm "chore: old scanners" >/dev/null 2>&1
+run_sync "$p"
+expect "reports the old .github/scanners/ and the files that still read it" \
+  'grep -q "^  .github/scanners$" "$p.out" && grep -q "still reads .github/scanners" "$p.out"'
+
 p=$(old_project on-main) || exit 1; git -C "$p" branch -qm development main
 run_sync "$p" --apply
 expect "--apply on main is refused" '[[ $status == 1 ]] && grep -q "# old guard" "$p/.claude/hooks/guard.sh"'

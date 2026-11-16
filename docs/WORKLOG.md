@@ -16,6 +16,19 @@
 - **Pending:**
 -->
 
+## 2026-11-16 — Release prep: CHANGELOG, legacy scanners folder in sync, README counts checked in CI
+- **Phase / issue:** —
+- **What:**
+  - CHANGELOG brought up to date with the work recorded here since the guardrails review (`.scanners/`, dev container Node 22 and sandbox options, owner-only agent instructions, gh writes to origin only, the setup-repo rerun fix, the CI fixes).
+  - `sync-from-template.sh` lists `.github/scanners` among the files to remove (the message now says "renamed or moved since") and warns while a project's `dependabot.yml` or `ci.yml` still read it. New test.
+  - The Hook job keeps each suite's output and a final step checks the README's counts (badge and "What's verified") against the real ones; skipped in projects.
+- **Why:** the CHANGELOG is what projects read when they sync; synced projects kept a stale `.github/scanners/` without being told; the README counts were updated by hand and could drift.
+- **Rejected:** generating the README counts in CI (a workflow writing to the repo needs write permissions it doesn't have now).
+- **Files:** CHANGELOG.md, scripts/sync-from-template.sh, scripts/test-scripts.sh, .github/workflows/ci.yml, README.md
+- **Commits:** pending (the owner's)
+- **Tested:** the four suites on /bin/bash 3.2 (guard 1302, git hooks 158, records 46, scripts 56); the count check run locally against their output, and it caught the README saying 156 git hook cases.
+- **Pending:** —
+
 ## 2026-11-16 — The agent's instructions (AGENTS.md, CLAUDE.md) are owner-only
 - **Phase / issue:** —
 - **What:** `AGENTS.md`, `CLAUDE.md` and `CLAUDE.local.md`, in any folder, are guardrails in every layer: the hooks' path list (pre-commit, pre-push), the guard (files, shell paths; the tripwire for the first two), the settings `Edit()` denies (root and nested) and `denyWrite`, CODEOWNERS (now in any folder, not only the root), and the layer-consistency test. `/close-phase` proposes AGENTS.md changes as a diff for the owner. Docs: AGENTS, SECURITY_GUIDE.
