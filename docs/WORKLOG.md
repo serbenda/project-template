@@ -23,8 +23,18 @@
 - **Rejected:** `CLAUDE.local.md` in the tripwire (the owner's uncommitted file would block the agent for good); protecting only the root files (Claude Code loads nested CLAUDE.md files too).
 - **Files:** .githooks/pre-commit, .githooks/pre-push, .claude/hooks/guard.sh, .claude/settings.json, .github/CODEOWNERS, .claude/commands/close-phase.md, scripts/test-guard.sh, scripts/test-githooks.sh, AGENTS.md, docs/SECURITY_GUIDE.md
 - **Commits:** pending (the owner's)
-- **Tested:** the four suites on /bin/bash 3.2 (guard 1302, git hooks 156, records 46, scripts 54).
-- **Pending:** the README test counts, after PR #11 (they share a line).
+- **Tested:** the four suites on /bin/bash 3.2 (guard 1302, git hooks 156, records 46, scripts 55 after merging development).
+- **Pending:** —
+## 2026-11-16 — setup-repo tested against GitHub; a second run no longer rewrites the project's docs
+- **Phase / issue:** —
+- **What:** `setup-repo.sh` replaces the `PROJECT_NAME` placeholder only on the first run (no `.claude/TEMPLATE_VERSION` yet). New test: a second run leaves the project's own mentions of `PROJECT_NAME` alone.
+- **Why:** the first run against the real GitHub API (serbenda/template-smoke-test, private, GitHub Pro) re-ran step 2 on a project already set up, and rewrote the places its docs name the placeholder on purpose (README step 3, worklog). The same damage had once been repaired by hand there.
+- **Tested against GitHub:** exit 0; squash merges off, merge commits only, development kept; "Protect main" updated in place (six required checks with `integration_id` 15368, strict; GitHub Actions' check runs on this repo report app 15368), "Protect development" (no deletion or force push) and "Protect tags" (creation, update, deletion; bypass for the repository admin role, actor 5) created. Not tested: that a non-admin is really refused a tag (needs a second account). Private vulnerability reporting and secret scanning warned as expected on a private repo.
+- **Rejected:** excluding the docs from the replacement (the first run must replace their headings).
+- **Files:** scripts/setup-repo.sh, scripts/test-scripts.sh, README.md
+- **Commits:** pending (the owner's)
+- **Tested:** test-scripts 55 on /bin/bash 3.2.
+- **Pending:** template-smoke-test's main now requires SAST and Dependencies, which its older CI doesn't run: sync it from the template before its next PR.
 
 ## 2026-11-16 — Scanner images move to .scanners/ so Dependabot can update them
 - **Phase / issue:** —
@@ -589,7 +599,7 @@
 - **Files:** `scripts/setup-repo.sh`.
 - **Commits:** this entry's commit.
 - **Tested:** with a fake `gh`: on `serbenda/demo` it still replaces the placeholder and resets the history; on `serbenda/project-template` it changes no file.
-- **Pending:** the README test counts, after PR #11 (they share a line).
+- **Pending:** —
 
 ## 2026-11-14 — Light mode tested; GitHub Actions bumped
 - **Phase / issue:** —
@@ -659,7 +669,7 @@
 - **Files:** `.claude/skills/{docx,xlsx,pptx,pdf}/` (removed), `.claude/skills/UPSTREAM.md`, `AGENTS.md`, `CLAUDE.md`, `README.es.md`, `CHANGELOG.md`.
 - **Commits:** this entry's commit.
 - **Tested:** links checked; every skill folder is listed in `README.es.md` and `UPSTREAM.md`; `bash scripts/test-guard.sh` passes.
-- **Pending:** the README test counts, after PR #11 (they share a line).
+- **Pending:** —
 
 ## 2026-11-13 — Spanish guide to the template
 - **Phase / issue:** —

@@ -12,7 +12,7 @@
   <img alt="Dependencies" src="https://img.shields.io/badge/dependencies-OSV--Scanner-4285F4?logo=google&logoColor=white">
   <img alt="Secrets" src="https://img.shields.io/badge/secrets-Gitleaks-CC2E2E">
   <img alt="Sandbox" src="https://img.shields.io/badge/agent-sandboxed-0E7C86">
-  <img alt="Guard hook tests" src="https://img.shields.io/badge/guard%20hook-1298%20tests-2EA44F">
+  <img alt="Guard hook tests" src="https://img.shields.io/badge/guard%20hook-1302%20tests-2EA44F">
   <br>
   <img alt="Docs" src="https://img.shields.io/badge/docs-English%20%C2%B7%20gu%C3%ADa%20en%20espa%C3%B1ol-555">
   <img alt="License" src="https://img.shields.io/badge/license-all%20rights%20reserved-lightgrey">
@@ -167,7 +167,7 @@ It never touches `main`, copies only committed template files, never writes thro
 
 ## 🧪 How it was tested
 
-- CI green on every push; guard hook (1298 cases), git hooks (150), records check (46) and `setup-repo`/`sync` (54, with a fake `gh`) run on Linux, and all but the git hooks also on macOS bash 3.2.
+- CI green on every push; guard hook (1302 cases), git hooks (156), records check (46) and `setup-repo`/`sync` (55, with a fake `gh`) run on Linux, and all but the git hooks also on macOS bash 3.2.
 - End to end on GitHub in a throwaway repo: direct push to `main` rejected, a PR without a worklog entry blocked, a PR with an AI signature blocked, all checks green with a proper PR.
 - Real Claude Code sessions in both modes: `/status`, `/new-phase` (it stopped a feature that contradicted the vision), `/close-phase` (it stopped on a missing owner approval), `/prepare-pr` with the three reviewers. The security reviewer found a guard regression that was fixed before release.
 - Sandbox: package registries reachable, other sites and writes outside the project blocked.
