@@ -39,9 +39,9 @@ prot_paths=(.claude/settings.json .claude/settings.local.json .claude/hooks .cla
   .claude/skills .githooks .github .devcontainer .devcontainer.json scripts/setup-repo.sh
   scripts/sync-from-template.sh scripts/check-records.sh scripts/test-guard.sh scripts/test-check-records.sh
   scripts/test-githooks.sh scripts/test-scripts.sh .claude/rules .claude/output-styles .claude/CLAUDE.md .mcp.json
-  AGENTS.md CLAUDE.md '*/AGENTS.md' '*/CLAUDE.md' .gitleaks.toml .gitleaksignore .semgrepignore .semgrep .scanners osv-scanner.toml .gitattributes)
-# (Not CLAUDE.local.md: it is the owner's own uncommitted file, so it would trip this for good. The deny rules
-# and the checks below still keep the agent from writing it.)
+  AGENTS.md CLAUDE.md '*/AGENTS.md' '*/CLAUDE.md' '*/CLAUDE.local.md' .gitleaks.toml .gitleaksignore .semgrepignore .semgrep .scanners osv-scanner.toml .gitattributes)
+# The root CLAUDE.local.md is left out: it is the owner's own uncommitted file, so it would trip this for good
+# (the deny rules and the sandbox keep the agent from writing it). Nested ones count.
 prot_top=(); for pp in "${prot_paths[@]}"; do prot_top+=(":/$pp"); done
 
 # --- Tripwire: guardrails changed outside a commit ---
@@ -52,8 +52,12 @@ prot_top=(); for pp in "${prot_paths[@]}"; do prot_top+=(":/$pp"); done
 # Checked in the project's own repository ($CLAUDE_PROJECT_DIR), whatever directory the session is in now.
 proj="${CLAUDE_PROJECT_DIR:-.}"
 if ! has '"tool_name" *: *"(Read|Grep|Glob)"' "$input" && git -C "$proj" rev-parse -q --verify HEAD >/dev/null 2>&1; then
+  # Untracked ones too, ignored included (settings.local.json…), except the instruction files that packages ship
+  # inside dependency folders (node_modules/x/AGENTS.md after npm install): third-party content, not this repo's
+  # rules, and they would come back on every install. The list is fixed here, so it can't be widened by the agent.
   tripped="$(git -C "$proj" -c core.quotepath=false diff --name-only HEAD -- "${prot_top[@]}" 2>&1
-    git -C "$proj" ls-files --others -- "${prot_top[@]}" 2>&1)"   # ignored ones too (settings.local.json…)
+    git -C "$proj" -c core.quotepath=false ls-files --others -- "${prot_top[@]}" 2>&1 |
+      grep -Eiv '(^|/)(node_modules|\.venv|venv|site-packages|__pypackages__|\.tox|\.nox|vendor|Pods|\.pub-cache|\.dart_tool|\.gradle|target)/(.*/)?(AGENTS|CLAUDE|CLAUDE\.local)\.md$' || true)"
   [[ -n "$tripped" ]] &&
     block "guardrail files differ from the last commit: $(printf '%s' "$tripped" | tr '\n' ' ')— the owner must review them and commit (GUARDRAILS_OWNER_CHANGE=1) or restore them before the agent goes on."
   # .git/config is not in any commit, so it is checked by content: settings that switch the hooks off, send
@@ -626,7 +630,7 @@ fi
 # variables or command substitution): there each subcommand is checked on its own, so read-only commands like
 # "git rm app.py && git grep x -- ':!.claude/skills'" or "ls .claude/commands 2>/dev/null" are not taken for
 # writes. Harmless redirections (2>/dev/null, >&2, 2>&1) never count as writing.
-protected_re='((^|[ /=<>])\.git(/|( |$))|\.claude/(settings|hooks|agents|commands|skills|rules|output-styles|CLAUDE\.md)|AGENTS\.md|CLAUDE\.md|CLAUDE\.local\.md|\.mcp\.json|\.gitleaks(\.toml|ignore)|\.gitattributes|\.semgrepignore|\.semgrep/|\.scanners/|osv-scanner\.toml|\.githooks([^A-Za-z0-9_-]|$)|(^|[ /=])\.claude/?( |$)|\.github([^A-Za-z0-9_-]|$)|\.devcontainer([^A-Za-z0-9_-]|$)|\.vscode([^A-Za-z0-9_-]|$)|\.envrc|\.husky([^A-Za-z0-9_-]|$)|\.pre-commit-config\.yaml|(^|[ /=])scripts/?( |$)|scripts/(setup-repo|sync-from-template|check-records|test-guard|test-check-records|test-githooks|test-scripts)\.sh)'
+protected_re='((^|[ /=<>])\.git(/|( |$))|\.claude/(settings|hooks|agents|commands|skills|rules|output-styles|CLAUDE\.md)|AGENTS\.md|CLAUDE\.md|CLAUDE\.local\.md|\.mcp\.json|\.gitleaks(\.toml|ignore)|\.gitattributes|\.semgrepignore|\.semgrep([^A-Za-z0-9_-]|$)|\.scanners([^A-Za-z0-9_-]|$)|osv-scanner\.toml|\.githooks([^A-Za-z0-9_-]|$)|(^|[ /=])\.claude/?( |$)|\.github([^A-Za-z0-9_-]|$)|\.devcontainer([^A-Za-z0-9_-]|$)|\.vscode([^A-Za-z0-9_-]|$)|\.envrc|\.husky([^A-Za-z0-9_-]|$)|\.pre-commit-config\.yaml|(^|[ /=])scripts/?( |$)|scripts/(setup-repo|sync-from-template|check-records|test-guard|test-check-records|test-githooks|test-scripts)\.sh)'
 write_re='((^|[^'$'\x1f''])>|sed +-i|(^|[ ;&|(])(tee|cp|mv|rm|chmod|ln|truncate|install|patch|tar|unzip|rsync|touch|mkdir|unlink|shred|rmdir|ditto|sponge|split|uniq|vi|vim|nvim|emacs)([ <>]|$)|find .* -delete|(curl|wget) .*(-o|-O|--output|--output-document)( |=)|sort( .*)? -o|awk .*>|unlink|file_put_contents|File\.(delete|write)|fs\.(unlink|rm|write)|os\.(remove|unlink)|shutil\.|dd .*of=|perl +-[a-z]*i|ruby +-[a-z]*i|awk +-i|python3? +-c|node +-e|writeFile|\.write\(|open\(|git( +[^ ]+)* +(checkout|restore)( +[^ ]+)* +-- )'
 indirect_re='((^|[ ;&|])(cd|pushd|for|while|until|read|set|printf +-v|xargs|find|eval|source|exec)( |$)|=|\$\(|`|\$\{?[A-Za-z_])'
 prot_paths_text=(.git/ .claude/settings .claude/hooks .claude/agents .claude/commands .claude/skills .claude/rules
@@ -645,11 +649,21 @@ for p in "${parts[@]+"${parts[@]}"}"; do
   for t in "${ws[@]}"; do
     [[ "$t" == *[*?[{]* ]] || continue
     pre="${t%%[*?[{]*}"; pre="${pre#>}"; pre="${pre#./}"
-    [[ -z "$pre" ]] && continue
+    msg="a write to a pattern ('$t') that could reach the guardrail files: name the files instead."
     for pp in "${prot_paths_text[@]}"; do
-      [[ "$pp" == "$pre"* || "$pre" == "$pp"* ]] &&
-        block "a write to a pattern ('$t') that could reach the guardrail files: name the files instead."
+      [[ -n "$pre" ]] && [[ "$pp" == "$pre"* || "$pre" == "$pp"* ]] && block "$msg"
     done
+    # A pattern with no literal start (*.md, [A]GENTS.md, */semgrep/Dockerfile) or a brace list: matched against
+    # the guardrail files that exist (a pattern only ever expands to existing files), by path and by name.
+    g="${t#>}"; g="${g#./}"
+    has '[{}]' "$g" && has '(agents|claude|scanners|semgrep|gitleaks|gitattributes|osv-scanner|githooks|github|devcontainer|envrc|husky|pre-commit|code-workspace|vscode|mcp)' "$g" && block "$msg"
+    lg="$(printf '%s' "$g" | tr '[:upper:]' '[:lower:]')"
+    while IFS= read -r gf; do
+      [[ -z "$gf" ]] && continue
+      lf="$(printf '%s' "$gf" | tr '[:upper:]' '[:lower:]')"
+      # shellcheck disable=SC2053  # the right side is the pattern on purpose
+      [[ "$lf" == $lg || "${lf##*/}" == $lg || "$lf" == $lg/* ]] && block "$msg"
+    done < <(git -C "$proj" -c core.quotepath=false ls-files -co --exclude-standard -- "${prot_top[@]}" ':/CLAUDE.local.md' 2>/dev/null)
   done
 done
 

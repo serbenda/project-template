@@ -3500,7 +3500,8 @@ run_hook_cmd 2 "the guard runs from HEAD: a changed copy on disk is ignored" "$t
 echo "Git writes into the guardrails, and the tripwire (repo with history):"
 hist="$tmp/hist"
 { git init -q -b development "$hist" && mkdir -p "$hist/.claude/hooks" && echo old > "$hist/.claude/hooks/guard.sh" &&
-  echo a > "$hist/app.txt" && git -C "$hist" add -A && git -C "$hist" -c user.name=t -c user.email=t@t -c core.hooksPath=/dev/null commit -qm one &&
+  echo a > "$hist/app.txt" && echo rules > "$hist/AGENTS.md" && mkdir -p "$hist/.scanners/semgrep" &&
+  echo "FROM x" > "$hist/.scanners/semgrep/Dockerfile" && printf 'node_modules/\nCLAUDE.local.md\n' > "$hist/.gitignore" && git -C "$hist" add -A && git -C "$hist" -c user.name=t -c user.email=t@t -c core.hooksPath=/dev/null commit -qm one &&
   git -C "$hist" branch old-branch && echo new > "$hist/.claude/hooks/guard.sh" && echo b > "$hist/app.txt" &&
   git -C "$hist" add -A && git -C "$hist" -c user.name=t -c user.email=t@t -c core.hooksPath=/dev/null commit -qm two &&
   git -C "$hist" branch feat/same &&
@@ -3530,6 +3531,25 @@ check 2 "tripwire: writes too"                       "$(file_json Write "$hist/a
 check 0 "tripwire: reading is still allowed"         "$(file_json Read "$hist/app.txt")"
 git -C "$hist" checkout -q -- .claude/hooks/guard.sh
 check 0 "tripwire clears once the owner restores it" "$(bash_json 'git status')"
+# Instruction files: dependency folders don't trip it, the project's own (nested, untracked) do.
+mkdir -p "$hist/node_modules/pkg" && echo x > "$hist/node_modules/pkg/AGENTS.md"
+check 0 "tripwire: a package's AGENTS.md in node_modules doesn't count" "$(bash_json 'git status')"
+rm -rf "$hist/node_modules"
+mkdir -p "$hist/src" && echo x > "$hist/src/AGENTS.md"
+check 2 "tripwire: a new nested AGENTS.md counts" "$(bash_json 'git status')"
+rm -f "$hist/src/AGENTS.md"; echo x > "$hist/src/CLAUDE.local.md"
+check 2 "tripwire: a nested CLAUDE.local.md counts" "$(bash_json 'git status')"
+rm -f "$hist/src/CLAUDE.local.md"; echo mine > "$hist/CLAUDE.local.md"
+check 0 "tripwire: the owner's own root CLAUDE.local.md doesn't" "$(bash_json 'git status')"
+rm -f "$hist/CLAUDE.local.md"
+# Writes to patterns are matched against the guardrail files that exist, by path and by name.
+check 2 "append to *.md (would reach AGENTS.md)"      "$(bash_json 'echo x >> *.md')"
+check 2 "append to [A]GENTS.md"                        "$(bash_json 'echo x >> [A]GENTS.md')"
+check 2 "cp into a brace list naming AGENTS"           "$(bash_json 'cp x {AGENTS,README}.md')"
+check 2 "tee into */semgrep/Dockerfile"                "$(bash_json 'tee */semgrep/Dockerfile < x')"
+check 0 "rm of a pattern that matches no guardrail"    "$(bash_json 'rm -f *.log')"
+check 2 "mv .scanners away (no trailing slash)"        "$(bash_json 'mv .scanners x')"
+check 2 "rm -r .semgrep (no trailing slash)"           "$(bash_json 'rm -r .semgrep')"
 echo tampered > "$hist/.claude/hooks/guard.sh"
 branch_dir="$tmp/development"
 CLAUDE_PROJECT_DIR="$hist" check 2 "tripwire: checks the project dir, also from another directory" "$(bash_json 'git status')"

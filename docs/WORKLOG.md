@@ -16,6 +16,22 @@
 - **Pending:**
 -->
 
+## 2026-11-16 — Final review (Fable, second pass): fixes for its High, Mediums and Lows
+- **Phase / issue:** —
+- **What:**
+  - **H1:** the tripwire no longer counts the `AGENTS.md`/`CLAUDE.md` files packages ship inside dependency folders (`node_modules/`, `.venv/`, `vendor/`…, a fixed list in the guard), which blocked the agent after every install.
+  - **M1:** nested `CLAUDE.local.md` files count for the tripwire (only the owner's root one is left out); SECURITY_GUIDE no longer claims more than is enforced.
+  - **M2:** dev container: `--cap-drop=ALL` (in runArgs and the CI check); SECURITY_GUIDE says root in the container could escape through unmasked `/proc`, which settings must stay (`USER vscode`, `no-new-privileges`, no capabilities), the Mac vs Linux kernel difference, and the alternatives weighed (`enableWeakerNestedSandbox`, a custom seccomp profile).
+  - **L1:** `.scanners` and `.semgrep` in shell text without a trailing slash (`mv .scanners x`). **L2:** writes to patterns with no literal start or with brace lists (`>> *.md`, `[A]GENTS.md`, `{AGENTS,README}.md`, `*/semgrep/Dockerfile`) are matched against the guardrail files that exist. **L3:** `.claude/AGENTS.md` in `denyWrite`.
+  - Dev container: `CLAUDE_CONFIG_DIR` points into the config volume, so Claude Code's `~/.claude.json` (login, preferences) survives a rebuild; found rebuilding it to test `--cap-drop=ALL`.
+  - **L4:** `setup-repo` writes `.claude/TEMPLATE_VERSION` after the placeholders are replaced. **L5:** sync warns about old `.github/scanners` paths even once the folder is gone. **L6:** the macOS CI job runs the git hook tests; the bubblewrap check adds `--unshare-net`.
+- **Why:** Fable's second final review: 8.5/10, no Critical, no regressions; these were its findings.
+- **Rejected:** L7 (a read with a redirect that names AGENTS.md is blocked): the price of a strict guard. `--exclude-standard` for H1 (the agent could hide a file by adding it to `.gitignore`, which is not a guardrail).
+- **Files:** .claude/hooks/guard.sh, .claude/settings.json, .devcontainer/devcontainer.json, .github/workflows/ci.yml, .github/workflows/devcontainer.yml, scripts/setup-repo.sh, scripts/sync-from-template.sh, scripts/test-guard.sh, scripts/test-scripts.sh, docs/SECURITY_GUIDE.md, README.md
+- **Commits:** pending (the owner's)
+- **Tested:** the four suites on /bin/bash 3.2 (guard 1313, git hooks 158, records 46, scripts 57). The container options only in CI (`--cap-drop=ALL` with the bubblewrap check).
+- **Pending:** confirm in the rebuilt container that the login survives a second rebuild.
+
 ## 2026-11-16 — Release prep: CHANGELOG, legacy scanners folder in sync, README counts checked in CI
 - **Phase / issue:** —
 - **What:**

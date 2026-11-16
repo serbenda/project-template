@@ -183,8 +183,8 @@ jobs:
           [ "$ok" = 1 ] && echo "✓ README counts match: guard $g, git hooks $h, records $r, scripts $s."
           [ "$ok" = 1 ]
 
-  # The same suites with macOS's /bin/bash 3.2 (the README's claim): the guard, the records check and the
-  # setup/sync scripts. The git hook tests run on Linux above.
+  # The same suites with macOS's /bin/bash 3.2 (the README's claim, and the shell the hooks run under on the
+  # owner's Mac): the guard, the records check, the setup/sync scripts and the git hooks.
   hook-macos:
     name: Hook (macOS bash 3.2)
     runs-on: macos-latest
@@ -206,6 +206,7 @@ jobs:
           /bin/bash scripts/test-guard.sh
           /bin/bash scripts/test-check-records.sh
           if [ ! -f .claude/TEMPLATE_VERSION ]; then /bin/bash scripts/test-scripts.sh; fi
+          /bin/bash scripts/test-githooks.sh
 
   sast:
     name: SAST

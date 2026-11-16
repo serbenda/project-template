@@ -86,7 +86,6 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versio
 
 ## [Unreleased]
 MD
-  echo "created from serbenda/project-template on $(date +%F)" > .claude/TEMPLATE_VERSION
   # The README is the template's showcase: the project starts from its own skeleton instead,
   # and the template's banner goes away.
   mv docs/templates/README.project.md README.md && rmdir docs/templates 2>/dev/null || true
@@ -124,6 +123,12 @@ if [[ "$NAME" != "project-template" ]]; then
     rm -rf docs/ROADMAP.md docs/RISKS.md docs/phases
     echo "  ✓ Light mode: VISION, STATE, WORKLOG and SETUP; ROADMAP, RISKS and phases removed"
   fi
+fi
+
+# 1c. The first run is over (its placeholders replaced): recorded only now, so a run stopped halfway is a first
+#     run again next time instead of leaving PROJECT_NAME unreplaced for good.
+if [[ "$NAME" != "project-template" ]] && (( first_run )); then
+  echo "created from serbenda/project-template on $(date +%F)" > .claude/TEMPLATE_VERSION
 fi
 
 # 2c. Gitleaks: the pre-commit hook refuses every commit if it is missing (a secrets check that silently

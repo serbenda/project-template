@@ -205,6 +205,10 @@ git -C "$p" -c core.hooksPath=/dev/null commit -qm "chore: old scanners" >/dev/n
 run_sync "$p"
 expect "reports the old .github/scanners/ and the files that still read it" \
   'grep -q "^  .github/scanners$" "$p.out" && grep -q "still reads .github/scanners" "$p.out"'
+rm -rf "$p/.github/scanners"; git -C "$p" add -A >/dev/null 2>&1
+git -C "$p" -c core.hooksPath=/dev/null commit -qm "chore: folder gone" >/dev/null 2>&1
+run_sync "$p"
+expect "…and warns about the old paths even once the folder is gone" 'grep -q "still reads .github/scanners" "$p.out"'
 
 p=$(old_project on-main) || exit 1; git -C "$p" branch -qm development main
 run_sync "$p" --apply

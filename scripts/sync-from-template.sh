@@ -167,9 +167,11 @@ if (( ${#found[@]} > 0 )); then
   if grep -q 'guardia.sh' "$target/.claude/settings.json" 2>/dev/null; then
     echo "  ⚠ .claude/settings.json still runs .claude/hooks/guardia.sh: point the hook to guard.sh when you merge settings.json."
   fi
-  if grep -q '\.github/scanners' "$target/.github/dependabot.yml" "$target/.github/workflows/ci.yml" 2>/dev/null; then
-    echo "  ⚠ dependabot.yml or ci.yml still reads .github/scanners: merge them from the template (the images moved to .scanners/)."
-  fi
+fi
+# Checked whether or not the old folder is still there: a project that deleted it but kept the old paths has a
+# Dependabot entry that finds nothing and a CI that can't read its scanner images.
+if grep -q '\.github/scanners' "$target/.github/dependabot.yml" "$target/.github/workflows/ci.yml" 2>/dev/null; then
+  echo; echo "  ⚠ dependabot.yml or ci.yml still reads .github/scanners: merge them from the template (the images moved to .scanners/)."
 fi
 
 echo
