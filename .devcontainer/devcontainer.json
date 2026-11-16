@@ -14,7 +14,10 @@
   "mounts": [
     "source=claude-code-config-${devcontainerId},target=/home/vscode/.claude,type=volume"
   ],
-  "runArgs": ["--security-opt=no-new-privileges"],
+  // seccomp and AppArmor unconfined: Docker's default profiles don't let bubblewrap create the namespaces
+  // Claude Code's sandbox runs in, and with "failIfUnavailable" a sandbox that can't start refuses every
+  // command. The trade-off (a wider kernel surface from inside the container) is in docs/SECURITY_GUIDE.md.
+  "runArgs": ["--security-opt=no-new-privileges", "--security-opt=seccomp=unconfined", "--security-opt=apparmor=unconfined"],
   // The git hooks, as setup-repo.sh sets them on the Mac (the identity comes from the repo's own git config).
   "postCreateCommand": "git config --global --add safe.directory \"${containerWorkspaceFolder}\" && git config core.hooksPath .githooks",
   "customizations": {

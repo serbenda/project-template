@@ -135,6 +135,14 @@ jobs:
       - name: Shell scripts
         run: shellcheck --severity=error scripts/*.sh .claude/hooks/*.sh .githooks/*
 
+      # Gitleaks pinned to a release and checked against its published SHA-256, before the tests: the git hook
+      # tests run every case with it, and setup-repo (test-scripts) pushes through the pre-push hook, which needs it.
+      - name: Install Gitleaks 8.30.1
+        run: |
+          curl -fsSLo gitleaks.tgz https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  gitleaks.tgz" | sha256sum -c -
+          tar -xzf gitleaks.tgz gitleaks && sudo install -m 0755 gitleaks /usr/local/bin/gitleaks && rm gitleaks.tgz gitleaks
+
       - name: Security hook tests
         run: bash scripts/test-guard.sh
 
@@ -157,18 +165,11 @@ jobs:
           echo "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  actionlint.tgz" | sha256sum -c -
           tar -xzf actionlint.tgz actionlint && ./actionlint -shellcheck= -pyflakes= && rm actionlint.tgz actionlint
 
-      # Gitleaks pinned to a release and checked against its published SHA-256, so the hook tests run every case.
-      - name: Install Gitleaks 8.30.1
-        run: |
-          curl -fsSLo gitleaks.tgz https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
-          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  gitleaks.tgz" | sha256sum -c -
-          tar -xzf gitleaks.tgz gitleaks && sudo install -m 0755 gitleaks /usr/local/bin/gitleaks && rm gitleaks.tgz gitleaks
-
       - name: Git hook tests
         run: bash scripts/test-githooks.sh
 
   # The same suites with macOS's /bin/bash 3.2 (the README's claim): the guard, the records check and the
-  # setup/sync scripts. The git hook tests need gitleaks and run on Linux above.
+  # setup/sync scripts. The git hook tests run on Linux above.
   hook-macos:
     name: Hook (macOS bash 3.2)
     runs-on: macos-latest
@@ -177,6 +178,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
+      # The same pinned Gitleaks (macOS arm64 build): setup-repo pushes through the pre-push hook, which needs it.
+      - name: Install Gitleaks 8.30.1
+        run: |
+          curl -fsSLo gitleaks.tgz https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_darwin_arm64.tar.gz
+          echo "b40ab0ae55c505963e365f271a8d3846efbc170aa17f2607f13df610a9aeb6a5  gitleaks.tgz" | shasum -a 256 -c -
+          tar -xzf gitleaks.tgz gitleaks && sudo install -m 0755 gitleaks /usr/local/bin/gitleaks && rm gitleaks.tgz gitleaks
+
       - name: Suites with /bin/bash 3.2
         run: |
           /bin/bash --version | head -1

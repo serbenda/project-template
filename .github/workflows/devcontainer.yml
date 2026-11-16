@@ -23,6 +23,6 @@ jobs:
       - name: Build the image and check its tools
         run: |
           docker build -t devcontainer-check .devcontainer
-          docker run --rm --security-opt=no-new-privileges devcontainer-check sh -c \
-            'gitleaks version && claude --version && python3 --version && jq --version && gh --version && bwrap --version &&
+          docker run --rm --security-opt=no-new-privileges --security-opt=seccomp=unconfined --security-opt=apparmor=unconfined devcontainer-check sh -c \
+            'gitleaks version && node --version && claude --version && python3 --version && jq --version && gh --version && bwrap --version &&
              bwrap --unshare-user --unshare-pid --ro-bind / / --dev /dev --proc /proc true && echo "sandbox starts"'

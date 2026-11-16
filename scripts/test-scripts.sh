@@ -8,6 +8,8 @@ failures=0
 # $TMPDIR, not the system temp folder: the Claude Code sandbox only lets commands write there.
 tmp="$(mktemp -d "${TMPDIR:-/tmp}/test-scripts.XXXXXX")" || { echo "✗ could not create a temp dir" >&2; exit 1; }
 trap '[[ -n "${KEEP:-}" ]] || rm -rf "$tmp"' EXIT
+# setup-repo pushes through the project's own pre-push hook, which refuses every push without gitleaks.
+command -v gitleaks >/dev/null 2>&1 || { echo "✗ gitleaks is required (setup-repo pushes through the pre-push hook)" >&2; exit 1; }
 
 ok()   { echo "  ok    $1"; }
 fail() { echo "  FAIL  $1"; failures=$((failures + 1)); }
@@ -81,11 +83,15 @@ run_setup() {
   (cd "$d" && env PATH="$bin:$PATH" FAKE_GH_DIR="$d.gh" "${envs[@]+"${envs[@]}"}" "$BASH" scripts/setup-repo.sh "$@" >"$d.out" 2>&1)
   status=$?
 }
+# finished_ok <project dir>: the run succeeded; if not, the end of its output, so CI shows why.
+finished_ok() {
+  if [[ $status == 0 ]]; then ok "finishes with exit 0"; else fail "finishes with exit 0"; sed 's/^/      | /' "$1.out" | tail -n 15; fi
+}
 
 echo "setup-repo.sh, a new project (full mode):"
 p=$(new_project my-app) || exit 1
 run_setup "$p" -- owner/my-app
-expect "finishes with exit 0" '[[ $status == 0 ]]'
+finished_ok "$p"
 expect "sets the owner identity and the git hooks path" \
   '[[ "$(git -C "$p" config user.email)" == serbenda@gmail.com && "$(git -C "$p" config core.hooksPath)" == .githooks ]]'
 expect "replaces PROJECT_NAME in the docs" \
@@ -113,14 +119,14 @@ expect "CODEOWNERS names this repository's owner" '[[ "$(grep -c " @owner$" "$p/
 echo "setup-repo.sh, run a second time:"
 printf '\n## 2026-01-01 — First change\n' >> "$p/docs/WORKLOG.md"
 run_setup "$p" -- owner/my-app
-expect "finishes with exit 0" '[[ $status == 0 ]]'
+finished_ok "$p"
 expect "keeps the project's own worklog" 'grep -q "First change" "$p/docs/WORKLOG.md"'
 expect "updates the existing ruleset instead of creating another" 'grep -q "api -X PUT repos/owner/my-app/rulesets/42 --input -" "$p.gh/calls.log"'
 
 echo "setup-repo.sh, light mode:"
 p=$(new_project light-app) || exit 1
 run_setup "$p" MODE=light -- owner/light-app
-expect "finishes with exit 0" '[[ $status == 0 ]]'
+finished_ok "$p"
 expect "sets Mode: light in STATE" 'grep -q "^- \*\*Mode:\*\* light" "$p/docs/STATE.md"'
 expect "removes the docs light mode doesn't use (ROADMAP, RISKS, phases)" '[[ ! -e "$p/docs/ROADMAP.md" && ! -e "$p/docs/RISKS.md" && ! -e "$p/docs/phases" ]]'
 expect "keeps the ones it uses" '[[ -f "$p/docs/VISION.md" && -f "$p/docs/SETUP.md" && -f "$p/docs/THREAT_MODEL.md" && -f "$p/docs/WORKLOG.md" ]]'
@@ -128,7 +134,7 @@ expect "keeps the ones it uses" '[[ -f "$p/docs/VISION.md" && -f "$p/docs/SETUP.
 echo "setup-repo.sh, with an agent account (AGENT_BOT):"
 p=$(new_project bot-app) || exit 1
 run_setup "$p" AGENT_BOT=owner-agent -- owner/bot-app
-expect "finishes with exit 0" '[[ $status == 0 ]]'
+finished_ok "$p"
 expect "gives the agent account write access, nothing more" 'grep -q "api -X PUT repos/owner/bot-app/collaborators/owner-agent -f permission=push" "$p.gh/calls.log"'
 expect "PRs into main need the owner's approval as code owner" \
   'grep -q "\"required_approving_review_count\": 1" "$p.gh/calls.log" && grep -q "\"require_code_owner_review\": true" "$p.gh/calls.log" && grep -q "\"require_last_push_approval\": true" "$p.gh/calls.log"'

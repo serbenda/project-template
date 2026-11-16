@@ -8,8 +8,10 @@ unset CLAUDE_PROJECT_DIR   # the tripwire checks this dir; each case sets it onl
 
 # The hook looks at the current git branch, so the tests run it inside throwaway repos with a known
 # branch instead of depending on wherever this repo happens to be checked out.
-# $TMPDIR, not the system temp folder: the Claude Code sandbox only lets commands write there.
-tmp="$(mktemp -d "${TMPDIR:-/tmp}/test-guard.XXXXXX")" || { echo "✗ could not create a temp dir" >&2; exit 1; }
+# $TMPDIR, not the system temp folder: the Claude Code sandbox only lets commands write there. Linux runners
+# don't set it, and the guard trusts "$TMPDIR/…" output paths only when it is set: /tmp then.
+export TMPDIR="${TMPDIR:-/tmp}"
+tmp="$(mktemp -d "${TMPDIR%/}/test-guard.XXXXXX")" || { echo "✗ could not create a temp dir" >&2; exit 1; }
 trap 'rm -rf "$tmp"' EXIT
 for b in development main; do git init -q -b "$b" "$tmp/$b" || { echo "✗ git init failed" >&2; exit 1; }; done
 branch_dir="$tmp/development"

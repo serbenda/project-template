@@ -16,6 +16,19 @@
 - **Pending:**
 -->
 
+## 2026-11-16 — CI fixes for PR #9: TMPDIR on Linux, Gitleaks before the tests, dev container sandbox
+- **Phase / issue:** — · PR #9
+- **What:**
+  - `test-guard.sh` sets `TMPDIR` to `/tmp` when it is unset (Linux runners): the guard trusts `"$TMPDIR/…"` output paths only when it is set, so 8 cases failed there.
+  - CI installs the pinned Gitleaks before the test steps on Linux, and on macOS too (darwin arm64 build, SHA-256 checked): setup-repo pushes through the new pre-push hook, which refuses every push without it (18 script cases failed on macOS). `test-scripts.sh` now says so up front, and shows the end of setup-repo's output when a run that should succeed fails.
+  - Dev container: Node.js 22.23.4 from nodejs.org, checksum verified (Ubuntu's Node 18 is below Claude Code's minimum); seccomp and AppArmor unconfined so bubblewrap can create its namespaces (the CI check showed the sandbox couldn't start, so every command would have been refused). The trade-off is documented in SECURITY_GUIDE.
+- **Why:** the first CI run of PR #9 failed in Hook, Hook (macOS bash 3.2) and Devcontainer build.
+- **Rejected:** turning Claude Code's sandbox off inside the container (it would lose the network allow-list and the OS-level write limits); a custom seccomp profile (a copy of Docker's to keep in step by hand).
+- **Files:** scripts/test-guard.sh, scripts/test-scripts.sh, .github/workflows/ci.yml, .github/workflows/devcontainer.yml, .devcontainer/Dockerfile, .devcontainer/devcontainer.json, docs/SECURITY_GUIDE.md
+- **Commits:** pending (the owner's)
+- **Tested:** all four suites on /bin/bash 3.2, the guard also with TMPDIR unset; the container fixes only in CI.
+- **Pending:** confirm in CI that bubblewrap starts in the runner's Docker with these options.
+
 ## 2026-11-15 — Final review (Fable): gh writes, settings deny list, layer consistency
 - **Phase / issue:** —
 - **What:**
