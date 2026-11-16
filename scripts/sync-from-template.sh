@@ -101,6 +101,7 @@ legacy=(
   .claude/commands/estado.md .claude/commands/nueva-fase.md .claude/commands/cerrar-fase.md .claude/commands/preparar-pr.md
   .claude/agents/revisor-seguridad.md .claude/agents/revisor-dod.md .claude/agents/revisor-arquitectura.md
   .claude/skills/registro-cambios
+  .github/scanners
 )
 
 version="$(git -C "$template" rev-parse --short HEAD)"
@@ -145,6 +146,18 @@ for f in "${owned[@]}"; do
 done
 (( changes == 0 )) && echo "  (all up to date)"
 
+# .github/OWNER is the project's own (who may commit), never replaced. A project from before it existed gets
+# the template's with --apply, since the git hooks copied above refuse every commit without one: edit it if
+# the project's owner is someone else (name, email, login, noreply), and commit it with the rest.
+if [[ ! -e "$target/.github/OWNER" && -f "$template/.github/OWNER" ]]; then
+  echo; echo "  NEW      .github/OWNER   (the owner's identity, which the git hooks now read: check it names this project's owner)"
+  if [[ "$mode" == "--apply" ]]; then
+    no_symlink .github/OWNER
+    mkdir -p "$target/.github"
+    cp "$template/.github/OWNER" "$target/.github/OWNER.sync-tmp.$$" && mv -f "$target/.github/OWNER.sync-tmp.$$" "$target/.github/OWNER"
+  fi
+fi
+
 echo; echo "Files to merge by hand (never copied):"
 pending=0
 for f in "${review[@]}"; do
@@ -161,11 +174,16 @@ done
 found=()
 for f in "${legacy[@]}"; do [[ -e "$target/$f" ]] && found+=("$f"); done
 if (( ${#found[@]} > 0 )); then
-  echo; echo "Files from the older Spanish template (renamed since): remove them once the new ones are in place:"
+  echo; echo "Files the template no longer uses (renamed or moved since): remove them once the new ones are in place:"
   printf '  %s\n' "${found[@]}"
   if grep -q 'guardia.sh' "$target/.claude/settings.json" 2>/dev/null; then
     echo "  ⚠ .claude/settings.json still runs .claude/hooks/guardia.sh: point the hook to guard.sh when you merge settings.json."
   fi
+fi
+# Checked whether or not the old folder is still there: a project that deleted it but kept the old paths has a
+# Dependabot entry that finds nothing and a CI that can't read its scanner images.
+if grep -q '\.github/scanners' "$target/.github/dependabot.yml" "$target/.github/workflows/ci.yml" 2>/dev/null; then
+  echo; echo "  ⚠ dependabot.yml or ci.yml still reads .github/scanners: merge them from the template (the images moved to .scanners/)."
 fi
 
 echo

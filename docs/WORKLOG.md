@@ -16,6 +16,49 @@
 - **Pending:**
 -->
 
+## 2026-11-16 — The owner's identity in one file: .github/OWNER
+- **Phase / issue:** —
+- **What:**
+  - New `.github/OWNER` (name, email, login, noreply), a guardrail. The git hooks read it from the last commit, the guard from the project's last commit, CI's Authorship job from the PR's base branch (the PR's own file only while the base still names someone other than the repository's owner: the template's, before setup). Nothing reads the copy on disk, so a change counts only once the owner commits it.
+  - `setup-repo.sh` writes it on a project's first run for the person running it (`OWNER_NAME`/`OWNER_EMAIL`, else the repo's git identity, else GitHub's noreply), names them in the project README's copyright line and in CODEOWNERS, and sets the git identity from it on every run. It also says what to do when it can't switch to development.
+  - `sync-from-template.sh` gives a project from before the file the template's (the new hooks refuse every commit without one) and never replaces a project's own.
+  - The name and email are no longer written in the hooks, CI, guard, setup-repo or docs; the tests use a fictitious owner where they can.
+- **Why:** the owner's name and email were hard-coded in about 15 guardrail files: changing the email, or handing the template to someone else, meant editing all of them.
+- **Rejected:** reading the identity from `git config` (anyone can set it, so it can't be the reference it is checked against); a multi-owner list (one owner is the template's model).
+- **Files:** .github/OWNER, .githooks/commit-msg, .githooks/applypatch-msg, .githooks/pre-push, .github/workflows/ci.yml, .claude/hooks/guard.sh, scripts/setup-repo.sh, scripts/sync-from-template.sh, scripts/test-guard.sh, scripts/test-githooks.sh, scripts/test-scripts.sh, AGENTS.md, README.es.md, README.md, docs/templates/README.project.md, .claude/agents/dod-reviewer.md, CHANGELOG.md
+- **Commits:** pending (the owner's)
+- **Tested:** the four suites on /bin/bash 3.2 (guard 1316, git hooks 160, records 46, scripts 63). The Authorship step run locally with the PR's real base and head, after CI caught it exiting (128) when the base has no OWNER yet: `git show` failing inside `$(…)` ended the step under `bash -e`.
+- **Pending:** —
+
+## 2026-11-16 — Final review (Fable, second pass): fixes for its High, Mediums and Lows
+- **Phase / issue:** —
+- **What:**
+  - **H1:** the tripwire no longer counts the `AGENTS.md`/`CLAUDE.md` files packages ship inside dependency folders (`node_modules/`, `.venv/`, `vendor/`…, a fixed list in the guard), which blocked the agent after every install.
+  - **M1:** nested `CLAUDE.local.md` files count for the tripwire (only the owner's root one is left out); SECURITY_GUIDE no longer claims more than is enforced.
+  - **M2:** dev container: `--cap-drop=ALL` (in runArgs and the CI check); SECURITY_GUIDE says root in the container could escape through unmasked `/proc`, which settings must stay (`USER vscode`, `no-new-privileges`, no capabilities), the Mac vs Linux kernel difference, and the alternatives weighed (`enableWeakerNestedSandbox`, a custom seccomp profile).
+  - **L1:** `.scanners` and `.semgrep` in shell text without a trailing slash (`mv .scanners x`). **L2:** writes to patterns with no literal start or with brace lists (`>> *.md`, `[A]GENTS.md`, `{AGENTS,README}.md`, `*/semgrep/Dockerfile`) are matched against the guardrail files that exist. **L3:** `.claude/AGENTS.md` in `denyWrite`.
+  - Dev container: `CLAUDE_CONFIG_DIR` points into the config volume, so Claude Code's `~/.claude.json` (login, preferences) survives a rebuild; found rebuilding it to test `--cap-drop=ALL`.
+  - **L4:** `setup-repo` writes `.claude/TEMPLATE_VERSION` after the placeholders are replaced. **L5:** sync warns about old `.github/scanners` paths even once the folder is gone. **L6:** the macOS CI job runs the git hook tests; the bubblewrap check adds `--unshare-net`.
+- **Why:** Fable's second final review: 8.5/10, no Critical, no regressions; these were its findings.
+- **Rejected:** L7 (a read with a redirect that names AGENTS.md is blocked): the price of a strict guard. `--exclude-standard` for H1 (the agent could hide a file by adding it to `.gitignore`, which is not a guardrail).
+- **Files:** .claude/hooks/guard.sh, .claude/settings.json, .devcontainer/devcontainer.json, .github/workflows/ci.yml, .github/workflows/devcontainer.yml, scripts/setup-repo.sh, scripts/sync-from-template.sh, scripts/test-guard.sh, scripts/test-scripts.sh, docs/SECURITY_GUIDE.md, README.md
+- **Commits:** pending (the owner's)
+- **Tested:** the four suites on /bin/bash 3.2 (guard 1313, git hooks 158, records 46, scripts 57). The container options only in CI (`--cap-drop=ALL` with the bubblewrap check).
+- **Pending:** confirm in the rebuilt container that the login survives a second rebuild.
+
+## 2026-11-16 — Release prep: CHANGELOG, legacy scanners folder in sync, README counts checked in CI
+- **Phase / issue:** —
+- **What:**
+  - CHANGELOG brought up to date with the work recorded here since the guardrails review (`.scanners/`, dev container Node 22 and sandbox options, owner-only agent instructions, gh writes to origin only, the setup-repo rerun fix, the CI fixes).
+  - `sync-from-template.sh` lists `.github/scanners` among the files to remove (the message now says "renamed or moved since") and warns while a project's `dependabot.yml` or `ci.yml` still read it. New test.
+  - The Hook job keeps each suite's output and a final step checks the README's counts (badge and "What's verified") against the real ones; skipped in projects.
+- **Why:** the CHANGELOG is what projects read when they sync; synced projects kept a stale `.github/scanners/` without being told; the README counts were updated by hand and could drift.
+- **Rejected:** generating the README counts in CI (a workflow writing to the repo needs write permissions it doesn't have now).
+- **Files:** CHANGELOG.md, scripts/sync-from-template.sh, scripts/test-scripts.sh, .github/workflows/ci.yml, README.md
+- **Commits:** pending (the owner's)
+- **Tested:** the four suites on /bin/bash 3.2 (guard 1302, git hooks 158, records 46, scripts 56); the count check run locally against their output, and it caught the README saying 156 git hook cases.
+- **Pending:** —
+
 ## 2026-11-16 — The agent's instructions (AGENTS.md, CLAUDE.md) are owner-only
 - **Phase / issue:** —
 - **What:** `AGENTS.md`, `CLAUDE.md` and `CLAUDE.local.md`, in any folder, are guardrails in every layer: the hooks' path list (pre-commit, pre-push), the guard (files, shell paths; the tripwire for the first two), the settings `Edit()` denies (root and nested) and `denyWrite`, CODEOWNERS (now in any folder, not only the root), and the layer-consistency test. `/close-phase` proposes AGENTS.md changes as a diff for the owner. Docs: AGENTS, SECURITY_GUIDE.

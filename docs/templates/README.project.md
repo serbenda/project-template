@@ -62,5 +62,5 @@ Every flow, as diagrams: [docs/WORKFLOWS.md](docs/WORKFLOWS.md).
 Read [AGENTS.md](AGENTS.md) and the [Definition of Done](docs/DEFINITION_OF_DONE.md).
 
 ## License
-No license: © Sergio Santiago Bendaña Quesada. All rights reserved.
+No license: © OWNER_NAME. All rights reserved.
 The code may be viewed, but not copied, modified or redistributed without the author's written permission.

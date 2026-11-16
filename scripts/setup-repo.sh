@@ -64,10 +64,7 @@ if [[ "$PRIVATE" == "true" && "$PLAN" == "free" ]]; then
   echo "    To protect main: make the repo public or upgrade to GitHub Pro." >&2
 fi
 
-# 1. Local commit authorship
-git config user.name  "Sergio Santiago Bendaña Quesada"
-git config user.email "serbenda@gmail.com"
-# Git hook that strips AI signatures from commits and checks the author
+# 1. Git hooks that check every commit, message and push (the identity they expect is set in step 2d)
 git config core.hooksPath .githooks
 chmod +x .githooks/* .claude/hooks/*.sh scripts/*.sh
 
@@ -86,7 +83,6 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versio
 
 ## [Unreleased]
 MD
-  echo "created from serbenda/project-template on $(date +%F)" > .claude/TEMPLATE_VERSION
   # The README is the template's showcase: the project starts from its own skeleton instead,
   # and the template's banner goes away.
   mv docs/templates/README.project.md README.md && rmdir docs/templates 2>/dev/null || true
@@ -113,7 +109,34 @@ if [[ "$NAME" != "project-template" ]]; then
   if [[ -n "$AGENT_BOT" && "$(lower "$AGENT_BOT")" == "$(lower "$ME")" ]]; then
     echo "AGENT_BOT must be a different account from yours ($ME): run this as the owner, not as the agent." >&2; exit 2
   fi
-  [[ -f .github/CODEOWNERS ]] && sed -i.bak "s/ @serbenda$/ @$ME/" .github/CODEOWNERS && rm -f .github/CODEOWNERS.bak
+  old_login="$(sed -n 's/^login=//p' .github/OWNER 2>/dev/null | head -n 1)"
+  [[ -n "$old_login" && -f .github/CODEOWNERS ]] && sed -i.bak "s/ @$old_login$/ @$ME/" .github/CODEOWNERS && rm -f .github/CODEOWNERS.bak
+
+  # 2a. The owner (.github/OWNER), on the first run, when it still names the template's owner: the person running
+  #     this. Name and email from OWNER_NAME / OWNER_EMAIL, else this repo's git identity, else GitHub's (the
+  #     private noreply address, so no personal email ends up in the files). Later runs keep the file.
+  if (( first_run )) && [[ "$(lower "$old_login")" != "$(lower "$ME")" ]]; then
+    gh_id="$(gh api user --jq .id)"
+    o_name="${OWNER_NAME:-$(git config --get user.name || true)}"
+    [[ -n "$o_name" ]] || o_name="$(gh api user --jq '.name // empty' || true)"
+    [[ -n "$o_name" ]] || o_name="$ME"
+    o_noreply="$gh_id+$ME@users.noreply.github.com"
+    o_email="${OWNER_EMAIL:-$(git config --get user.email || true)}"
+    [[ -n "$o_email" ]] || o_email="$o_noreply"
+    if [[ "$o_name" == *[$'\n\\=']* || ! "$o_email" =~ ^[^[:space:]@]+@[^[:space:]@]+$ ]]; then
+      echo "The owner's name or email isn't usable ('$o_name' <$o_email>): set OWNER_NAME and OWNER_EMAIL." >&2; exit 2
+    fi
+    { sed -n '/^#/p' .github/OWNER 2>/dev/null | grep -v '^# GitHub' || true
+      printf 'name=%s\nemail=%s\nlogin=%s\n' "$o_name" "$o_email" "$ME"
+      echo "# GitHub's private address for commits made in its web UI (merges of PRs): Settings → Emails."
+      printf 'noreply=%s\n' "$o_noreply"; } > .github/OWNER.new && mv .github/OWNER.new .github/OWNER
+    # The project README's copyright line names the owner too.
+    if [[ -f README.md ]] && grep -q OWNER_NAME README.md; then
+      awk -v v="$o_name" '{ out = ""; while ((i = index($0, "OWNER_NAME")) > 0) { out = out substr($0, 1, i - 1) v; $0 = substr($0, i + 10) } print out $0 }' \
+        README.md > README.md.new && mv README.md.new README.md
+    fi
+    echo "  ✓ Owner: $o_name <$o_email> (@$ME), in .github/OWNER"
+  fi
 
   # 2b. Project mode: MODE=light ./scripts/setup-repo.sh for experiments and small tools (default: full).
   #     See AGENTS.md → Project mode.
@@ -126,7 +149,22 @@ if [[ "$NAME" != "project-template" ]]; then
   fi
 fi
 
-# 2c. Gitleaks: the pre-commit hook refuses every commit if it is missing (a secrets check that silently
+# 2d. Local commit authorship: the owner's identity, as .github/OWNER says (the hooks check commits against it).
+own_name="$(sed -n 's/^name=//p' .github/OWNER 2>/dev/null | head -n 1)"
+own_email="$(sed -n 's/^email=//p' .github/OWNER 2>/dev/null | head -n 1)"
+if [[ -z "$own_name" || -z "$own_email" ]]; then
+  echo ".github/OWNER is missing or has no name or email: the git hooks can't check authorship without it." >&2; exit 2
+fi
+git config user.name  "$own_name"
+git config user.email "$own_email"
+
+# 2e. The first run is over (its placeholders replaced): recorded only now, so a run stopped halfway is a first
+#     run again next time instead of leaving PROJECT_NAME unreplaced for good.
+if [[ "$NAME" != "project-template" ]] && (( first_run )); then
+  echo "created from serbenda/project-template on $(date +%F)" > .claude/TEMPLATE_VERSION
+fi
+
+# 2f. Gitleaks: the pre-commit hook refuses every commit if it is missing (a secrets check that silently
 #     doesn't run is worse than none). Warn now instead of at the first commit.
 command -v gitleaks >/dev/null 2>&1 ||
   echo "  ⚠ gitleaks is not installed: commits will be refused until you run  brew install gitleaks" >&2
@@ -140,7 +178,12 @@ if ! git ls-remote --exit-code --heads origin development >/dev/null 2>&1; then
   git push origin "HEAD:refs/heads/development"
 fi
 git fetch origin development
-git switch development 2>/dev/null || git switch -c development --track origin/development
+if git rev-parse -q --verify refs/heads/development >/dev/null; then
+  git switch development ||
+    { echo "Could not switch to development (uncommitted changes in the way?): commit or stash them, then run this again." >&2; exit 2; }
+else
+  git switch -c development --track origin/development
+fi
 
 # What you asked for and couldn't be set: listed at the end, and the script fails.
 failed=()

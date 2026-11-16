@@ -29,7 +29,7 @@ You remember nothing between sessions: the project's memory lives in `docs/` (se
 - **Order:** plan approved → code, tests and worklog entry per change → `/close-phase` → `/prepare-pr` (three reviewers, PR from the template) → the owner merges → after-merge checks (DoD section 7) and `development` updated with `main`.
 
 ## Identity and authorship
-- All commits are signed **only** by: `Sergio Santiago Bendaña Quesada <serbenda@gmail.com>`.
+- All commits are signed **only** by the owner named in `.github/OWNER` (name and email; `setup-repo.sh` sets them as this repository's git identity).
 - Never add `Co-Authored-By`, signatures, "Generated with…" footers or AI tool session links to commits, PRs or issues. They are blocked by the agent hook, `.githooks/commit-msg` and the CI **Authorship** job.
 - Check before committing: `git config user.name` and `git config user.email`.
 
