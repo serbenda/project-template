@@ -16,6 +16,17 @@
 - **Pending:**
 -->
 
+## 2026-11-16 — setup-repo tested against GitHub; a second run no longer rewrites the project's docs
+- **Phase / issue:** —
+- **What:** `setup-repo.sh` replaces the `PROJECT_NAME` placeholder only on the first run (no `.claude/TEMPLATE_VERSION` yet). New test: a second run leaves the project's own mentions of `PROJECT_NAME` alone.
+- **Why:** the first run against the real GitHub API (serbenda/template-smoke-test, private, GitHub Pro) re-ran step 2 on a project already set up, and rewrote the places its docs name the placeholder on purpose (README step 3, worklog). The same damage had once been repaired by hand there.
+- **Tested against GitHub:** exit 0; squash merges off, merge commits only, development kept; "Protect main" updated in place (six required checks with `integration_id` 15368, strict; GitHub Actions' check runs on this repo report app 15368), "Protect development" (no deletion or force push) and "Protect tags" (creation, update, deletion; bypass for the repository admin role, actor 5) created. Not tested: that a non-admin is really refused a tag (needs a second account). Private vulnerability reporting and secret scanning warned as expected on a private repo.
+- **Rejected:** excluding the docs from the replacement (the first run must replace their headings).
+- **Files:** scripts/setup-repo.sh, scripts/test-scripts.sh, README.md
+- **Commits:** pending (the owner's)
+- **Tested:** test-scripts 55 on /bin/bash 3.2.
+- **Pending:** template-smoke-test's main now requires SAST and Dependencies, which its older CI doesn't run: sync it from the template before its next PR.
+
 ## 2026-11-16 — Scanner images move to .scanners/ so Dependabot can update them
 - **Phase / issue:** —
 - **What:** `.github/scanners/{semgrep,osv-scanner}/Dockerfile` move to `.scanners/…`. The new folder is a guardrail in every layer: the hooks' path list, the guard (files, shell paths, tripwire), the settings deny and `denyWrite` lists, CODEOWNERS, and the layer-consistency test. ci.yml, dependabot.yml, sync-from-template, the tests and the docs follow the new path.

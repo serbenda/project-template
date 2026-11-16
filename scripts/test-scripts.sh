@@ -117,10 +117,11 @@ expect "no agent account: no review required (the owner can't approve their own 
 expect "CODEOWNERS names this repository's owner" '[[ "$(grep -c " @owner$" "$p/.github/CODEOWNERS")" == "$(grep -c " @serbenda$" "$root/.github/CODEOWNERS")" ]] && ! grep -q " @serbenda$" "$p/.github/CODEOWNERS"'
 
 echo "setup-repo.sh, run a second time:"
-printf '\n## 2026-01-01 — First change\n' >> "$p/docs/WORKLOG.md"
+printf '\n## 2026-01-01 — First change\n- Explains the PROJECT_NAME placeholder.\n' >> "$p/docs/WORKLOG.md"
 run_setup "$p" -- owner/my-app
 finished_ok "$p"
 expect "keeps the project's own worklog" 'grep -q "First change" "$p/docs/WORKLOG.md"'
+expect "leaves the project's own mentions of PROJECT_NAME alone" 'grep -q "Explains the PROJECT_NAME placeholder" "$p/docs/WORKLOG.md"'
 expect "updates the existing ruleset instead of creating another" 'grep -q "api -X PUT repos/owner/my-app/rulesets/42 --input -" "$p.gh/calls.log"'
 
 echo "setup-repo.sh, light mode:"

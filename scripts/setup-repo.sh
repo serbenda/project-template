@@ -74,7 +74,10 @@ chmod +x .githooks/* .claude/hooks/*.sh scripts/*.sh
 # 1b. Start the project's own history: the CHANGELOG and WORKLOG that come with the template describe
 #     the template, not this project. Only on the first run (no .claude/TEMPLATE_VERSION yet) and
 #     never in the template repo itself.
-if [[ "$NAME" != "project-template" && ! -f .claude/TEMPLATE_VERSION ]]; then
+# First run: no .claude/TEMPLATE_VERSION yet (step 1b writes it). Later runs (to update the rulesets) must not
+# touch the project's own files: its docs may name the PROJECT_NAME placeholder on purpose.
+first_run=0; [[ -f .claude/TEMPLATE_VERSION ]] || first_run=1
+if [[ "$NAME" != "project-template" ]] && (( first_run )); then
   awk '{ print } /^-->$/ { exit }' docs/WORKLOG.md > docs/WORKLOG.md.new && mv docs/WORKLOG.md.new docs/WORKLOG.md
   cat > CHANGELOG.md <<'MD'
 # Changelog
@@ -98,9 +101,12 @@ if [[ "$NAME" != "project-template" ]]; then
   #    PROJECT_NAME variable, nor in the Spanish guide, which explains the placeholder)
   #    "|| true": on a second run nothing is left to replace, and grep finding nothing is not an error.
   #    NUL-separated: a file name with spaces stays one name. $NAME was checked above (no sed metacharacters).
-  { grep -rl --null --exclude-dir=.git --exclude-dir=skills --exclude=setup-repo.sh --exclude="test-*.sh" --exclude=README.es.md "PROJECT_NAME" . || true; } |
-    xargs -0 -r sed -i.bak "s/PROJECT_NAME/$NAME/g"
-  find . -name '*.bak' -not -path './.git/*' -delete
+  #    Only on the first run: by then every placeholder is replaced, and a later mention is the project's own.
+  if (( first_run )); then
+    { grep -rl --null --exclude-dir=.git --exclude-dir=skills --exclude=setup-repo.sh --exclude="test-*.sh" --exclude=README.es.md "PROJECT_NAME" . || true; } |
+      xargs -0 -r sed -i.bak "s/PROJECT_NAME/$NAME/g"
+    find . -name '*.bak' -not -path './.git/*' -delete
+  fi
   # CODEOWNERS names the template's owner; in a new project the code owner is you, the person running this
   # (for an organisation's repo the org itself can't be a code owner, so it is never used).
   ME="$(gh api user --jq .login)"
