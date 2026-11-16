@@ -16,6 +16,20 @@
 - **Pending:**
 -->
 
+## 2026-11-16 — The owner's identity in one file: .github/OWNER
+- **Phase / issue:** —
+- **What:**
+  - New `.github/OWNER` (name, email, login, noreply), a guardrail. The git hooks read it from the last commit, the guard from the project's last commit, CI's Authorship job from the PR's base branch (the PR's own file only while the base still names someone other than the repository's owner: the template's, before setup). Nothing reads the copy on disk, so a change counts only once the owner commits it.
+  - `setup-repo.sh` writes it on a project's first run for the person running it (`OWNER_NAME`/`OWNER_EMAIL`, else the repo's git identity, else GitHub's noreply), names them in the project README's copyright line and in CODEOWNERS, and sets the git identity from it on every run. It also says what to do when it can't switch to development.
+  - `sync-from-template.sh` gives a project from before the file the template's (the new hooks refuse every commit without one) and never replaces a project's own.
+  - The name and email are no longer written in the hooks, CI, guard, setup-repo or docs; the tests use a fictitious owner where they can.
+- **Why:** the owner's name and email were hard-coded in about 15 guardrail files: changing the email, or handing the template to someone else, meant editing all of them.
+- **Rejected:** reading the identity from `git config` (anyone can set it, so it can't be the reference it is checked against); a multi-owner list (one owner is the template's model).
+- **Files:** .github/OWNER, .githooks/commit-msg, .githooks/applypatch-msg, .githooks/pre-push, .github/workflows/ci.yml, .claude/hooks/guard.sh, scripts/setup-repo.sh, scripts/sync-from-template.sh, scripts/test-guard.sh, scripts/test-githooks.sh, scripts/test-scripts.sh, AGENTS.md, README.es.md, README.md, docs/templates/README.project.md, .claude/agents/dod-reviewer.md, CHANGELOG.md
+- **Commits:** pending (the owner's)
+- **Tested:** the four suites on /bin/bash 3.2 (guard 1316, git hooks 160, records 46, scripts 63). The Authorship step run locally with the PR's real base and head, after CI caught it exiting (128) when the base has no OWNER yet: `git show` failing inside `$(…)` ended the step under `bash -e`.
+- **Pending:** —
+
 ## 2026-11-16 — Final review (Fable, second pass): fixes for its High, Mediums and Lows
 - **Phase / issue:** —
 - **What:**

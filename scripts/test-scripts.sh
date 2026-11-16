@@ -46,6 +46,8 @@ case "$*" in
   *"--jq .permissions.admin"*) echo "${FAKE_ADMIN:-true}" ;;
   *"--jq .default_branch"*) echo "${FAKE_DEFAULT_BRANCH:-main}" ;;
   "api user --jq .login") echo "${FAKE_LOGIN:-owner}" ;;
+  "api user --jq .id") echo 1234 ;;
+  "api user --jq .name // empty") echo "${FAKE_NAME:-}" ;;
   "api user --jq"*) echo "${FAKE_PLAN:-pro}" ;;
   *"/rulesets?includes_parents=false --jq"*)   # the id of the ruleset the jq filter names, if created
     n="$(printf '%s' "$*" | sed -n 's/.*\.name == "\([^"]*\)".*/\1/p')"
@@ -94,6 +96,9 @@ run_setup "$p" -- owner/my-app
 finished_ok "$p"
 expect "sets the owner identity and the git hooks path" \
   '[[ "$(git -C "$p" config user.email)" == serbenda@gmail.com && "$(git -C "$p" config core.hooksPath)" == .githooks ]]'
+expect "writes .github/OWNER for the person running it (this repo's git identity, GitHub's noreply)" \
+  'grep -qx "login=owner" "$p/.github/OWNER" && grep -qx "email=serbenda@gmail.com" "$p/.github/OWNER" && grep -qx "noreply=1234+owner@users.noreply.github.com" "$p/.github/OWNER"'
+expect "names the owner in the project README" 'grep -q "© Sergio Santiago Bendaña Quesada" "$p/README.md" && ! grep -q OWNER_NAME "$p/README.md"'
 expect "replaces PROJECT_NAME in the docs" \
   '! grep -rq --exclude-dir=.git --exclude-dir=skills --exclude=setup-repo.sh --exclude=README.es.md --exclude="test-*.sh" PROJECT_NAME "$p" && grep -q my-app "$p/docs/VISION.md"'
 expect "starts an empty worklog (only the template comment)" '! grep -q "^## 20" "$p/docs/WORKLOG.md" && grep -q "^-->" "$p/docs/WORKLOG.md"'
@@ -126,11 +131,13 @@ expect "updates the existing ruleset instead of creating another" 'grep -q "api 
 
 echo "setup-repo.sh, light mode:"
 p=$(new_project light-app) || exit 1
-run_setup "$p" MODE=light -- owner/light-app
+run_setup "$p" MODE=light "OWNER_NAME=Ada Owner" OWNER_EMAIL=ada@example.com -- owner/light-app
 finished_ok "$p"
 expect "sets Mode: light in STATE" 'grep -q "^- \*\*Mode:\*\* light" "$p/docs/STATE.md"'
 expect "removes the docs light mode doesn't use (ROADMAP, RISKS, phases)" '[[ ! -e "$p/docs/ROADMAP.md" && ! -e "$p/docs/RISKS.md" && ! -e "$p/docs/phases" ]]'
 expect "keeps the ones it uses" '[[ -f "$p/docs/VISION.md" && -f "$p/docs/SETUP.md" && -f "$p/docs/THREAT_MODEL.md" && -f "$p/docs/WORKLOG.md" ]]'
+expect "OWNER_NAME and OWNER_EMAIL set the owner and the git identity" \
+  'grep -qx "email=ada@example.com" "$p/.github/OWNER" && grep -qx "name=Ada Owner" "$p/.github/OWNER" && [[ "$(git -C "$p" config user.email)" == ada@example.com ]]'
 
 echo "setup-repo.sh, with an agent account (AGENT_BOT):"
 p=$(new_project bot-app) || exit 1
@@ -174,6 +181,7 @@ expect "says main is NOT protected" 'grep -q "main is NOT protected" "$p.out"'
 echo "setup-repo.sh, in the template itself:"
 p=$(new_project project-template) || exit 1
 run_setup "$p" -- owner/project-template
+expect "keeps the template's .github/OWNER" 'cmp -s "$root/.github/OWNER" "$p/.github/OWNER"'
 expect "keeps the template's placeholders, history and README" \
   'grep -q PROJECT_NAME "$p/docs/VISION.md" && grep -q "^## 20" "$p/docs/WORKLOG.md" && grep -q banner.svg "$p/README.md"'
 
@@ -197,6 +205,15 @@ run_sync "$p" --apply
 expect "--apply replaces the template-owned files" '[[ $status == 0 ]] && cmp -s "$tpl/.claude/hooks/guard.sh" "$p/.claude/hooks/guard.sh"'
 expect "--apply never overwrites the files each project adapts" 'grep -q custom "$p/.claude/settings.json"'
 expect "--apply records the template version" '[[ -s "$p/.claude/TEMPLATE_VERSION" ]]'
+
+p=$(old_project no-owner) || exit 1; git -C "$p" rm -q .github/OWNER >/dev/null 2>&1
+git -C "$p" -c core.hooksPath=/dev/null commit -qm "chore: before OWNER" >/dev/null 2>&1
+run_sync "$p" --apply
+expect "--apply gives a project from before .github/OWNER the template's (the hooks need one)" 'cmp -s "$tpl/.github/OWNER" "$p/.github/OWNER"'
+p=$(old_project own-owner) || exit 1; printf 'name=Ada\nemail=ada@example.com\nlogin=ada\n' > "$p/.github/OWNER"
+git -C "$p" add -A >/dev/null 2>&1; git -C "$p" -c core.hooksPath=/dev/null commit -qm "chore: owner" >/dev/null 2>&1
+run_sync "$p" --apply
+expect "--apply never replaces a project's own .github/OWNER" 'grep -qx "login=ada" "$p/.github/OWNER"'
 
 p=$(old_project moved) || exit 1
 mkdir -p "$p/.github/scanners/semgrep"; echo "FROM x" > "$p/.github/scanners/semgrep/Dockerfile"
