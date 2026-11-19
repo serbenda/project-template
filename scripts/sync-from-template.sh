@@ -28,7 +28,26 @@ branch="$(tgit branch --show-current)"
 if [[ "$mode" == "--apply" ]]; then
   [[ -z "$branch" ]] && { echo "The project is on a detached HEAD: switch to development or a branch first." >&2; exit 1; }
   [[ "$branch" =~ ^(main|master)$ ]] && { echo "The project is on $branch: switch to development or a branch first." >&2; exit 1; }
-  [[ -n "$(tgit status --porcelain)" ]] && { echo "The project has uncommitted changes: commit or stash them first." >&2; exit 1; }
+  # git status runs the filters (clean, process) that the project's own .git/config names (directly or through
+  # an include or a per-worktree config), and the config switches above don't cover those: a project whose config
+  # defines one is refused, before any git that could run it. Git LFS's own standard filter is allowed.
+  cfg="$(tgit config --local --list)" || { echo "Could not read $target/.git/config: refusing to run git there." >&2; exit 1; }
+  risky="$(printf '%s\n' "$cfg" | python3 -I -c '
+import re, sys
+lfs = {"filter.lfs.clean": "git-lfs clean -- %f", "filter.lfs.smudge": "git-lfs smudge -- %f",
+       "filter.lfs.process": "git-lfs filter-process", "filter.lfs.required": "true"}
+bad = set()
+for line in sys.stdin.read().splitlines():
+    key, _, value = line.partition("=")
+    k = key.lower()
+    if lfs.get(k) == value:
+        continue
+    if re.match(r"(filter\..*\.(clean|smudge|process)|include\..*|includeif\..*|extensions\.worktreeconfig)$", k):
+        bad.add(k)
+print(" ".join(sorted(bad)))
+')" || { echo "Could not check $target/.git/config: refusing to run git there." >&2; exit 1; }
+  [[ -n "$risky" ]] && { echo "$target/.git/config has settings that make git status run programs: ${risky} - review and remove them (git config --local --unset …), then run again." >&2; exit 1; }
+  [[ -n "$(tgit status --porcelain --ignore-submodules=all)" ]] && { echo "The project has uncommitted changes: commit or stash them first." >&2; exit 1; }
   # Only reviewed, committed template files are copied into a project: its main as on origin, or a tag.
   [[ -n "$(git -C "$template" status --porcelain)" ]] && { echo "The template has uncommitted changes: commit them (or stash them) before --apply." >&2; exit 1; }
   thead="$(git -C "$template" rev-parse HEAD)"
@@ -50,6 +69,16 @@ linked() {
     [[ -L "$p" ]] && return 0
   done
   return 1
+}
+# put_file <relative path> <source> [exec]: writes a file into the project through a temporary file that mktemp
+# creates anew under a random name (never one planted beforehand, like a symlink waiting at a predictable name),
+# then moves it into place, so a hard link or symlink at the destination is replaced, never written through.
+put_file() {
+  local dest="$target/$1" tmp
+  tmp="$(mktemp "$dest.sync-tmp.XXXXXX")" || { echo "✗ could not create a temporary file next to $dest" >&2; exit 1; }
+  cat "$2" > "$tmp"
+  if [[ "${3:-}" == exec ]]; then chmod 0755 "$tmp"; else chmod 0644 "$tmp"; fi
+  mv -f "$tmp" "$dest"
 }
 # no_symlink <relative path>: refuse if it is linked in the project, so --apply can never write outside it (a
 # planted .claude/hooks -> ~/somewhere would redirect cp).
@@ -138,10 +167,7 @@ for f in "${owned[@]}"; do
   if [[ "$mode" == "--apply" ]]; then
     no_symlink "$f"
     mkdir -p "$(dirname "$target/$f")"
-    # A new file moved into place: a hard link at the destination is replaced, never written through.
-    cp "$template/$f" "$target/$f.sync-tmp.$$"
-    [[ "$f" == *.sh || "$f" == .githooks/* ]] && chmod +x "$target/$f.sync-tmp.$$"
-    mv -f "$target/$f.sync-tmp.$$" "$target/$f"
+    if [[ "$f" == *.sh || "$f" == .githooks/* || -x "$template/$f" ]]; then put_file "$f" "$template/$f" exec; else put_file "$f" "$template/$f"; fi
   fi
 done
 (( changes == 0 )) && echo "  (all up to date)"
@@ -154,7 +180,7 @@ if [[ ! -e "$target/.github/OWNER" && -f "$template/.github/OWNER" ]]; then
   if [[ "$mode" == "--apply" ]]; then
     no_symlink .github/OWNER
     mkdir -p "$target/.github"
-    cp "$template/.github/OWNER" "$target/.github/OWNER.sync-tmp.$$" && mv -f "$target/.github/OWNER.sync-tmp.$$" "$target/.github/OWNER"
+    put_file .github/OWNER "$template/.github/OWNER"
   fi
 fi
 
@@ -190,8 +216,7 @@ echo
 if [[ "$mode" == "--apply" ]]; then
   no_symlink .claude/TEMPLATE_VERSION
   ref="$(git -C "$template" describe --exact-match --tags HEAD 2>/dev/null || echo main)"
-  echo "$version ($ref)" > "$target/.claude/TEMPLATE_VERSION.sync-tmp.$$"
-  mv -f "$target/.claude/TEMPLATE_VERSION.sync-tmp.$$" "$target/.claude/TEMPLATE_VERSION"
+  put_file .claude/TEMPLATE_VERSION <(echo "$version ($ref)")
   echo "✓ Applied. In the project: review 'git diff', merge the files above by hand, run scripts/test-guard.sh,"
   echo "  add a worklog entry and commit on '$branch'. The files copied are guardrails: you, the owner, commit them"
   echo "  with  GUARDRAILS_OWNER_CHANGE=1 git commit …  (the agent can't)."

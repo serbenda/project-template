@@ -16,6 +16,72 @@
 - **Pending:**
 -->
 
+## 2026-11-19 — Guard: older gaps from the third review (grouped options, worktree hooks)
+- **Phase / issue:** — (follow-up to PR #21, at the owner's request)
+- **What:** risky short options inside a group (`git grep -nO<program>`, `clone -qc…`, `archive -vo…`) and
+  abbreviated long ones (`clone --recurs`, `--ref`) are refused; before hook-running git in a linked worktree, its
+  `.githooks` and `.claude/hooks` must match its last commit; `git push -u origin HEAD` from a work branch and
+  `PAGER=cat git …` pass. False positives from the third round fixed too (`git add -A` inside a worktree, other
+  commands before git at the project's root except before `git add`/`stash`).
+- **Why:** the third design review of PR #21 found these older gaps (they predate it); PR #21 was merged before
+  this commit (e4ce546) reached it.
+- **Rejected:** a rule for commands after git and for redirections of git output: Claude Code runs a call outside
+  the sandbox only when every command in it is excluded, and a redirect, `cd` or `$(…)` keeps it sandboxed
+  (code.claude.com/docs/en/sandboxing).
+- **Files:** .claude/hooks/guard.sh, scripts/test-guard.sh, README.md, CHANGELOG.md, docs/SECURITY_GUIDE.md
+- **Commits:** e4ce546 (owner) and this one.
+- **Tested:** guard 1391 and scripts 69 on /bin/bash 3.2; the new blocking cases fail against PR #21's guard; the
+  worktree block checked directly (commit refused with changed hooks, status allowed).
+- **Pending:** check in a real session whether `excludedCommands: ["git", "gh"]` (no wildcard) matches git with
+  arguments, as the docs say it doesn't.
+
+## 2026-11-19 — Security audit: git only on the project's repository; sync refuses risky configs
+- **Phase / issue:** — (a full security audit run in bsketch, a project made from this template)
+- **What:**
+  - `.claude/settings.json` `env`: every git gets `safe.bareRepository=explicit` and `core.fsmonitor=false`.
+  - `guard.sh`: `own_repo()` finds the repository git would use (hook input `cwd` plus each `-C` in turn, `.git`
+    dirs, worktree gitfiles, git-directory layouts) and blocks git and gh unless it is the project's (a worktree
+    of the project counts; a submodule doesn't). Blocked too: git/gh after a `cd` or after a command that could
+    write in the same command; `-C` with `$`, `` ` ``, `~`, empty, or `..` after a folder; `git submodule`,
+    `archive --remote`, `upload-archive/-pack`, `receive-pack`; `git add` taking in a nested repository; a
+    project with gitlinks (tripwire). The guard's own git calls run with `core.fsmonitor=false`.
+  - `sync-from-template.sh --apply`: reads the project's config (refusing if it can't) and refuses filters,
+    includes and `extensions.worktreeConfig` (LFS's standard filter allowed) before `git status
+    --ignore-submodules=all`; temporary files from `mktemp` (`put_file`), with their modes set.
+- **Why:** audit findings — an agent could plant a git directory under an ordinary name and run
+  `git -C gd status`, which runs its `core.fsmonitor` outside the sandbox (High, reproduced: the marker ran);
+  `--apply`'s status ran a project's clean filter on the host (Medium); `*.sync-tmp.$$` names were predictable
+  (Low). The first fix got a review round (Opus, Sonnet, Haiku): chained `-C`, a repo made earlier in the same
+  command, quoted `~`, submodule recursion, `commondir` layouts, `-C` tokens differing from git's argv, `archive
+  --remote`; and false positives (branch changes, worktrees, monorepos, sync rejecting harmless keys). All fixed.
+- **Rejected:** taking git out of `excludedCommands` (it needs the network and the real `.git`);
+  `diff.ignoreSubmodules=all` as the submodule fix (tested: a `.gitmodules` with `ignore = none` overrides it,
+  and the filter ran); relying on the guard alone (it looks before the command runs: a background process can
+  change the disk in between, which the run-time settings close for planted repositories).
+- **Files:** .claude/settings.json, .claude/hooks/guard.sh, scripts/sync-from-template.sh, scripts/test-guard.sh,
+  scripts/test-scripts.sh, docs/SECURITY_GUIDE.md, README.md, CHANGELOG.md
+- **Commits:** pending (the owner's: guardrail files)
+- **Tested:** git 2.54 with the settings' env: a planted layout and a `commondir` one are refused (rc 128, the
+  marker never written; without the env the planted one ran it); the project, its worktree and `git -C .git log`
+  work. Guard 1364 cases, scripts 69, git hooks 160, records 46, also on /bin/bash 3.2; the new blocking cases
+  fail against the old guard and sync.
+- **Second round (Sonnet):** `git ls-remote`/`git clone` of a folder or `file://` started upload-pack there
+  (its config's `core.alternateRefsCommand`): now only origin or a remote URL, and no `--recurse-submodules`,
+  `--reference`. `git add` missed a repository deeper down or an ignored one added with `-f`: it now walks what is
+  added (skipping ignored folders unless forced) and refuses `git add -f` of everything.
+- **Third round:** false positives fixed — `git add -A` inside a worktree of the project (the walk now starts
+  from the work tree git uses), and other commands before git are allowed at the project's root without `-C`
+  except before `git add`/`stash` (`npm test && git commit` works again).
+- **Older gaps from the third design round, closed here at the owner's request:** grouped short options
+  (`git grep -nO<program>`, `clone -qc…`, `archive -vo`) and abbreviated long ones (`clone --recurs`, `--ref`) are
+  refused; a linked worktree's `.githooks`/`.claude/hooks` must match its commit before hook-running git there;
+  `git push -u origin HEAD` and `PAGER=cat git` now pass. Not changed, after reading Claude Code's sandboxing docs
+  (code.claude.com/docs/en/sandboxing): a call runs outside the sandbox only when every command in it matches
+  `excludedCommands`, and a redirect to a file, a `cd` or a `$(…)` keeps it sandboxed, so commands after git and
+  `git log > ~/.gitconfig` stay sandboxed. The same page says an entry without a wildcard (`"git"`) matches only
+  the bare command: to check in a real session whether git with arguments runs sandboxed today.
+- **Pending:** that check of `excludedCommands` matching; shellcheck and CI on Linux.
+
 ## 2026-11-16 — The owner's identity in one file: .github/OWNER
 - **Phase / issue:** —
 - **What:**
