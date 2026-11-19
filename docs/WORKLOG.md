@@ -50,8 +50,18 @@
   (its config's `core.alternateRefsCommand`): now only origin or a remote URL, and no `--recurse-submodules`,
   `--reference`. `git add` missed a repository deeper down or an ignored one added with `-f`: it now walks what is
   added (skipping ignored folders unless forced) and refuses `git add -f` of everything.
-- **Pending:** the third round (design and false positives; the second's were cut off by a network error);
-  shellcheck and CI on Linux (Actions blocked by a billing problem on 2026-11-19).
+- **Third round:** false positives fixed — `git add -A` inside a worktree of the project (the walk now starts
+  from the work tree git uses), and other commands before git are allowed at the project's root without `-C`
+  except before `git add`/`stash` (`npm test && git commit` works again).
+- **Older gaps from the third design round, closed here at the owner's request:** grouped short options
+  (`git grep -nO<program>`, `clone -qc…`, `archive -vo`) and abbreviated long ones (`clone --recurs`, `--ref`) are
+  refused; a linked worktree's `.githooks`/`.claude/hooks` must match its commit before hook-running git there;
+  `git push -u origin HEAD` and `PAGER=cat git` now pass. Not changed, after reading Claude Code's sandboxing docs
+  (code.claude.com/docs/en/sandboxing): a call runs outside the sandbox only when every command in it matches
+  `excludedCommands`, and a redirect to a file, a `cd` or a `$(…)` keeps it sandboxed, so commands after git and
+  `git log > ~/.gitconfig` stay sandboxed. The same page says an entry without a wildcard (`"git"`) matches only
+  the bare command: to check in a real session whether git with arguments runs sandboxed today.
+- **Pending:** that check of `excludedCommands` matching; shellcheck and CI on Linux.
 
 ## 2026-11-16 — The owner's identity in one file: .github/OWNER
 - **Phase / issue:** —
