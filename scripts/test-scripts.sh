@@ -277,6 +277,39 @@ p=$(old_project via-link) || exit 1; ln -s "$tpl" "$tmp/tpl-alias"
 ("$BASH" "$tpl/scripts/sync-from-template.sh" "$tmp/tpl-alias" --apply >"$p.out" 2>&1); status=$?
 expect "a symlink to the template is taken for the template itself" '[[ $status == 2 && ! -e "$tpl/.claude/TEMPLATE_VERSION" ]]'
 
+# Security audit, 2026-11-19: the project's own .git/config could make the owner's git run a program (a clean
+# filter runs on git status), and the temporary files had predictable names a symlink could wait at.
+p=$(old_project filter) || exit 1
+git -C "$p" config filter.pwn.clean "touch $tmp/filter-ran; cat"
+echo '* filter=pwn' > "$p/.git/info/attributes"; touch "$p/docs/STATE.md"
+run_sync "$p" --apply
+expect "--apply refuses a project whose .git/config makes git run programs, before running git status there" \
+  '[[ $status == 1 && ! -e "$tmp/filter-ran" ]] && grep -q "filter.pwn.clean" "$p.out" && grep -q "# old guard" "$p/.claude/hooks/guard.sh"'
+
+p=$(old_project lfs) || exit 1
+git -C "$p" config filter.lfs.clean "git-lfs clean -- %f"; git -C "$p" config filter.lfs.process "git-lfs filter-process"
+git -C "$p" config diff.pdf.textconv "pdftotext"
+run_sync "$p" --apply
+expect "--apply accepts Git LFS's standard filter and a diff textconv (git status runs neither of ours)" '[[ $status == 0 ]] && cmp -s "$tpl/.claude/hooks/guard.sh" "$p/.claude/hooks/guard.sh"'
+
+p=$(old_project lfs-changed) || exit 1
+git -C "$p" config filter.lfs.clean "git-lfs clean -- %f; touch $tmp/lfs-ran"
+run_sync "$p" --apply
+expect "--apply refuses an LFS filter changed from the standard one" '[[ $status == 1 && ! -e "$tmp/lfs-ran" ]]'
+
+p=$(old_project tmp-links) || exit 1
+victim="$tmp/victim"; echo "keep" > "$victim"; echo '*.sync-tmp.*' >> "$p/.git/info/exclude"
+for ((n = $$; n < $$ + 3000; n++)); do ln -s "$victim" "$p/.claude/TEMPLATE_VERSION.sync-tmp.$n"; done
+run_sync "$p" --apply
+expect "--apply never writes through a symlink waiting at a temporary file's name" \
+  '[[ $status == 0 && "$(cat "$victim")" == keep && ! -L "$p/.claude/TEMPLATE_VERSION" && -s "$p/.claude/TEMPLATE_VERSION" ]]'
+expect "…and the files it writes keep their modes (scripts executable, the rest not)" \
+  '[[ -x "$p/scripts/test-guard.sh" && -x "$p/.githooks/commit-msg" && ! -x "$p/.claude/TEMPLATE_VERSION" ]]'
+# The PIDs above may not include the one the run gets (macOS doesn't hand them out in order), so the rule itself
+# is checked too: temporary names come from mktemp, never from the process ID.
+expect "temporary files are named by mktemp, not by the process ID" \
+  '! grep -Eq "sync-tmp\.\\\$\\\$" "$tpl/scripts/sync-from-template.sh" && grep -q "mktemp \"\$dest.sync-tmp.XXXXXX\"" "$tpl/scripts/sync-from-template.sh"'
+
 echo
 if (( failures == 0 )); then echo "✓ All script tests pass."; exit 0
 else echo "✗ $failures script tests fail."; exit 1; fi

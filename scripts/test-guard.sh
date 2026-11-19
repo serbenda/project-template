@@ -34,6 +34,8 @@ check() {  # check <expected> <description> <json>   (runs on branch development
   fi
 }
 bash_json() { python3 -c 'import json,sys; print(json.dumps({"tool_name":"Bash","tool_input":{"command":sys.argv[1]}}))' "$1"; }
+# bash_in <dir> <command>: the session's directory is <dir> (the hook input's "cwd"), as in a real session.
+bash_in() { python3 -c 'import json,sys; print(json.dumps({"tool_name":"Bash","cwd":sys.argv[1],"tool_input":{"command":sys.argv[2]}}))' "$1" "$2"; }
 file_json() { python3 -c 'import json,sys; print(json.dumps({"tool_name":sys.argv[1],"tool_input":{"file_path":sys.argv[2],"content":sys.argv[3]}}))' "$1" "$2" "${3:-}"; }
 
 echo "Must BLOCK:"
@@ -197,8 +199,8 @@ check 0 "message mentioning /usr/bin/git push" "$(bash_json 'git commit -m "docs
 check 0 "message mentioning --no-verify"      "$(bash_json 'git commit -m "docs: never use --no-verify"')"
 check 2 "git merge --no-commit (can fast-forward)" "$(bash_json 'git merge --no-commit side')"
 check 0 "git merge --abort"                   "$(bash_json 'git merge --abort')"
-CLAUDE_PROJECT_DIR="$own" check 0 "set the owner email (from .github/OWNER)" "$(bash_json 'git config user.email ada@example.com')"
-CLAUDE_PROJECT_DIR="$own" check 0 "set the owner name (from .github/OWNER)"  "$(bash_json 'git config user.name "Ada Owner"')"
+CLAUDE_PROJECT_DIR="$own" check 0 "set the owner email (from .github/OWNER)" "$(bash_in "$own" 'git config user.email ada@example.com')"
+CLAUDE_PROJECT_DIR="$own" check 0 "set the owner name (from .github/OWNER)"  "$(bash_in "$own" 'git config user.name "Ada Owner"')"
 CLAUDE_PROJECT_DIR="$own" check 2 "an email that isn't the owner's"          "$(bash_json 'git config user.email eve@example.com')"
 check 2 "no .github/OWNER committed: no identity can be set" "$(bash_json 'git config user.email ada@example.com')"
 check 0 "set hooksPath to .githooks"          "$(bash_json 'git config core.hooksPath .githooks')"
@@ -233,7 +235,7 @@ check 0 "normal commit"                   "$(bash_json 'git commit -m "feat: add
 check 0 "commit mentioning .claude/"      "$(bash_json 'git commit -m "chore: adjust permissions in .claude/settings.json"')"
 check 0 "push to development"             "$(bash_json 'git push origin development')"
 check 0 "hook tests"                      "$(bash_json 'bash scripts/test-guard.sh')"
-CLAUDE_PROJECT_DIR="$own" check 0 "correct git email, quoted"   "$(bash_json 'git config user.email "ada@example.com"')"
+CLAUDE_PROJECT_DIR="$own" check 0 "correct git email, quoted"   "$(bash_in "$own" 'git config user.email "ada@example.com"')"
 check 0 "Read of README.md"               "$(file_json Read /repo/README.md)"
 check 0 "Read of docs/SETUP.md"           "$(file_json Read /repo/docs/SETUP.md)"
 check 0 "normal Write"                    "$(file_json Write /repo/src/app.py 'print(1)')"
@@ -1158,7 +1160,7 @@ git add {foo\,bar}
 2
 git add {foo,bar}
 %%
-0
+2
 python3 -c 'print(1)' && git status
 %%
 0
@@ -2914,7 +2916,7 @@ pip install -e .[dev]
 0
 npx vitest run src/git
 %%
-0
+2
 git submodule status
 %%
 2
@@ -3634,6 +3636,81 @@ branch_dir="$tmp/main"
 check 2 "commit while on main"            "$(bash_json 'git commit -m "fix: x"')"
 check 2 "plain push while on main"        "$(bash_json 'git push')"
 branch_dir="$tmp/development"
+
+echo "git and gh only on the project's repository, must BLOCK:"
+# A repository the agent could plant under any name (security audit, 2026-11-19): git finds it by its layout
+# and runs what its config names, outside the sandbox. Its program writes a marker that must never appear.
+proj_dir="$tmp/development"
+marker="$tmp/planted-ran"
+planted() {  # planted <dir>: a git directory with an ordinary name whose config runs a program
+  mkdir -p "$1/objects" "$1/refs/heads" "$1-wt" && printf 'ref: refs/heads/main\n' > "$1/HEAD" &&
+  printf '[core]\n\trepositoryformatversion = 0\n\tbare = false\n\tworktree = %s\n\tfsmonitor = touch %s\n[diff]\n\texternal = touch %s\n' "$1-wt" "$marker" "$marker" > "$1/config"
+}
+planted "$proj_dir/gd"
+planted "$tmp/outside"
+mkdir -p "$proj_dir/nested" && git init -q "$proj_dir/nested"
+mkdir -p "$proj_dir/linked" && printf 'gitdir: %s\n' "$tmp/outside" > "$proj_dir/linked/.git"
+mkdir -p "$proj_dir/js/app"
+check 2 "git -C into a planted git directory"             "$(bash_in "$proj_dir" 'git -C gd status')"
+check 2 "git -C into a planted one, diff"                 "$(bash_in "$proj_dir" 'git -C gd diff')"
+check 2 "git status with the session inside a planted one" "$(bash_in "$proj_dir/gd" 'git status')"
+check 2 "git status from a planted repo's work tree"      "$(bash_in "$proj_dir/gd-wt" 'git -C ../gd status')"
+check 2 "git -C into a nested repository"                 "$(bash_in "$proj_dir" 'git -C nested status')"
+check 2 "git -C into a folder whose .git file points away" "$(bash_in "$proj_dir" 'git -C linked log')"
+check 2 "git -C to a repository outside the project"      "$(bash_in "$proj_dir" "git -C $tmp/outside status")"
+check 2 "git -C with a variable in the path"              "$(bash_in "$proj_dir" 'git -C "$HOME/x" status')"
+check 2 "cd, then git, in one command"                    "$(bash_in "$proj_dir" 'cd gd && git status')"
+check 2 "cd into the project itself, then git"            "$(bash_in "$proj_dir" "cd $proj_dir && git status")"
+check 2 "gh with the session inside another repository"   "$(bash_in "$proj_dir/nested" 'gh pr list')"
+check 2 "cd, then gh, in one command"                     "$(bash_in "$proj_dir" 'cd nested && gh pr list')"
+# From the review: several -C apply in turn (an absolute one replaces the rest), ~ is not expanded by git when
+# quoted, and a repository made earlier in the same command isn't on disk yet when the guard looks.
+check 2 "-C chain ending in an absolute path elsewhere"   "$(bash_in "$proj_dir" "git -C js -C $tmp/outside status")"
+check 2 "-C chain with .. out of the project"             "$(bash_in "$proj_dir" "git -C js -C ../../outside status")"
+check 2 "-C . then an absolute path elsewhere"            "$(bash_in "$proj_dir" "git -C . -C $tmp/outside status")"
+check 2 "-C with a quoted ~"                              "$(bash_in "$proj_dir" "git -C '~/x' status")"
+check 2 "a repository made, then used, in one command"    "$(bash_in "$proj_dir" "mkdir -p gd2/objects gd2/refs; echo 'ref: refs/heads/main' > gd2/HEAD; git -C gd2 status")"
+check 2 "a symlink made, then used, in one command"       "$(bash_in "$proj_dir" "ln -s $tmp/outside lnk; git -C lnk status")"
+check 2 "planted in the session's own folder, then git"    "$(bash_in "$proj_dir/js" "mkdir -p objects refs; echo x > HEAD; git status")"
+check 2 "gh after another command, away from the root"    "$(bash_in "$proj_dir/js" "mkdir x && gh pr list")"
+check 2 "a submodule's own repository"                    "$(bash_in "$proj_dir" 'git -C linked status')"
+# Second review round: -C as git gets it, commands that start git elsewhere, submodules, writes before git.
+check 2 "-C with .. after a folder (a symlink there leads away)" "$(bash_in "$proj_dir" 'git -C lnk/../x status')"
+check 2 "an empty -C (it vanishes from the tokens)"       "$(bash_in "$proj_dir" 'git -C "" -C status status')"
+mkdir -p "$proj_dir/a b" && git init -q "$proj_dir/a b"
+check 2 "-C with a quoted space into a nested repository"  "$(bash_in "$proj_dir" 'git -C "a b" status')"
+check 2 "git archive --remote (git in another repository)" "$(bash_in "$proj_dir" "git archive --remote=$tmp/outside HEAD")"
+check 2 "git upload-pack"                                 "$(bash_in "$proj_dir" "git upload-pack $tmp/outside")"
+check 2 "git submodule"                                   "$(bash_in "$proj_dir" 'git submodule status')"
+check 2 "git add with a nested repository in the project" "$(bash_in "$proj_dir" 'git add -A')"
+check 2 "a file written, then git"                        "$(bash_in "$proj_dir" 'echo x > f && git status')"
+check 2 "a script run, then git"                          "$(bash_in "$proj_dir" 'bash make.sh; git status')"
+echo "git in the project's own repository, must ALLOW:"
+check 0 "git commands chained with each other"            "$(bash_in "$proj_dir" 'git add js && git status')"
+check 0 "git add of a file, with a nested repository elsewhere" "$(bash_in "$proj_dir" 'git add js/app')"
+check 0 "-C chain that stays in the project"              "$(bash_in "$proj_dir" 'git -C js -C app status')"
+check 0 "git first, then another command"                 "$(bash_in "$proj_dir" 'git status && echo done')"
+check 0 "output thrown away, then git"                   "$(bash_in "$proj_dir" 'echo x >/dev/null 2>&1 && git status')"
+check 0 "git archive of this repository"                  "$(bash_in "$proj_dir" 'git archive --format=zip HEAD')"
+check 0 "another command, then git, at the project's root" "$(bash_in "$proj_dir" 'echo start && git status')"
+check 0 "a new branch, then git, in one command"          "$(bash_in "$proj_dir" 'git switch -c feat/x && git status')"
+check 0 "a new branch, then gh, in one command"           "$(bash_in "$proj_dir" 'git switch -c feat/x && gh pr view 1')"
+mkdir -p "$proj_dir/.git/worktrees/wt" "$proj_dir/.claude/worktrees/wt"
+printf 'gitdir: %s\n' "$proj_dir/.git/worktrees/wt" > "$proj_dir/.claude/worktrees/wt/.git"
+check 0 "git in a worktree of the project itself"         "$(bash_in "$proj_dir/.claude/worktrees/wt" 'git status')"
+CLAUDE_PROJECT_DIR="$proj_dir/js" check 0 "a project in a subfolder of its repository (monorepo)" "$(bash_in "$proj_dir/js" 'git status')"
+check 0 "git status in the project"                       "$(bash_in "$proj_dir" 'git status')"
+check 0 "git status from a project folder"                "$(bash_in "$proj_dir/js/app" 'git status')"
+check 0 "git -C into a project folder"                    "$(bash_in "$proj_dir" 'git -C js log --oneline')"
+check 0 "git -C with .. that stays in the project"        "$(bash_in "$proj_dir/js/app" 'git -C ../.. diff')"
+sm="$tmp/with-submodule"; git init -q "$sm" && git -C "$sm" update-index --add --cacheinfo "160000,$(printf '%040d' 1),vendor/lib" &&
+  git -C "$sm" -c user.name=t -c user.email=t@t -c core.hooksPath=/dev/null commit -qm sub >/dev/null 2>&1
+CLAUDE_PROJECT_DIR="$sm" check 2 "tripwire: a repository with a submodule (gitlink)" "$(bash_in "$sm" 'git status')"
+python3 -c 'import json,sys; e=json.load(open(sys.argv[1])).get("env",{}); n=int(e.get("GIT_CONFIG_COUNT",0)); c={e.get(f"GIT_CONFIG_KEY_{i}"): e.get(f"GIT_CONFIG_VALUE_{i}") for i in range(n)}; sys.exit(0 if c.get("safe.bareRepository")=="explicit" and c.get("core.fsmonitor")=="false" else 1)' "$root/.claude/settings.json" &&
+  echo "  ok    settings.json gives every git safe.bareRepository=explicit and core.fsmonitor=false" ||
+  { echo "  FAIL  settings.json must give git safe.bareRepository=explicit and core.fsmonitor=false"; failures=$((failures + 1)); }
+[[ -e "$marker" ]] && { echo "  FAIL  the planted repository's program ran"; failures=$((failures + 1)); } ||
+  echo "  ok    the planted repository's program never ran"
 
 echo
 if [[ $failures -eq 0 ]]; then echo "✓ All tests pass."; else echo "✗ $failures tests fail."; exit 1; fi
