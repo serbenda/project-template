@@ -46,7 +46,12 @@
   marker never written; without the env the planted one ran it); the project, its worktree and `git -C .git log`
   work. Guard 1364 cases, scripts 69, git hooks 160, records 46, also on /bin/bash 3.2; the new blocking cases
   fail against the old guard and sync.
-- **Pending:** a second review round; shellcheck and CI on Linux.
+- **Second round (Sonnet):** `git ls-remote`/`git clone` of a folder or `file://` started upload-pack there
+  (its config's `core.alternateRefsCommand`): now only origin or a remote URL, and no `--recurse-submodules`,
+  `--reference`. `git add` missed a repository deeper down or an ignored one added with `-f`: it now walks what is
+  added (skipping ignored folders unless forced) and refuses `git add -f` of everything.
+- **Pending:** the third round (design and false positives; the second's were cut off by a network error);
+  shellcheck and CI on Linux (Actions blocked by a billing problem on 2026-11-19).
 
 ## 2026-11-16 — The owner's identity in one file: .github/OWNER
 - **Phase / issue:** —

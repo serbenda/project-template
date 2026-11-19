@@ -1057,22 +1057,54 @@ for p in "${parts[@]+"${parts[@]}"}"; do
     case "$sub" in
       submodule) block "git submodule is not used by the agent: submodules run what their own config names. Ask the owner." ;;
       upload-archive|upload-pack|receive-pack) block "git $sub runs git in another repository: not used by the agent." ;;
+      clone|ls-remote)
+        # From a folder (or file://) git starts upload-pack in that repository, which runs what its config names
+        # (core.alternateRefsCommand…): only origin or a remote URL.
+        src=""; skip=0
+        for t in "${rt[@]+"${rt[@]}"}"; do
+          if (( skip )); then skip=0; continue; fi
+          case "$t" in
+            --recurse-submodules*|--recursive|--reference*|--separate-git-dir*|--bundle-uri*)
+              block "git $sub $t reaches into other repositories: not used by the agent." ;;
+            -b|--branch|-o|--origin|--depth|--filter|-j|--jobs|--shallow-since|--shallow-exclude|--server-option|--sort) skip=1 ;;
+            -*) ;;
+            *) src="${t//$US/ }"; break ;;
+          esac
+        done
+        if [[ -n "$src" && "$src" != origin ]] && ! [[ "$src" =~ ^(https?|ssh|git)://[^/] || "$src" =~ ^[A-Za-z0-9._-]+@[A-Za-z0-9.-]+: ]]; then
+          block "git $sub from '$src': only origin or a remote URL (https://, ssh://, git@host:), never a folder or file:// (git would run what that repository's config names)."
+        fi ;;
       archive) has '(^| )--remote(=| |$)|(^| )--exec(=| |$)' " ${tok[*]:$((i + 1))} " && block "git archive --remote runs git in another repository: archive from this one." ;;
       add)  # adding a folder that holds another repository makes a submodule (a gitlink) that status then enters
-        nested="$(git -C "$proj" -c core.fsmonitor=false ls-files --others --exclude-standard --directory -z 2>/dev/null |
-          python3 -c '
-import os, sys
-root, cwd, args = sys.argv[1], sys.argv[2], sys.argv[3:]
+        nested="$(printf '%s' "$input" | python3 -c '
+import json, os, subprocess, sys
+proj, args = os.path.realpath(sys.argv[1]), sys.argv[2:]
+try:
+    cwd = json.load(sys.stdin).get("cwd") or os.getcwd()
+except Exception:
+    cwd = os.getcwd()
+force = any(a in ("-f", "--force") or (a.startswith("-") and not a.startswith("--") and "f" in a) for a in args)
 specs = [a for a in args if not a.startswith("-")]
-everything = any(a in ("-A", "--all") or a.startswith("--pathspec-from-file") for a in args) or not specs
-paths = [os.path.relpath(os.path.realpath(os.path.join(cwd, x)), os.path.realpath(root)) for x in specs]
-for e in sys.stdin.read().split("\0"):
-    if not (e.endswith("/") and os.path.lexists(os.path.join(root, e, ".git"))):
+everything = any(a in ("-A", "--all") or a.startswith("--pathspec-from-file") for a in args) or not specs or "." in specs
+if force and everything:
+    print("git add -f of everything"); sys.exit()
+roots = [proj] if everything else [os.path.realpath(os.path.join(cwd, x)) for x in specs]
+ignored = set()
+if not force:  # git add skips ignored folders unless forced: so does this walk (node_modules…)
+    out = subprocess.run(["git", "-C", proj, "-c", "core.fsmonitor=false", "ls-files", "--others", "--ignored",
+                          "--exclude-standard", "--directory", "-z"], capture_output=True, text=True).stdout
+    ignored = {os.path.join(proj, e.rstrip("/")) for e in out.split("\0") if e}
+for root in roots:
+    if not os.path.isdir(root) or os.path.islink(root):
         continue
-    e = e.rstrip("/")
-    if everything or any(p == "." or e == p or e.startswith(p + "/") or p.startswith(e + "/") or any(c in p for c in "*?[") for p in paths):
-        print(e); break
-' "$proj" "$(printf '%s' "$input" | python3 -c 'import json,os,sys; print(json.load(sys.stdin).get("cwd") or os.getcwd())' 2>/dev/null || pwd)" "${rt[@]+"${rt[@]}"}" 2>/dev/null)"
+    for d, dirs, files in os.walk(root):
+        if d in ignored:
+            dirs[:] = []
+            continue
+        if d != proj and (".git" in dirs or ".git" in files):
+            print(os.path.relpath(d, proj)); sys.exit()
+        dirs[:] = [x for x in dirs if x != ".git" and os.path.join(d, x) not in ignored]
+' "$proj" "${rt[@]+"${rt[@]}"}" 2>/dev/null)"
         [[ -n "$nested" ]] && block "git add with another repository inside the project ($nested): it would become a submodule. Remove it or ignore it first." ;;
     esac
     case "$sub" in

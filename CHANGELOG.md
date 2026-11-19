@@ -11,8 +11,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versio
   repository git would use (from the hook input's `cwd` and any `-C`, as git does) and refuses anything but the
   project's; git or gh after a `cd`, or after any command that could write, in the same command are refused, and
   so are `-C` paths with variables, `~`, an empty value or `..` after a folder, `git submodule`,
-  `git archive --remote` and `upload-pack`, a `git add` that would take in another repository, and a project with
-  submodules (until the owner reviews them).
+  `git archive --remote` and `upload-pack`, `git clone`/`ls-remote` from a folder or `file://` (only origin or a
+  remote URL), a `git add` that would take in another repository (at any depth, or an ignored one with `-f`;
+  `git add -f` of everything), and a project with submodules (until the owner reviews them).
 - **`.claude/settings.json` passes git `safe.bareRepository=explicit` and `core.fsmonitor=false`** (`env`), so a
   repository planted under another name is refused by git itself when the command runs, whatever the guard saw
   before. The guard's own git calls in the project run with `core.fsmonitor=false`.
