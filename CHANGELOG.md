@@ -3,6 +3,8 @@
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioned with [SemVer](https://semver.org/).
 
 ## [Unreleased]
+
+## [1.0.1] - 2026-11-19
 ### Security
 - **guard.sh: git and gh only on the project's repository.** git and gh run outside the sandbox, and git runs the
   programs named in the config of the repository it works on (`core.fsmonitor` on status, `diff.external` on
