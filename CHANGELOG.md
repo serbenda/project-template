@@ -3,6 +3,26 @@
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioned with [SemVer](https://semver.org/).
 
 ## [Unreleased]
+### Security
+- **guard.sh: git and gh only on the project's repository.** git and gh run outside the sandbox, and git runs the
+  programs named in the config of the repository it works on (`core.fsmonitor` on status, `diff.external` on
+  diff…). The tripwire vetted only the project's `.git/config`, while `git -C <dir>`, a `cd` before git or the
+  session's own directory could point git at a repository planted under any name. The guard now finds the
+  repository git would use (from the hook input's `cwd` and any `-C`, as git does) and refuses anything but the
+  project's; git or gh after a `cd`, or after any command that could write, in the same command are refused, and
+  so are `-C` paths with variables, `~`, an empty value or `..` after a folder, `git submodule`,
+  `git archive --remote` and `upload-pack`, `git clone`/`ls-remote` from a folder or `file://` (only origin or a
+  remote URL), a `git add` that would take in another repository (at any depth, or an ignored one with `-f`;
+  `git add -f` of everything), and a project with submodules (until the owner reviews them).
+- **`.claude/settings.json` passes git `safe.bareRepository=explicit` and `core.fsmonitor=false`** (`env`), so a
+  repository planted under another name is refused by git itself when the command runs, whatever the guard saw
+  before. The guard's own git calls in the project run with `core.fsmonitor=false`.
+- **sync-from-template.sh `--apply`** refuses a project whose `.git/config` defines filters (or includes or a
+  per-worktree config that could add them; Git LFS's standard filter is fine) before running `git status` there,
+  which runs clean filters, refuses when it can't read that config, runs that status without entering submodules;
+  and its
+  temporary files come from `mktemp` instead of a name from the process ID, so a symlink planted at that name
+  can't redirect the write outside the project.
 
 ## [1.0.0] - 2026-11-16
 ### Added
