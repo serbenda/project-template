@@ -1160,7 +1160,7 @@ git add {foo\,bar}
 2
 git add {foo,bar}
 %%
-2
+0
 python3 -c 'print(1)' && git status
 %%
 0
@@ -3635,6 +3635,7 @@ echo "On branch main, must BLOCK:"
 branch_dir="$tmp/main"
 check 2 "commit while on main"            "$(bash_json 'git commit -m "fix: x"')"
 check 2 "plain push while on main"        "$(bash_json 'git push')"
+check 2 "git push origin HEAD while on main" "$(bash_json 'git push -u origin HEAD')"
 branch_dir="$tmp/development"
 
 echo "git and gh only on the project's repository, must BLOCK:"
@@ -3683,8 +3684,9 @@ check 2 "git archive --remote (git in another repository)" "$(bash_in "$proj_dir
 check 2 "git upload-pack"                                 "$(bash_in "$proj_dir" "git upload-pack $tmp/outside")"
 check 2 "git submodule"                                   "$(bash_in "$proj_dir" 'git submodule status')"
 check 2 "git add with a nested repository in the project" "$(bash_in "$proj_dir" 'git add -A')"
-check 2 "a file written, then git"                        "$(bash_in "$proj_dir" 'echo x > f && git status')"
-check 2 "a script run, then git"                          "$(bash_in "$proj_dir" 'bash make.sh; git status')"
+check 2 "a file written, then git add"                    "$(bash_in "$proj_dir" 'echo x > f && git add f')"
+check 2 "tests run, then git add"                         "$(bash_in "$proj_dir" 'npm test && git add -A')"
+check 2 "a script run, then git -C"                       "$(bash_in "$proj_dir" 'bash make.sh; git -C js status')"
 # Second round: clone and ls-remote from a folder start upload-pack there; nested repositories deeper down or ignored.
 check 2 "git ls-remote of a folder"                       "$(bash_in "$proj_dir" "git ls-remote $tmp/outside")"
 check 2 "git ls-remote of file://"                        "$(bash_in "$proj_dir" "git ls-remote file://$tmp/outside")"
@@ -3697,6 +3699,17 @@ check 2 "git add of a folder with a repository deeper down" "$(bash_in "$proj_di
 check 2 "git add of the repository itself, deeper down"   "$(bash_in "$proj_dir" 'git add deep/x')"
 check 2 "git add -f of an ignored repository"             "$(bash_in "$proj_dir" 'git add -f ign/n')"
 check 2 "git add -f of everything"                        "$(bash_in "$proj_dir" 'git add -f .')"
+# Third round: grouped short options, abbreviated long ones, a linked worktree's own hooks.
+check 2 "git grep with -O inside a group of short options" "$(bash_in "$proj_dir" 'git grep -nO/tmp/x.sh README')"
+check 2 "git clone with -c inside a group"                "$(bash_in "$proj_dir" 'git clone -qcfilter.x.smudge=y https://github.com/acme/x d')"
+check 2 "git archive with -o inside a group"              "$(bash_in "$proj_dir" 'git archive -vo /tmp/x.tar HEAD')"
+check 2 "git clone --recurs (abbreviated)"                "$(bash_in "$proj_dir" 'git clone --recurs https://github.com/acme/x d')"
+check 2 "git clone --ref (abbreviated)"                   "$(bash_in "$proj_dir" "git clone --ref $tmp/outside https://github.com/acme/x d")"
+check 2 "another variable before git"                     "$(bash_in "$proj_dir" 'FOO=1 git log')"
+wtp="$tmp/wt-owner"; { git init -q -b development "$wtp" && git -C "$wtp" -c user.name=t -c user.email=t@t -c core.hooksPath=/dev/null commit -q --allow-empty -m base &&
+  git -C "$wtp" worktree add -q "$wtp/.claude/worktrees/w" -b feat/w && mkdir -p "$wtp/.claude/worktrees/w/.githooks" &&
+  printf '#!/bin/sh\ntouch %s\n' "$marker" > "$wtp/.claude/worktrees/w/.githooks/pre-commit"; } >/dev/null 2>&1
+CLAUDE_PROJECT_DIR="$wtp" check 2 "commit in a worktree whose .githooks changed" "$(bash_in "$wtp/.claude/worktrees/w" 'git commit -m "fix: x"')"
 echo "git in the project's own repository, must ALLOW:"
 check 0 "git commands chained with each other"            "$(bash_in "$proj_dir" 'git add js && git status')"
 check 0 "git add of a file, with a nested repository elsewhere" "$(bash_in "$proj_dir" 'git add js/app')"
@@ -3704,6 +3717,11 @@ check 0 "-C chain that stays in the project"              "$(bash_in "$proj_dir"
 check 0 "git first, then another command"                 "$(bash_in "$proj_dir" 'git status && echo done')"
 check 0 "output thrown away, then git"                   "$(bash_in "$proj_dir" 'echo x >/dev/null 2>&1 && git status')"
 check 0 "git archive of this repository"                  "$(bash_in "$proj_dir" 'git archive --format=zip HEAD')"
+check 0 "short options grouped without a risky one"       "$(bash_in "$proj_dir" 'git grep -nI foo')"
+check 0 "PAGER=cat before git"                            "$(bash_in "$proj_dir" 'PAGER=cat git log --oneline -3')"
+check 0 "git push -u origin HEAD from a work branch"      "$(bash_in "$proj_dir" 'git push -u origin HEAD')"
+check 0 "tests run, then git commit, at the project's root" "$(bash_in "$proj_dir" 'npm test && git commit -m "fix: x"')"
+check 0 "a file written, then git status, at the root"    "$(bash_in "$proj_dir" 'echo x > f && git status')"
 check 0 "git ls-remote of origin"                         "$(bash_in "$proj_dir" 'git ls-remote origin')"
 check 0 "git ls-remote of a remote URL"                   "$(bash_in "$proj_dir" 'git ls-remote https://github.com/acme/x')"
 check 0 "git clone of a remote URL"                       "$(bash_in "$tmp" 'git clone https://github.com/acme/x copy')"
@@ -3713,6 +3731,7 @@ check 0 "a new branch, then gh, in one command"           "$(bash_in "$proj_dir"
 mkdir -p "$proj_dir/.git/worktrees/wt" "$proj_dir/.claude/worktrees/wt"
 printf 'gitdir: %s\n' "$proj_dir/.git/worktrees/wt" > "$proj_dir/.claude/worktrees/wt/.git"
 check 0 "git in a worktree of the project itself"         "$(bash_in "$proj_dir/.claude/worktrees/wt" 'git status')"
+check 0 "git add -A inside a worktree of the project"     "$(bash_in "$proj_dir/.claude/worktrees/wt" 'git add -A')"
 CLAUDE_PROJECT_DIR="$proj_dir/js" check 0 "a project in a subfolder of its repository (monorepo)" "$(bash_in "$proj_dir/js" 'git status')"
 check 0 "git status in the project"                       "$(bash_in "$proj_dir" 'git status')"
 check 0 "git status from a project folder"                "$(bash_in "$proj_dir/js/app" 'git status')"

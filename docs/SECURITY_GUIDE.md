@@ -176,6 +176,8 @@ git and gh are the two commands the sandbox lets out (`excludedCommands`), and g
 - **Before running, in the guard:** git and gh only on the project's repository, found as git finds it from the session's directory and any `-C`; nothing but git, gh or harmless commands (echo, set…) before them in the same command, and no `cd`; no `git submodule`, `archive --remote`, `upload-pack`; no `git add` that would take in another repository; a project with submodules stops the agent until the owner reviews them.
 - **The tripwire:** the project's `.git/config` is checked by content before every action.
 
+Claude Code runs a call outside the sandbox only when every command in it is an excluded one; a redirect to a file, a `cd` or a `$(…)` keeps the whole call sandboxed (Claude Code's sandboxing docs). So what runs after git in the same call, or `git … > file`, stays sandboxed. Before git runs hooks in a linked worktree (whose `core.hooksPath=.githooks` is that worktree's own folder), the guard checks its hooks against its last commit.
+
 Limits: the guard looks at the disk before the command runs, so a process left running in the background could change a folder in between; the run-time settings are what close that for planted repositories. A git run from inside a script or another program (`bash x.sh`, `npm test`) runs inside the sandbox, where whatever it starts stays confined.
 
 ### Known limits of the git hooks

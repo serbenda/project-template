@@ -26,6 +26,16 @@ has() { printf '%s' "$2" | grep -Eiq -- "$1"; }   # has <regex> <text>
 # .git/config, so git and gh may only work on the project's repository: the one git would find from the session's
 # directory (the hook input's "cwd") and any -C, looking up for a .git or for a directory laid out as a git
 # directory (HEAD, objects, refs), as git itself does. A repository planted under another name is refused.
+at_root() {  # true if the session's directory (the hook input's "cwd") is the project's root
+  printf '%s' "$input" | python3 -c '
+import json, os, sys
+try:
+    cwd = json.load(sys.stdin).get("cwd") or os.getcwd()
+except Exception:
+    cwd = os.getcwd()
+sys.exit(0 if os.path.realpath(cwd) == os.path.realpath(sys.argv[1]) else 1)
+' "$proj" 2>/dev/null
+}
 own_repo() {  # own_repo <what> [-C path…]: blocks unless git there would use the project's repository
   local what="$1" c r; shift
   for c in "$@"; do
@@ -940,7 +950,7 @@ for p in "${parts[@]+"${parts[@]}"}"; do
   if [[ "$cw" == gh ]]; then
     # gh runs git in the current directory (remotes, branch, status): only in the project's repository.
     (( cd_before )) && block "gh after a cd in the same command: run it as a command of its own."
-    (( other_before )) && block "gh after other commands in the same command: run it as a command of its own."
+    (( other_before )) && ! at_root && block "gh after other commands in the same command, away from the project's root: run it as a command of its own."
     own_repo gh
     # gh runs outside the sandbox: a body or field file must be in the project or the temp folder.
     bv=0
@@ -1029,7 +1039,10 @@ for p in "${parts[@]+"${parts[@]}"}"; do
   fi
   if (( i < ${#tok[@]} )) && [[ "${tok[$i]}" == "git" ]]; then
     isgit=1
-    (( i > 0 )) && block "no VAR=value before git: they can change what git does."
+    # Only PAGER=cat may go before git (the pager rule below allows it); any other VAR=value can change what git does.
+    for ((q = 0; q < i; q++)); do
+      [[ "${tok[$q]}" == PAGER=cat ]] || block "no VAR=value before git (except PAGER=cat): they can change what git does."
+    done
     i=$((i + 1))
     while (( i < ${#tok[@]} )) && [[ "${tok[$i]}" == -* ]]; do
       case "${tok[$i]}" in
@@ -1048,11 +1061,38 @@ for p in "${parts[@]+"${parts[@]}"}"; do
     has '(^|[ ;&|(])git( +[^ ;&|]+)*? +-C *(""|'"''"')( |$)' "$cmd_raw" && block "git -C with an empty path is not allowed."
     has '(^|[ ;&|(])git( +[^ ;&|]+)*? +-C *["'"'"']?([^ ;&|]*/)?[^./ ;&|][^/ ;&|]*/\.\.(/|["'"'"' ]|$)' "$cmd_raw" &&
       block "git -C with .. after a folder name: write the path without it (a symlink on the way would lead elsewhere)."
-    (( other_before )) &&
-      block "git after other commands in the same command: run it as a command of its own (or after git, echo, set…), so the guard sees the folders and repositories it will use as they are."
     own_repo git "${gcd[@]+"${gcd[@]}"}"
     sub="${tok[$i]:-}"
     rt=("${tok[@]:$((i + 1))}")
+    # From the project's root without -C git always finds the project's .git; a repository made earlier in the same
+    # command only matters with -C, away from the root, or for add/stash (which could take it in as a submodule).
+    if (( other_before )) && { (( ${#gcd[@]} )) || [[ "$sub" =~ ^(add|stash)$ ]] || ! at_root; }; then
+      block "git after other commands in the same command (with -C, away from the project's root, or git add/stash): run it as a command of its own, so the guard sees the folders and repositories it will use as they are."
+    fi
+    # A linked worktree of the project runs the hooks of its own .githooks (core.hooksPath is relative), which the
+    # tripwire, checking the project's root, doesn't see: before git runs hooks there, they must match the commit.
+    case "$sub" in commit|merge|push|am|rebase|cherry-pick|revert|checkout|switch|pull|reset|stash)
+      wtop="$(printf '%s' "$input" | python3 -c '
+import json, os, sys
+proj, cdirs = os.path.realpath(sys.argv[1]), sys.argv[2:]
+try:
+    d = json.load(sys.stdin).get("cwd") or os.getcwd()
+except Exception:
+    d = os.getcwd()
+for c in cdirs:
+    d = os.path.join(d, c)
+d = os.path.realpath(d)
+while not os.path.lexists(os.path.join(d, ".git")) and os.path.dirname(d) != d:
+    d = os.path.dirname(d)
+print(d if os.path.isfile(os.path.join(d, ".git")) and d != proj else "")
+' "$proj" "${gcd[@]+"${gcd[@]}"}" 2>/dev/null)"
+      if [[ -n "$wtop" ]]; then
+        wtrip="$(git -C "$wtop" -c core.fsmonitor=false -c core.quotepath=false diff --name-only HEAD -- :/.githooks :/.claude/hooks :/.claude/settings.json 2>&1
+          git -C "$wtop" -c core.fsmonitor=false -c core.quotepath=false ls-files --others -- :/.githooks :/.claude/hooks 2>&1)"
+        [[ -n "$wtrip" ]] &&
+          block "this worktree's hooks differ from its last commit ($(printf '%s' "$wtrip" | head -3 | tr '\n' ' ')): git $sub would run them outside the sandbox. The owner must review them."
+      fi ;;
+    esac
     # Subcommands that start git in another repository (whose config would name what runs), and submodules.
     case "$sub" in
       submodule) block "git submodule is not used by the agent: submodules run what their own config names. Ask the owner." ;;
@@ -1064,8 +1104,11 @@ for p in "${parts[@]+"${parts[@]}"}"; do
         for t in "${rt[@]+"${rt[@]}"}"; do
           if (( skip )); then skip=0; continue; fi
           case "$t" in
-            --recurse-submodules*|--recursive|--reference*|--separate-git-dir*|--bundle-uri*)
-              block "git $sub $t reaches into other repositories: not used by the agent." ;;
+            --*) if opt_prefix "$t" --recurse-submodules 5 || opt_prefix "$t" --recursive 5 || opt_prefix "$t" --reference 5 ||
+                    opt_prefix "$t" --reference-if-able 5 || opt_prefix "$t" --separate-git-dir 4 || opt_prefix "$t" --bundle-uri 4; then
+                   block "git $sub ${t%%=*} reaches into other repositories: not used by the agent."
+                 fi
+                 case "$t" in --branch|--origin|--depth|--filter|--jobs|--shallow-since|--shallow-exclude|--server-option|--sort) skip=1 ;; esac ;;
             -b|--branch|-o|--origin|--depth|--filter|-j|--jobs|--shallow-since|--shallow-exclude|--server-option|--sort) skip=1 ;;
             -*) ;;
             *) src="${t//$US/ }"; break ;;
@@ -1088,12 +1131,19 @@ specs = [a for a in args if not a.startswith("-")]
 everything = any(a in ("-A", "--all") or a.startswith("--pathspec-from-file") for a in args) or not specs or "." in specs
 if force and everything:
     print("git add -f of everything"); sys.exit()
-roots = [proj] if everything else [os.path.realpath(os.path.join(cwd, x)) for x in specs]
+# The work tree git adds to: the nearest folder up from the session directory that holds a .git (the project,
+# or one of its own worktrees).
+top = os.path.realpath(cwd)
+while not os.path.lexists(os.path.join(top, ".git")) and os.path.dirname(top) != top:
+    top = os.path.dirname(top)
+if not os.path.lexists(os.path.join(top, ".git")):
+    top = proj
+roots = [top] if everything else [os.path.realpath(os.path.join(cwd, x)) for x in specs]
 ignored = set()
 if not force:  # git add skips ignored folders unless forced: so does this walk (node_modules…)
-    out = subprocess.run(["git", "-C", proj, "-c", "core.fsmonitor=false", "ls-files", "--others", "--ignored",
+    out = subprocess.run(["git", "-C", top, "-c", "core.fsmonitor=false", "ls-files", "--others", "--ignored",
                           "--exclude-standard", "--directory", "-z"], capture_output=True, text=True).stdout
-    ignored = {os.path.join(proj, e.rstrip("/")) for e in out.split("\0") if e}
+    ignored = {os.path.join(top, e.rstrip("/")) for e in out.split("\0") if e}
 for root in roots:
     if not os.path.isdir(root) or os.path.islink(root):
         continue
@@ -1101,8 +1151,8 @@ for root in roots:
         if d in ignored:
             dirs[:] = []
             continue
-        if d != proj and (".git" in dirs or ".git" in files):
-            print(os.path.relpath(d, proj)); sys.exit()
+        if d != top and (".git" in dirs or ".git" in files):
+            print(os.path.relpath(d, top)); sys.exit()
         dirs[:] = [x for x in dirs if x != ".git" and os.path.join(d, x) not in ignored]
 ' "$proj" "${rt[@]+"${rt[@]}"}" 2>/dev/null)"
         [[ -n "$nested" ]] && block "git add with another repository inside the project ($nested): it would become a submodule. Remove it or ignore it first." ;;
@@ -1178,6 +1228,16 @@ for root in roots:
         block "git $sub ${t%%=*} is not allowed: it writes a file or runs a program outside the sandbox."
       case "$sub:$t" in archive:-o*|format-patch:-o*|clone:-u*|ls-remote:-u*|grep:-O*|clone:-c*|init:-c*)
         block "git $sub ${t:0:2} is not allowed: it writes a file or runs a program outside the sandbox." ;; esac
+      # The same letters inside a group of short options (git grep -nO<program>, clone -qc…, archive -vo…): only the
+      # first letter of a group is looked at above, so a group with one of them later on is refused.
+      if [[ "$t" =~ ^-[A-Za-z]{2,} ]]; then
+        case "$sub" in archive|format-patch) dl=o ;; clone) dl=uc ;; ls-remote) dl=u ;; grep) dl=O ;; init) dl=c ;; *) dl="" ;; esac
+        grp="${t:2}"; grp="${grp%%[!A-Za-z]*}"
+        for ((q = 0; q < ${#dl}; q++)); do
+          [[ "$grp" == *"${dl:$q:1}"* ]] &&
+            block "git $sub $t: write -${dl:$q:1} on its own, not grouped with other short options, so the guard can check its value."
+        done
+      fi
     done
     # Broad pathspecs (git rm -r ., git mv src dst): resolved with git itself, refused if they reach a guardrail.
     if [[ "$sub" == rm || "$sub" == mv ]]; then
@@ -1366,6 +1426,12 @@ print(os.path.relpath(p, os.path.realpath(top)) if top else os.path.normpath(sys
           branch="$(git branch --show-current 2>/dev/null || true)"
           [[ "$branch" =~ ^${work_branch_re}$ ]] ||
             block "you are on '${branch:-a detached HEAD}': plain git push is only allowed from development or a work branch."
+        elif has "^((-u|--set-upstream) +)?origin +HEAD *$" "$rest"; then
+          # HEAD is the current branch: the same check as a plain git push.
+          (( moved )) && block "change branch or directory as a command of its own, then push: the guard checks the branch as it is now."
+          branch="$(git branch --show-current 2>/dev/null || true)"
+          [[ "$branch" =~ ^${work_branch_re}$ ]] ||
+            block "you are on '${branch:-a detached HEAD}': git push origin HEAD is only allowed from development or a work branch."
         elif ! has "^((-u|--set-upstream) +)?origin +${work_branch_re} *$" "$rest"; then
           block "only 'git push [-u] origin development' (or a feat/, fix/… work branch) is allowed. No refspecs, force, other remotes or main."
         fi ;;

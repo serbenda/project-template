@@ -14,6 +14,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versio
   `git archive --remote` and `upload-pack`, `git clone`/`ls-remote` from a folder or `file://` (only origin or a
   remote URL), a `git add` that would take in another repository (at any depth, or an ignored one with `-f`;
   `git add -f` of everything), and a project with submodules (until the owner reviews them).
+- **guard.sh, older gaps closed:** risky short options inside a group (`git grep -nO<program>`, `clone -qc…`,
+  `archive -vo…`) and abbreviated long ones (`clone --recurs`, `--ref`) are refused; before git runs hooks in a
+  linked worktree, its `.githooks` and `.claude/hooks` must match its last commit. `git push -u origin HEAD` from a
+  work branch and `PAGER=cat git …` are allowed, as the rules meant.
 - **`.claude/settings.json` passes git `safe.bareRepository=explicit` and `core.fsmonitor=false`** (`env`), so a
   repository planted under another name is refused by git itself when the command runs, whatever the guard saw
   before. The guard's own git calls in the project run with `core.fsmonitor=false`.

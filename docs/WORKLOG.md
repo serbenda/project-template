@@ -16,6 +16,25 @@
 - **Pending:**
 -->
 
+## 2026-11-19 — Guard: older gaps from the third review (grouped options, worktree hooks)
+- **Phase / issue:** — (follow-up to PR #21, at the owner's request)
+- **What:** risky short options inside a group (`git grep -nO<program>`, `clone -qc…`, `archive -vo…`) and
+  abbreviated long ones (`clone --recurs`, `--ref`) are refused; before hook-running git in a linked worktree, its
+  `.githooks` and `.claude/hooks` must match its last commit; `git push -u origin HEAD` from a work branch and
+  `PAGER=cat git …` pass. False positives from the third round fixed too (`git add -A` inside a worktree, other
+  commands before git at the project's root except before `git add`/`stash`).
+- **Why:** the third design review of PR #21 found these older gaps (they predate it); PR #21 was merged before
+  this commit (e4ce546) reached it.
+- **Rejected:** a rule for commands after git and for redirections of git output: Claude Code runs a call outside
+  the sandbox only when every command in it is excluded, and a redirect, `cd` or `$(…)` keeps it sandboxed
+  (code.claude.com/docs/en/sandboxing).
+- **Files:** .claude/hooks/guard.sh, scripts/test-guard.sh, README.md, CHANGELOG.md, docs/SECURITY_GUIDE.md
+- **Commits:** e4ce546 (owner) and this one.
+- **Tested:** guard 1391 and scripts 69 on /bin/bash 3.2; the new blocking cases fail against PR #21's guard; the
+  worktree block checked directly (commit refused with changed hooks, status allowed).
+- **Pending:** check in a real session whether `excludedCommands: ["git", "gh"]` (no wildcard) matches git with
+  arguments, as the docs say it doesn't.
+
 ## 2026-11-19 — Security audit: git only on the project's repository; sync refuses risky configs
 - **Phase / issue:** — (a full security audit run in bsketch, a project made from this template)
 - **What:**
@@ -50,8 +69,18 @@
   (its config's `core.alternateRefsCommand`): now only origin or a remote URL, and no `--recurse-submodules`,
   `--reference`. `git add` missed a repository deeper down or an ignored one added with `-f`: it now walks what is
   added (skipping ignored folders unless forced) and refuses `git add -f` of everything.
-- **Pending:** the third round (design and false positives; the second's were cut off by a network error);
-  shellcheck and CI on Linux (Actions blocked by a billing problem on 2026-11-19).
+- **Third round:** false positives fixed — `git add -A` inside a worktree of the project (the walk now starts
+  from the work tree git uses), and other commands before git are allowed at the project's root without `-C`
+  except before `git add`/`stash` (`npm test && git commit` works again).
+- **Older gaps from the third design round, closed here at the owner's request:** grouped short options
+  (`git grep -nO<program>`, `clone -qc…`, `archive -vo`) and abbreviated long ones (`clone --recurs`, `--ref`) are
+  refused; a linked worktree's `.githooks`/`.claude/hooks` must match its commit before hook-running git there;
+  `git push -u origin HEAD` and `PAGER=cat git` now pass. Not changed, after reading Claude Code's sandboxing docs
+  (code.claude.com/docs/en/sandboxing): a call runs outside the sandbox only when every command in it matches
+  `excludedCommands`, and a redirect to a file, a `cd` or a `$(…)` keeps it sandboxed, so commands after git and
+  `git log > ~/.gitconfig` stay sandboxed. The same page says an entry without a wildcard (`"git"`) matches only
+  the bare command: to check in a real session whether git with arguments runs sandboxed today.
+- **Pending:** that check of `excludedCommands` matching; shellcheck and CI on Linux.
 
 ## 2026-11-16 — The owner's identity in one file: .github/OWNER
 - **Phase / issue:** —
