@@ -16,6 +16,25 @@
 - **Pending:**
 -->
 
+## 2026-11-19 — Guard: older gaps from the third review (grouped options, worktree hooks)
+- **Phase / issue:** — (follow-up to PR #21, at the owner's request)
+- **What:** risky short options inside a group (`git grep -nO<program>`, `clone -qc…`, `archive -vo…`) and
+  abbreviated long ones (`clone --recurs`, `--ref`) are refused; before hook-running git in a linked worktree, its
+  `.githooks` and `.claude/hooks` must match its last commit; `git push -u origin HEAD` from a work branch and
+  `PAGER=cat git …` pass. False positives from the third round fixed too (`git add -A` inside a worktree, other
+  commands before git at the project's root except before `git add`/`stash`).
+- **Why:** the third design review of PR #21 found these older gaps (they predate it); PR #21 was merged before
+  this commit (e4ce546) reached it.
+- **Rejected:** a rule for commands after git and for redirections of git output: Claude Code runs a call outside
+  the sandbox only when every command in it is excluded, and a redirect, `cd` or `$(…)` keeps it sandboxed
+  (code.claude.com/docs/en/sandboxing).
+- **Files:** .claude/hooks/guard.sh, scripts/test-guard.sh, README.md, CHANGELOG.md, docs/SECURITY_GUIDE.md
+- **Commits:** e4ce546 (owner) and this one.
+- **Tested:** guard 1391 and scripts 69 on /bin/bash 3.2; the new blocking cases fail against PR #21's guard; the
+  worktree block checked directly (commit refused with changed hooks, status allowed).
+- **Pending:** check in a real session whether `excludedCommands: ["git", "gh"]` (no wildcard) matches git with
+  arguments, as the docs say it doesn't.
+
 ## 2026-11-19 — Security audit: git only on the project's repository; sync refuses risky configs
 - **Phase / issue:** — (a full security audit run in bsketch, a project made from this template)
 - **What:**
