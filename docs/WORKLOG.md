@@ -16,6 +16,19 @@
 - **Pending:**
 -->
 
+## 2026-11-23 — mcp-builder skill: `mcp>=1.30.0` (five more advisories)
+- **Phase / issue:** —
+- **What:** `.claude/skills/mcp-builder/scripts/requirements.txt` asks for `mcp>=1.30.0` instead of `mcp>=1.28.1`.
+- **Why:** after the previous change, Scorecard on `main` listed GHSA-5h93-6whr-6q8j, GHSA-84m7-p3x7-pcfv,
+  GHSA-qx49-fqc8-xw99, GHSA-rwrf-2pqf-9j8j and GHSA-w4fh-qvv9-3v23, all fixed in 1.30.0 (the 1.28.1 floor came
+  from the PYSEC entries only).
+- **Rejected:** —
+- **Files:** .claude/skills/mcp-builder/scripts/requirements.txt, docs/WORKLOG.md
+- **Commits:** this one (a guardrail file: committed by the owner with `GUARDRAILS_OWNER_CHANGE=1`).
+- **Tested:** an OSV query for `mcp` 1.30.0 returns no advisories (1.28.1 returns these five); `anthropic` 0.39.0
+  has none.
+- **Pending:** —
+
 ## 2026-11-21 — mcp-builder skill: `mcp>=1.28.1` (known vulnerabilities)
 - **Phase / issue:** —
 - **What:** `.claude/skills/mcp-builder/scripts/requirements.txt` asks for `mcp>=1.28.1` instead of `mcp>=1.1.0`.
