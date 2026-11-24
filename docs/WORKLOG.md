@@ -16,6 +16,29 @@
 - **Pending:**
 -->
 
+## 2026-11-23 — mcp-builder skill: `mcp>=1.30.0` (five more advisories)
+- **Phase / issue:** —
+- **What:** `.claude/skills/mcp-builder/scripts/requirements.txt` asks for `mcp>=1.30.0` instead of `mcp>=1.28.1`.
+- **Why:** after the previous change, Scorecard on `main` listed GHSA-5h93-6whr-6q8j, GHSA-84m7-p3x7-pcfv,
+  GHSA-qx49-fqc8-xw99, GHSA-rwrf-2pqf-9j8j and GHSA-w4fh-qvv9-3v23, all fixed in 1.30.0 (the 1.28.1 floor came
+  from the PYSEC entries only).
+- **Rejected:** —
+- **Files:** .claude/skills/mcp-builder/scripts/requirements.txt, docs/WORKLOG.md
+- **Commits:** this one (a guardrail file: committed by the owner with `GUARDRAILS_OWNER_CHANGE=1`).
+- **Tested:** an OSV query for `mcp` 1.30.0 returns no advisories (1.28.1 returns these five); `anthropic` 0.39.0
+  has none.
+- **Pending:** —
+
+## 2026-11-21 — mcp-builder skill: `mcp>=1.28.1` (known vulnerabilities)
+- **Phase / issue:** —
+- **What:** `.claude/skills/mcp-builder/scripts/requirements.txt` asks for `mcp>=1.28.1` instead of `mcp>=1.1.0`.
+- **Why:** Scorecard in projects made from the template (bsketch, alert 10) lists PYSEC-2026-1616, -1617, -1618, -3482 and -3483 for `mcp` below 1.28.1; every project gets it on its next sync.
+- **Rejected:** dismissing the alert (the floor is what a fresh install could resolve to).
+- **Files:** .claude/skills/mcp-builder/scripts/requirements.txt, docs/WORKLOG.md
+- **Commits:** this one (a guardrail file: committed by the owner with `GUARDRAILS_OWNER_CHANGE=1`).
+- **Tested:** the OSV entries give 1.28.1 as the highest fixed version.
+- **Pending:** —
+
 ## 2026-11-19 — Guard: older gaps from the third review (grouped options, worktree hooks)
 - **Phase / issue:** — (follow-up to PR #21, at the owner's request)
 - **What:** risky short options inside a group (`git grep -nO<program>`, `clone -qc…`, `archive -vo…`) and

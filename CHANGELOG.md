@@ -3,6 +3,14 @@
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioned with [SemVer](https://semver.org/).
 
 ## [Unreleased]
+### Security
+- **mcp-builder skill: `mcp>=1.30.0`.** Its `scripts/requirements.txt` allowed MCP Python SDK versions with ten known
+  advisories (PYSEC-2026-1616, -1617, -1618, -3482, -3483 and GHSA-5h93-6whr-6q8j, GHSA-84m7-p3x7-pcfv,
+  GHSA-qx49-fqc8-xw99, GHSA-rwrf-2pqf-9j8j, GHSA-w4fh-qvv9-3v23), reported by Scorecard in projects made from the
+  template.
+
+### Changed
+- The Semgrep image: 1.185.0 (Dependabot).
 
 ## [1.0.1] - 2026-11-19
 ### Security
